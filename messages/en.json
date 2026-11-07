@@ -42,8 +42,7 @@
     "gantt": "Gantt",
     "agenda": "Agenda",
     "calendar": "Calendar",
-    "platform": "Schools",
-    "import": "Import"
+    "platform": "Schools"
   },
   "grades": {
     "label_7": "ז",
@@ -220,6 +219,8 @@
       "error": "Save failed"
     },
     "import": {
+      "button": "Import calendar",
+      "close": "Close",
       "title": "Import calendar",
       "intro": "Bring the school's existing calendar into the system in one go, from an Excel file.",
       "step1": "Download the template and fill it in Excel, one row per event. Keep the header row as is.",

@@ -26,11 +26,13 @@ interface ImportResponse {
 interface CalendarImportProps {
   template: string;
   typeLabels: Record<string, string>;
+  /** Called after a confirmed import publishes events. */
+  onImported?: (count: number) => void;
 }
 
 type Status = "idle" | "loading" | "previewed" | "imported" | "failed";
 
-export function CalendarImport({ template, typeLabels }: CalendarImportProps) {
+export function CalendarImport({ template, typeLabels, onImported }: CalendarImportProps) {
   const t = useTranslations("admin.import");
   const [csv, setCsv] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResponse | null>(null);
@@ -48,6 +50,7 @@ export function CalendarImport({ template, typeLabels }: CalendarImportProps) {
       const body = (await res.json()) as ImportResponse;
       setResult(body);
       setStatus(body.imported > 0 ? "imported" : "previewed");
+      if (body.imported > 0) onImported?.(body.imported);
     } catch {
       setStatus("failed");
     }

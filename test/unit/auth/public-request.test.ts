@@ -24,4 +24,8 @@ describe("shouldBypassAuthRefresh", () => {
     expect(shouldBypassAuthRefresh("/accessibility")).toBe(true);
     expect(shouldBypassAuthRefresh("/privacy")).toBe(true);
   });
+
+  it("lets the uptime probe through without a session", () => {
+    expect(shouldBypassAuthRefresh("/api/health")).toBe(true);
+  });
 });

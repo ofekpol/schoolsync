@@ -1,0 +1,54 @@
+name: Uptime
+
+# Every 15 minutes: production must answer /api/health (app + database) and the
+# login page. While it fails, one open "uptime" issue tracks the outage (GitHub
+# emails watchers when it opens); the next passing run closes it.
+# Scheduled workflows only run from the default branch (main).
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  APP_URL: https://school-gantt.vercel.app
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe production
+        id: probe
+        continue-on-error: true
+        run: |
+          check() { curl -fsS -o /dev/null --max-time 20 --retry 3 --retry-delay 20 --retry-all-errors "$1"; }
+          check "$APP_URL/api/health"
+          check "$APP_URL/auth/login"
+
+      - name: Open an outage issue
+        if: steps.probe.outcome == 'failure'
+        run: |
+          gh label create uptime --color B60205 --description "Production health check failing" 2>/dev/null || true
+          if [ -z "$(gh issue list --label uptime --state open --json number --jq '.[0].number')" ]; then
+            gh issue create --label uptime \
+              --title "Production is down: health check failing" \
+              --body "The uptime check of $APP_URL failed at $(date -u +%FT%TZ). Run: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID. Check Vercel deployments and the Supabase project status. This issue closes by itself when the check passes again."
+          fi
+          exit 1
+
+      - name: Close outage issues after recovery
+        if: steps.probe.outcome == 'success'
+        run: |
+          for number in $(gh issue list --label uptime --state open --json number --jq '.[].number'); do
+            gh issue close "$number" --comment "Recovered at $(date -u +%FT%TZ)."
+          done

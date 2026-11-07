@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./print.css";
-import { Geist, Frank_Ruhl_Libre, Heebo, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
@@ -10,33 +10,41 @@ import { RouteProgressProvider } from "@/components/RouteProgress";
 import { VercelSpeedInsights } from "@/components/VercelSpeedInsights";
 import { LegalFooter } from "@/components/legal/LegalFooter";
 
+// Fonts are committed under app/fonts (OFL, see OFL-*.txt) so builds never
+// depend on Google's font servers. Variable files are subset to latin (+hebrew)
+// with the same unicode ranges Google serves.
 // Only Heebo (UI) is preloaded — it's the body font for every Hebrew
 // page above the fold. Display / mono / sans-latin fonts load on demand
 // with display: swap to avoid CLS, eliminating ~8 unused-preload warnings.
-const geist = Geist({
-  subsets: ["latin"],
+const geist = localFont({
+  src: "./fonts/Geist-latin-var.woff2",
+  weight: "100 900",
   variable: "--font-sans",
   preload: false,
 });
 
-const frankRuhlLibre = Frank_Ruhl_Libre({
-  subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "700", "900"],
+const frankRuhlLibre = localFont({
+  src: "./fonts/FrankRuhlLibre-hebrew-latin-var.woff2",
+  weight: "300 900",
   variable: "--font-display",
+  adjustFontFallback: "Times New Roman", // serif fallback, as next/font/google used
   display: "swap",
   preload: false,
 });
 
-const heebo = Heebo({
-  subsets: ["hebrew", "latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+const heebo = localFont({
+  src: "./fonts/Heebo-hebrew-latin-var.woff2",
+  weight: "100 900",
   variable: "--font-ui",
   display: "swap",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const ibmPlexMono = localFont({
+  src: [
+    { path: "./fonts/IBMPlexMono-Regular.woff2", weight: "400" },
+    { path: "./fonts/IBMPlexMono-Medium.woff2", weight: "500" },
+    { path: "./fonts/IBMPlexMono-SemiBold.woff2", weight: "600" },
+  ],
   variable: "--font-mono",
   display: "swap",
   preload: false,

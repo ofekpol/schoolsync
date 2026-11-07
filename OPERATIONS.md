@@ -124,6 +124,19 @@ Vercel **Preview** env vars point at the staging project. `NEXT_PUBLIC_APP_URL` 
 
 **After merging to `main`:** confirm Vercel created a production deployment for the commit. A push has been skipped before; if so, deploy that commit by hand and check the project's Git settings.
 
+### Custom domain cutover (`app.edusolutions.co.il`)
+
+Blocked until `edusolutions.co.il` DNS is live (`nslookup edusolutions.co.il 1.1.1.1` must resolve). The code needs no change: every link and email redirect is built from `NEXT_PUBLIC_APP_URL` (fallback: the request origin). The app sends no email of its own since PR #57; the only emails are Supabase Auth's (sign-up confirmation, password reset, the new admin's magic link).
+
+1. **Vercel → school-gantt → Domains:** add `app.edusolutions.co.il` (Production). Create the CNAME Vercel shows at the DNS provider; wait for the certificate.
+2. **Keep `school-gantt.vercel.app` serving, no redirect.** Staff and parents already have links and iCal subscriptions on it; calendar clients handle redirects poorly.
+3. **Vercel env (Production):** `NEXT_PUBLIC_APP_URL=https://app.edusolutions.co.il`, then redeploy `main`.
+4. **Supabase prod → Authentication → URL Configuration:** Site URL `https://app.edusolutions.co.il`; add `https://app.edusolutions.co.il/**` to Redirect URLs (keep the old origin's entry).
+5. **Auth email sender:** Resend → add and verify `edusolutions.co.il` (SPF/DKIM records at the DNS provider). Supabase prod → Authentication → SMTP Settings: host `smtp.resend.com`, port 465, user `resend`, password = a Resend API key, sender `no-reply@edusolutions.co.il`, name `EduSolutions`. Without custom SMTP, Supabase's built-in sender is rate-limited to a few emails per hour.
+6. **Google OAuth (Google Cloud console):** add `https://app.edusolutions.co.il` to Authorized JavaScript origins. The redirect URI stays the Supabase callback, so nothing else changes.
+7. **Company site (EduSolutions repo):** set `NEXT_PUBLIC_GANTT_URL=https://app.edusolutions.co.il`.
+8. **Check:** password reset from `/auth/login` arrives from `no-reply@edusolutions.co.il` and its link opens on the new domain; Google sign-in works; an old `school-gantt.vercel.app/<token>` link still opens.
+
 **E2E against staging:** `PLAYWRIGHT_BASE_URL=<staging url> VERCEL_AUTOMATION_BYPASS_SECRET=<from .env.staging.local> pnpm playwright`. Generate the bypass in Vercel → Settings → Deployment Protection; it applies to the whole project, so revoke it afterwards.
 
 **Plans:** Vercel Hobby and Supabase Free today. Hobby forbids commercial use; see `docs/COST_PLAN.md` (PR #55) for upgrade thresholds.

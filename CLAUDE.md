@@ -206,6 +206,8 @@ TEST_DATABASE_URL
 NEXT_PUBLIC_APP_URL             # unset on Preview: links use the request origin
 GROQ_API_KEY                    # staff AI features; unset = AI hidden (unset on Production today)
 AI_MODEL                        # optional Groq model override
+GITHUB_SUPPORT_REPO             # private repo for staff Help/bug reports (e.g. ofekpol/schoolsync-support)
+GITHUB_SUPPORT_TOKEN            # fine-grained token, Issues r/w on that repo only; unset = Help hidden
 TEST_LOGIN_ENABLED              # e2e-only test login route; never on Production
 PLAYWRIGHT_BASE_URL             # run e2e against a deployment
 VERCEL_AUTOMATION_BYPASS_SECRET # e2e against protected previews; revoke after use

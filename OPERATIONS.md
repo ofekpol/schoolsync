@@ -15,6 +15,7 @@ Copy `.env.example` to `.env.local` and fill these in:
 | `TEST_DATABASE_URL` | Separate Postgres for integration tests; tests skip if absent | `test/integration/setup.ts` |
 | `NEXT_PUBLIC_APP_URL` | Public base URL; unset on Preview (links use the request origin) | email links, provisioning |
 | `GROQ_API_KEY` / `AI_MODEL` | Staff AI chat + smart adder. Unset = AI hidden (Production today) | `lib/ai/` |
+| `GITHUB_SUPPORT_REPO` / `GITHUB_SUPPORT_TOKEN` | Staff "עזרה" form → issues in the private support repo. Unset = Help link hidden. Setup: §9 "Support reports" | `lib/support/` |
 | `TEST_LOGIN_ENABLED` | Enables the e2e test login route. Never on Production | `app/api/v1/auth/login` |
 | `PLAYWRIGHT_BASE_URL` / `VERCEL_AUTOMATION_BYPASS_SECRET` | Run e2e against a deployment (bypass needed for protected previews). Revoke the bypass after testing | `playwright.config.ts` |
 
@@ -124,6 +125,19 @@ Vercel **Preview** env vars point at the staging project. `NEXT_PUBLIC_APP_URL` 
 
 **After merging to `main`:** confirm Vercel created a production deployment for the commit. A push has been skipped before; if so, deploy that commit by hand and check the project's Git settings.
 
+### Custom domain cutover (`app.edusolutions.co.il`)
+
+Blocked until `edusolutions.co.il` DNS is live (`nslookup edusolutions.co.il 1.1.1.1` must resolve). The code needs no change: every link and email redirect is built from `NEXT_PUBLIC_APP_URL` (fallback: the request origin). The app sends no email of its own since PR #57; the only emails are Supabase Auth's (sign-up confirmation, password reset, the new admin's magic link).
+
+1. **Vercel → school-gantt → Domains:** add `app.edusolutions.co.il` (Production). Create the CNAME Vercel shows at the DNS provider; wait for the certificate.
+2. **Keep `school-gantt.vercel.app` serving, no redirect.** Staff and parents already have links and iCal subscriptions on it; calendar clients handle redirects poorly.
+3. **Vercel env (Production):** `NEXT_PUBLIC_APP_URL=https://app.edusolutions.co.il`, then redeploy `main`.
+4. **Supabase prod → Authentication → URL Configuration:** Site URL `https://app.edusolutions.co.il`; add `https://app.edusolutions.co.il/**` to Redirect URLs (keep the old origin's entry).
+5. **Auth email sender:** Resend → add and verify `edusolutions.co.il` (SPF/DKIM records at the DNS provider). Supabase prod → Authentication → SMTP Settings: host `smtp.resend.com`, port 465, user `resend`, password = a Resend API key, sender `no-reply@edusolutions.co.il`, name `EduSolutions`. Without custom SMTP, Supabase's built-in sender is rate-limited to a few emails per hour.
+6. **Google OAuth (Google Cloud console):** add `https://app.edusolutions.co.il` to Authorized JavaScript origins. The redirect URI stays the Supabase callback, so nothing else changes.
+7. **Company site (EduSolutions repo):** set `NEXT_PUBLIC_GANTT_URL=https://app.edusolutions.co.il`.
+8. **Check:** password reset from `/auth/login` arrives from `no-reply@edusolutions.co.il` and its link opens on the new domain; Google sign-in works; an old `school-gantt.vercel.app/<token>` link still opens.
+
 **E2E against staging:** `PLAYWRIGHT_BASE_URL=<staging url> VERCEL_AUTOMATION_BYPASS_SECRET=<from .env.staging.local> pnpm playwright`. Generate the bypass in Vercel → Settings → Deployment Protection; it applies to the whole project, so revoke it afterwards.
 
 **Plans:** Vercel Hobby and Supabase Free today. Hobby forbids commercial use; see `docs/COST_PLAN.md` (PR #55) for upgrade thresholds.
@@ -170,6 +184,19 @@ The PRD targets and the corresponding observables:
 | Auth lockout — 10 attempts / 15 min | `staff_users.locked_until` updates |
 
 ## 9. Runbooks
+
+### Support reports (staff "עזרה" link)
+
+Staff open `/support` from the header, pick תקלה / שאלה / הצעה and write a message. The app files it as an issue in a **private** GitHub repo, with school, name, email, role, page and browser attached, labelled `bug` / `question` / `idea`. GitHub emails the repo's watchers on every new issue, and the owner watches by default. Each staff member can send 10 reports per 24 h (counted in `audit_log`, action `support_report`). `@mentions` in staff text are defused so a report can't ping GitHub users.
+
+One-time setup:
+
+1. `gh repo create ofekpol/schoolsync-support --private`, then `gh label create bug`, `question` and `idea` on it (`--repo ofekpol/schoolsync-support`). **Never point it at `ofekpol/schoolsync`, which is public.**
+2. GitHub → Settings → Developer settings → Fine-grained tokens: repository access = only `schoolsync-support`; permission Issues = Read and write. Expiry: up to a year, with a calendar reminder.
+3. Vercel (Production and Preview): `GITHUB_SUPPORT_REPO=ofekpol/schoolsync-support`, `GITHUB_SUPPORT_TOKEN=<token>`. Redeploy.
+4. Check the repo's Watch setting is "All activity" (or at least Issues), and that GitHub → Settings → Notifications sends email.
+5. Reply to the staff member from your own email (their address is in the issue), then close the issue.
+
 
 ### "An editor can't sign in — claims password is right"
 

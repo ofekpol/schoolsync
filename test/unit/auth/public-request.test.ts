@@ -11,6 +11,7 @@ describe("shouldBypassAuthRefresh", () => {
     expect(shouldBypassAuthRefresh("/dashboard")).toBe(false);
     expect(shouldBypassAuthRefresh("/platform")).toBe(false);
     expect(shouldBypassAuthRefresh("/platform/schools")).toBe(false);
+    expect(shouldBypassAuthRefresh("/support")).toBe(false);
   });
 
   it("bypasses middleware auth refresh for the read-only public schedule", () => {

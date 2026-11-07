@@ -15,8 +15,6 @@ vi.mock("@/lib/db/pending", () => ({
   rejectPendingRegistration: (...args: unknown[]) => rejectMock(...args),
 }));
 
-vi.mock("@/lib/email/approval", () => ({ sendApprovalEmail: vi.fn() }));
-
 import { GET, POST } from "@/app/api/v1/admin/staff/pending/route";
 
 const SCHOOL_B = "00000000-0000-0000-0000-00000000000b";

@@ -5,7 +5,6 @@ import {
   type ProvisionSchoolInput,
   type ProvisionSchoolResult,
 } from "@/lib/db/provision";
-import { sendWelcomeEmail } from "@/lib/email/welcome";
 
 /**
  * CLI to provision a new school (tenant) + admin user.
@@ -20,7 +19,8 @@ import { sendWelcomeEmail } from "@/lib/email/welcome";
  * Optional:
  *   --locale=he|en        (default he)
  *   --timezone=...        (default Asia/Jerusalem)
- *   --skip-email          (do not call Resend; print magic link to stdout only)
+ *
+ * Prints the admin's one-time magic link; deliver it to them by hand.
  */
 
 const REQUIRED_FLAGS = [
@@ -30,12 +30,7 @@ const REQUIRED_FLAGS = [
   "admin-name",
 ] as const;
 
-interface ParsedFlags {
-  input: ProvisionSchoolInput;
-  skipEmail: boolean;
-}
-
-function parseFlags(): ParsedFlags {
+function parseFlags(): ProvisionSchoolInput {
   const { values } = parseArgs({
     options: {
       slug: { type: "string" },
@@ -44,7 +39,6 @@ function parseFlags(): ParsedFlags {
       timezone: { type: "string" },
       "admin-email": { type: "string" },
       "admin-name": { type: "string" },
-      "skip-email": { type: "boolean", default: false },
     },
     strict: true,
   });
@@ -57,57 +51,34 @@ function parseFlags(): ParsedFlags {
 
   const locale = values.locale === "en" ? "en" : "he";
   return {
-    input: {
-      slug: values.slug!,
-      name: values.name!,
-      locale,
-      timezone: values.timezone ?? "Asia/Jerusalem",
-      adminEmail: values["admin-email"]!,
-      adminName: values["admin-name"]!,
-    },
-    skipEmail: values["skip-email"] === true,
+    slug: values.slug!,
+    name: values.name!,
+    locale,
+    timezone: values.timezone ?? "Asia/Jerusalem",
+    adminEmail: values["admin-email"]!,
+    adminName: values["admin-name"]!,
   };
 }
 
-async function maybeSendWelcome(
-  flags: ParsedFlags,
-  result: ProvisionSchoolResult,
-): Promise<void> {
-  if (flags.skipEmail) return;
-  await sendWelcomeEmail({
-    to: flags.input.adminEmail,
-    adminName: flags.input.adminName,
-    schoolName: flags.input.name,
-    magicLinkUrl: result.magicLinkUrl,
-    expiresAt: new Date(result.magicLinkExpiresAt),
-    locale: flags.input.locale,
-  });
-}
-
-function reportResult(flags: ParsedFlags, result: ProvisionSchoolResult): void {
+function reportResult(input: ProvisionSchoolInput, result: ProvisionSchoolResult): void {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "(NEXT_PUBLIC_APP_URL unset)";
   console.log("");
   console.log("School provisioned successfully:");
   console.log(`  schoolId         = ${result.schoolId}`);
   console.log(`  staff sign-up    = ${appUrl}/auth/login?school=${result.accessToken}`);
   console.log(`  guest view       = ${appUrl}/schedule?school=${result.accessToken}`);
-  console.log(`  admin email      = ${flags.input.adminEmail}`);
+  console.log(`  admin email      = ${input.adminEmail}`);
   console.log(`  admin authId     = ${result.adminAuthUserId}`);
   console.log(`  magic link       = ${result.magicLinkUrl}`);
   console.log(`  magic link until = ${result.magicLinkExpiresAt}`);
   console.log("");
-  console.log(
-    flags.skipEmail
-      ? "--skip-email set: deliver the magic link manually."
-      : "Welcome email sent via Resend (no-op if RESEND_API_KEY unset).",
-  );
+  console.log("Deliver the magic link to the admin by hand.");
 }
 
 async function main(): Promise<void> {
-  const flags = parseFlags();
-  const result = await provisionSchool(flags.input);
-  await maybeSendWelcome(flags, result);
-  reportResult(flags, result);
+  const input = parseFlags();
+  const result = await provisionSchool(input);
+  reportResult(input, result);
 }
 
 main().catch((err: unknown) => {

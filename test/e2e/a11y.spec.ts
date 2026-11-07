@@ -16,6 +16,8 @@ import { DEMO_SCHOOL_PATH } from "../../db/demo-school";
  */
 const PUBLIC_ROUTES = [
   { name: "home", url: "/" },
+  { name: "privacy", url: "/privacy" },
+  { name: "accessibility", url: "/accessibility" },
   // Note: /[school]/* routes need a seeded school. Wired here to demonstrate
   // shape; the actual checks rely on the demo seed (demo-school, fixed token in db/demo-school.ts).
   { name: "agenda (demo-school)", url: `${DEMO_SCHOOL_PATH}/agenda` },

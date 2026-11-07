@@ -27,6 +27,7 @@ export async function buildNavLinks(
   ];
   if (role === "admin") {
     links.push({ href: "/admin/staff", label: t("staff") });
+    links.push({ href: "/admin/import", label: t("import") });
   }
   if (role === "admin" || role === "editor") {
     links.push({ href: "/admin/event-types", label: t("eventTypes") });

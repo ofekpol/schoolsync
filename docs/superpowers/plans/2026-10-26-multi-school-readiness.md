@@ -257,7 +257,7 @@ Signup carries school context from a `?school=<slug>` link. The staging refresh 
 - Modify: `OPERATIONS.md` (new section "Onboarding a new school"); `lib/db/provision.ts` only if Step 2 fails.
 - Test: `test/integration/provision.test.ts` (only if Step 2 fails)
 
-- [ ] **Step 1: Check a fresh school.** Against the local/test DB, run `pnpm provision:school --slug=fresh-check --name="Fresh" --admin-email=fresh@check.test --admin-name=Fresh --skip-email`, then open `/fresh-check`, `/fresh-check/calendar`, `/fresh-check/agenda`, and the dashboard as that admin via the magic link.
+- [ ] **Step 1: Check a fresh school.** Against the local/test DB, run `pnpm provision:school --slug=fresh-check --name="Fresh" --admin-email=fresh@check.test --admin-name=Fresh`, then open `/fresh-check`, `/fresh-check/calendar`, `/fresh-check/agenda`, and the dashboard as that admin via the magic link.
 - [ ] **Step 2: Decide.**
   - If any page errors because there is no active academic year: write the failing test `"provisionSchool creates the current academic year and sets it active"`, then make `provisionSchool` insert the Sept 1 → Jul 31 year (same computation as `db/seed.ts:106-107`) and set `schools.active_academic_year_id`, inside the existing `withSchool` block. Run it until it passes.
   - Otherwise, skip the code change.

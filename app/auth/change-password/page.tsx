@@ -7,7 +7,7 @@ export default function ChangePasswordPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">עדכון סיסמה</h1>
           <p className="text-sm text-muted-foreground">
-            זוהי הפעם הראשונה שאתם נכנסים. יש לבחור סיסמה חדשה כדי להמשיך.
+            בחרו סיסמה חדשה כדי להמשיך.
           </p>
         </div>
         <ChangePasswordForm />

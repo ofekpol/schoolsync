@@ -78,11 +78,11 @@ test("MULTI: /schedule without a link lists no schools", async ({ page }) => {
 });
 
 test("MULTI: slugs open no public view or API", async ({ page, request }) => {
-  // The viewer's loading.tsx streams first, so a slug page renders Next's
-  // not-found UI under HTTP 200; assert on what the visitor sees instead.
+  // The viewer's loading.tsx streams first, so a slug page renders the
+  // link-required screen under HTTP 200; assert on what the visitor sees instead.
   for (const path of ["/demo-school", "/second-school/agenda", "/second-school/calendar"]) {
     await page.goto(path);
-    await expect(page.getByText("This page could not be found.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "נדרש קישור של בית הספר" })).toBeVisible();
     await expect(page.getByText(SECOND_EVENT)).toHaveCount(0);
   }
   expect((await request.get("/api/v1/public/second-school/events")).status()).toBe(404);

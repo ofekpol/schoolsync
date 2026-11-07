@@ -1,0 +1,55 @@
+name: Seed demo events
+
+# Manual only. Replaces every event of a *demo* school with the realistic
+# 2026–2027 year from db/demo-events.ts. scripts/seed-demo-events.ts refuses
+# any slug that isn't a demo school, so a real school can't be touched.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Database"
+        type: choice
+        options: [production, staging]
+        default: production
+      slug:
+        description: "Demo school slug (provision it first on /platform/schools)"
+        type: choice
+        options: [edusolutions-demo, demo-school]
+        default: edusolutions-demo
+
+concurrency:
+  group: seed-demo-events
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    name: Seed ${{ inputs.slug }} on ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout staging
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: staging
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 9.12.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Seed demo events
+        env:
+          DATABASE_URL: ${{ inputs.target == 'production' && secrets.PROD_DATABASE_URL || secrets.STAGING_DATABASE_URL }}
+        run: pnpm seed:demo-events "${{ inputs.slug }}"

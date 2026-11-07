@@ -11,11 +11,17 @@ describe("shouldBypassAuthRefresh", () => {
     expect(shouldBypassAuthRefresh("/dashboard")).toBe(false);
     expect(shouldBypassAuthRefresh("/platform")).toBe(false);
     expect(shouldBypassAuthRefresh("/platform/schools")).toBe(false);
+    expect(shouldBypassAuthRefresh("/support")).toBe(false);
   });
 
   it("bypasses middleware auth refresh for the read-only public schedule", () => {
     expect(shouldBypassAuthRefresh("/schedule")).toBe(true);
     expect(shouldBypassAuthRefresh("/schedule/")).toBe(true);
     expect(shouldBypassAuthRefresh("/schedule/anything")).toBe(false);
+  });
+
+  it("bypasses middleware auth refresh for the legal pages", () => {
+    expect(shouldBypassAuthRefresh("/accessibility")).toBe(true);
+    expect(shouldBypassAuthRefresh("/privacy")).toBe(true);
   });
 });

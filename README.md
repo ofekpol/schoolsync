@@ -1,6 +1,6 @@
 # School Gantt Chart System
 
-Multi-tenant school event calendar. Staff editors submit events through a 7-step wizard → admin approves → events appear on four public views (Gantt, agenda, printable calendar, iCal). Each school is isolated via Postgres RLS. Hebrew RTL by default, English toggle available.
+Multi-tenant school event calendar. Multi-tenant school event calendar, the first product of EduSolutions ([site](https://edusolutions-site.vercel.app/)). Staff editors create and publish events directly (no approval queue) → events appear on the public views (Gantt, agenda, printable calendar, iCal). Guests open a school through its secret link. Each school is isolated via Postgres RLS. Hebrew RTL by default, English toggle available.
 
 ## Quickstart
 
@@ -12,7 +12,7 @@ pnpm seed                        # demo school + admin + 6 grade editors
 pnpm dev                         # http://localhost:3000
 ```
 
-Then sign in at `/login` with `admin@demo-school.test / ChangeMe123!` (created by the seed).
+Then sign in at `/auth/login` with `admin@demo-school.test / ChangeMe123!` (created by the seed).
 
 ## Daily commands
 
@@ -23,57 +23,41 @@ pnpm lint                # ESLint
 pnpm test                # Vitest unit + integration
 pnpm test:unit           # unit tests only (no DB needed)
 pnpm test:integration    # integration tests (TEST_DATABASE_URL required)
-pnpm playwright          # Playwright e2e (chromium)
+pnpm playwright          # Playwright e2e (chromium); PLAYWRIGHT_BASE_URL targets a deployment
+pnpm provision:school    # create a school + first admin
 pnpm build               # production build
 pnpm seed:perf           # populate 1 000 events for perf benchmarks
 ```
 
 ## Stack
 
-Next.js 15 (App Router) · React 19 · TypeScript 5 strict · Tailwind CSS · shadcn/ui · Supabase (Postgres + Auth + RLS) · Drizzle ORM · `next-intl` · Hand-written RFC 5545 iCal serializer · Resend · Zod · Vitest · Playwright · `@axe-core/playwright`.
+Next.js 15 (App Router) · React 19 · TypeScript 5 strict · Tailwind CSS · shadcn/ui · Supabase (Postgres + Auth + RLS) · Drizzle ORM · `next-intl` · Hand-written RFC 5545 iCal serializer · Zod · Vitest · Playwright · `@axe-core/playwright`.
 
 ## Architecture
 
 ```
 app/
-  (public)/                — Unauthenticated visitor surface
-    page.tsx               — school index landing
-    [school]/page.tsx      — Gantt (Phase 5)
-    [school]/agenda/       — mobile agenda (Phase 4)
-    [school]/calendar/     — printable yearly calendar (Phase 6)
-  (staff)/                 — Authenticated editor surface
-    dashboard/             — draft + pending list, link to rejected
-    dashboard/rejected/    — rejected events with reason (Phase 3)
-    events/new/            — 7-step wizard
-    profile/               — iCal subscriptions (Phase 7)
-  (admin)/admin/           — Admin-only
-    queue/                 — pending events, approve / reject (Phase 3)
-    staff/                 — manage editors
-    event-types/           — color + glyph palette
-    year/                  — academic year
-  api/v1/                  — REST route handlers
-    events/[id]/{approve,reject,revise,submit}/
-    ical-subscriptions/{[id]/}
-    …
-  ical/[token]/route.ts    — public token-gated iCal feed (Phase 7)
+  (viewer)/[school]/       — full public viewer (Gantt, /calendar, /agenda); [school] = secret school token
+  (public)/schedule/       — read-only guest view (?school=<token>)
+  (staff)/                 — /dashboard (monthly/weekly calendar), /events/new (event form)
+  (admin)/admin/           — /staff (staff, invites, sign-ups, school links), /event-types
+  (platform)/platform/     — /schools: provision schools (platform admins)
+  api/v1/                  — REST route handlers (events, public, admin, ai, ical-subscriptions, export)
+  ical/[token]/route.ts    — token-gated iCal feed
 lib/
-  db/                      — Drizzle schema, withSchool RLS wrapper, schools/staff helpers
-  auth/                    — session, admin guard, editor scopes
-  events/                  — approval state machine, CRUD, queries, revisions
-  ical/                    — VEVENT serializer + subscription module
+  db/                      — Drizzle schema, withSchool RLS wrapper, schools/staff/invites/provision
+  auth/                    — session, admin + platform-admin guards, editor scopes
+  events/                  — publish state machine, CRUD, queries, revisions
+  ai/                      — staff chat + smart adder (Groq)
+  ical/                    — VEVENT serializer + subscriptions
   views/                   — agenda, gantt, calendar pure projections
   validations/             — Zod schemas
-  i18n/                    — locale config + setLocale server action
-i18n/request.ts            — next-intl request handler (cookie-based)
 db/
   migrations/              — one .sql file per schema change
-  seed.ts                  — demo school bootstrap (1 admin + 6 grade editors + 11 event types)
+  seed.ts                  — demo school (1 admin + 6 grade editors + counselor + 11 event types)
   seed-perf.ts             — 1 000-event perf seed
 messages/{he,en}.json      — UI strings (he primary)
-test/
-  unit/                    — pure-function tests (vitest)
-  integration/             — RLS + DB tests (vitest, real Postgres)
-  e2e/                     — Playwright incl. a11y + PRD §14 acceptance
+test/{unit,integration,e2e}/
 ```
 
 See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
@@ -85,7 +69,7 @@ See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
 | 0 | Foundation — scaffold, RTL toolchain, CI | ✅ |
 | 1 | Database, RLS, Auth — schema, withSchool, lockout | ✅ |
 | 2 | Event CRUD + 7-step wizard with draft autosave | ✅ |
-| 3 | Approval workflow + admin queue + revisions | ✅ |
+| 3 | Approval workflow + revisions (later replaced by direct publish) | ✅ |
 | 4 | Public surface: FilterBar + mobile agenda | ✅ |
 | 5 | Gantt view (Sept–Jul timeline, zoom presets) | ✅ |
 | 6 | Printable yearly calendar + monochrome fallback | ✅ |
@@ -94,7 +78,7 @@ See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
 
 ## Quality bars
 
-- **Performance** — Gantt ≤ 2 s first paint with 1 k events · iCal ≤ 500 ms · public view freshness ≤ 5 s after approval
+- **Performance** — Gantt ≤ 2 s first paint with 1 k events · iCal ≤ 500 ms · public view freshness ≤ 5 s after publish
 - **Accessibility** — WCAG 2.1 AA · axe-core "no serious/critical" across all four public views · 44 px tap targets · keyboard-only wizard · color + glyph encoding (color-blind safe)
 - **i18n** — Hebrew default, English toggle persists in `NEXT_LOCALE` cookie · all UI strings flow through `next-intl`
 - **Print** — `@media print` produces an 11-page A4 PDF · monochrome fallback (glyph + dashed border) keeps chips legible
@@ -103,7 +87,7 @@ See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
 
 ## Key constraints
 
-- All status transitions go through [lib/events/approval.ts](lib/events/approval.ts) — never set `events.status` directly
+- Publish/edit transitions go through [lib/events/approval.ts](lib/events/approval.ts) — never set `events.status` directly
 - CSS logical properties only (`start`/`end`) — never hardcode `left`/`right`
 - Parameterized SQL only — no string interpolation
 - Functions < 50 lines · files < 400 lines · no `any`
@@ -114,7 +98,7 @@ See [OPERATIONS.md](./OPERATIONS.md) for Supabase setup, migrations, seeding, de
 
 ## CI
 
-GitHub Actions runs on every PR and push to `main`:
+GitHub Actions (`.github/workflows/ci.yml`, one job "Lint, Typecheck, Test, E2E") runs on every PR and on pushes to `staging` and `main`:
 
 1. `pnpm install --frozen-lockfile`
 2. `pnpm lint`
@@ -123,4 +107,4 @@ GitHub Actions runs on every PR and push to `main`:
 5. `pnpm build`
 6. `pnpm playwright` (chromium, with axe a11y gates)
 
-`main` is protected — no direct pushes, CI must be green, one approving review required.
+Flow: feature branch → PR into `staging` → verify on staging → PR `staging` → `main`. Never push directly to `main`; merge only when every check is green. Open work: [docs/ROADMAP.md](docs/ROADMAP.md).

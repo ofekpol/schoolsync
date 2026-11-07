@@ -1,4 +1,6 @@
 const PUBLIC_PREFIXES = [
+  "/accessibility",
+  "/privacy",
   "/auth/login",
   "/auth/callback",
   "/auth/confirm",
@@ -6,11 +8,13 @@ const PUBLIC_PREFIXES = [
   "/auth/pending",
   "/auth/deactivated",
   "/auth/change-password",
+  "/auth/forgot-password",
   "/invite/",
   "/ical/",
   "/api/v1/auth/signin",
   "/api/v1/auth/register",
   "/api/v1/auth/login",
+  "/api/v1/auth/forgot-password",
   "/api/v1/public/",
   "/api/v1/export/",
   "/api/v1/ical-subscriptions/personal",
@@ -18,7 +22,7 @@ const PUBLIC_PREFIXES = [
 
 const RESERVED_PREFIXES = [
   "/auth", "/invite", "/ical", "/api", "/admin",
-  "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform",
+  "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform", "/support",
 ];
 
 export function shouldBypassAuthRefresh(pathname: string): boolean {

@@ -2,7 +2,7 @@
 
 How to rotate sensitive credentials without downtime.
 
-Applies to: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DATABASE_URL` (Supabase DB password).
+Applies to: `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` (Supabase DB password).
 
 ---
 
@@ -47,28 +47,6 @@ Applies to: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DATABASE_URL` (Supab
    - At this point the old key is dead — there is no rollback
 
 6. **Update local `.env.local`** for every developer who has a copy
-
----
-
-## Rotate `RESEND_API_KEY`
-
-1. **Create new key**
-   - Resend Dashboard → API Keys → "Create API Key" → scope: "Sending access" only
-   - Copy new key
-
-2. **Push to Vercel**
-   ```bash
-   printf '%s' "<new-key>" | npx vercel env add RESEND_API_KEY production --sensitive --force
-   ```
-
-3. **Redeploy**
-   ```bash
-   npx vercel --prod --yes
-   ```
-
-4. **Verify** — trigger a real invite send from `/admin/staff` → check Resend Dashboard → Logs for `delivered`
-
-5. **Delete old key** in Resend Dashboard → API Keys → trash icon
 
 ---
 

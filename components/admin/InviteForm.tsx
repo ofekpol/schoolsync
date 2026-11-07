@@ -21,14 +21,12 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
   const [role, setRole] = useState<string>("editor");
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
   async function create(form: FormData) {
     setError(null);
     setUrl(null);
-    setEmailSent(false);
     setCopied(false);
     const selectedRole = String(form.get("role") ?? "editor");
     const gradeScopes =
@@ -41,14 +39,12 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
             .filter((et) => form.get(`invite-type-${et.key}`) === "on")
             .map((et) => et.key)
         : [];
-    const emailRaw = String(form.get("email") ?? "").trim();
     const body: Record<string, unknown> = {
       role: selectedRole,
       gradeScopes,
       eventTypeScopes,
       multiUse: form.get("multiUse") === "on",
     };
-    if (emailRaw) body.email = emailRaw;
     const res = await fetch("/api/v1/admin/staff/invites", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -58,9 +54,8 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
       setError(t("createError"));
       return;
     }
-    const data = (await res.json()) as { url: string; emailSent: boolean };
+    const data = (await res.json()) as { url: string };
     setUrl(data.url);
-    setEmailSent(data.emailSent);
     setFormKey((k) => k + 1);
     startRouteProgress(2500);
     router.refresh();
@@ -91,13 +86,6 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
           <option value="editor">{t("roleEditor")}</option>
           <option value="admin">{t("roleAdmin")}</option>
         </select>
-        <input
-          name="email"
-          type="email"
-          placeholder={t("email")}
-          className="w-56 rounded border px-2 py-1"
-          aria-label={t("email")}
-        />
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input type="checkbox" name="multiUse" />
           {t("multiUse")}
@@ -128,7 +116,6 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
         <div className="flex flex-wrap items-center gap-2">
           <p className="break-all text-sm text-green-700">
             {t("inviteCreated")}: {url}
-            {emailSent && <span className="ms-2">· {t("emailSent")}</span>}
           </p>
           <Button
             type="button"

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 
 interface ProvisionResponse {
   slug: string;
-  emailSent: boolean;
-  magicLinkUrl: string | null;
+  magicLinkUrl: string;
 }
 
 const TEXT_FIELDS = ["slug", "name", "adminEmail", "adminName"] as const;
@@ -71,13 +70,9 @@ export function ProvisionSchoolForm() {
       {created && (
         <div role="status" className="space-y-1 text-sm text-green-700">
           <p>{t("success", { slug: created.slug })}</p>
-          {created.emailSent ? (
-            <p>{t("emailSent")}</p>
-          ) : (
-            <p className="break-all">
-              {t("emailNotSent")} <span dir="ltr">{created.magicLinkUrl}</span>
-            </p>
-          )}
+          <p className="break-all">
+            {t("magicLink")} <span dir="ltr">{created.magicLinkUrl}</span>
+          </p>
         </div>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}

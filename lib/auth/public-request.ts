@@ -16,6 +16,7 @@ const PUBLIC_PREFIXES = [
   "/api/v1/auth/login",
   "/api/v1/auth/forgot-password",
   "/api/v1/public/",
+  "/api/health",
   "/api/v1/export/",
   "/api/v1/ical-subscriptions/personal",
 ];

@@ -18,6 +18,7 @@ Staff editors create events in a single-page event form (`components/wizard/Wiza
 - Drizzle ORM + `pg` (service-role client only inside `lib/db/`)
 - `next-intl` (Hebrew + English, `he` default)
 - Hand-written RFC 5545 iCal serializer (`lib/ical/serializer.ts`)
+- Fonts self-hosted in `app/fonts/` via `next/font/local` (never `next/font/google`: builds must not fetch fonts)
 - Groq via `ai` SDK (staff AI chat + smart adder; hidden when `GROQ_API_KEY` is unset)
 - Zod (all API boundary validation)
 - Vitest (unit + integration) + Playwright (e2e)
@@ -47,6 +48,7 @@ app/
   (staff)/                   — /dashboard (monthly/weekly calendar), /events/new (event form)
   (admin)/admin/             — /staff (staff, invites, pending sign-ups, school links, grade colors), /event-types
   (platform)/platform/schools — Platform admins: provision schools, list every school's links
+  api/health/                — Uptime probe (app + `select 1`), hit by `.github/workflows/uptime.yml`
   api/v1/                    — REST route handlers (public/, events/, admin/, ai/, auth/, ical-subscriptions/, export/ics, platform/)
   ical/[token]/route.ts      — text/calendar feed (unauthenticated, token-gated)
   auth/                      — /login, /register, /confirm, /callback, /pending, /deactivated, /change-password
@@ -206,7 +208,7 @@ TEST_DATABASE_URL
 NEXT_PUBLIC_APP_URL             # unset on Preview: links use the request origin
 GROQ_API_KEY                    # staff AI features; unset = AI hidden (unset on Production today)
 AI_MODEL                        # optional Groq model override
-GITHUB_SUPPORT_REPO             # private repo for staff Help/bug reports (e.g. ofekpol/schoolsync-support)
+GITHUB_SUPPORT_REPO             # private repo for staff Help/bug reports and server-error issues (instrumentation.ts)
 GITHUB_SUPPORT_TOKEN            # fine-grained token, Issues r/w on that repo only; unset = Help hidden
 TEST_LOGIN_ENABLED              # e2e-only test login route; never on Production
 PLAYWRIGHT_BASE_URL             # run e2e against a deployment

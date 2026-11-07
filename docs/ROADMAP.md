@@ -8,7 +8,7 @@ Today the company site's "כניסה למערכת" button goes to `NEXT_PUBLIC_G
 
 - [ ] Decide discovery: public school directory (opt-in per school), search box, or a friendly per-school page (e.g. `/s/<slug>`) that still relies on the secret token.
 - [ ] Build the entry page in the app; point the site's button (or a second "parents and students" button) at it.
-- [ ] Replace the bare "link required" screen with a short explanation of the app.
+- [x] Replace the bare "link required" screen with a short explanation of the app (#58).
 
 ## 2. Landing site go-live (EduSolutions repo)
 
@@ -23,11 +23,11 @@ Today the company site's "כניסה למערכת" button goes to `NEXT_PUBLIC_G
 
 ## 3. App as a sold product
 
-- [ ] Accessibility statement and privacy policy inside the app (Israeli law; the site has them, the app doesn't).
+- [x] Accessibility statement and privacy policy inside the app (#59). Still to do: fill the `[להשלמה]` placeholders in `lib/legal.ts`.
 - [ ] Privacy / data-processing agreement for schools (Privacy Protection Law, Ministry of Education vendor requirements) — confirm with someone qualified.
-- [ ] Demo school with realistic data for sales meetings.
-- [ ] Onboarding: provisioning (`/platform/schools`), first admin invite, Excel calendar import (AI parsing could help).
-- [ ] Support channel and an "I found a bug" path for staff.
+- [ ] Demo school with realistic data for sales meetings. Code is done (#61, `seed-demo-events.yml`); still to do: provision `edusolutions-demo` on prod and run the workflow (OPERATIONS.md).
+- [x] Onboarding: provisioning (`/platform/schools`), first admin invite, CSV calendar import from the dashboard's "ייבוא לוח" dialog (#62, #69). Not yet tested by hand: creating a school on `/platform/schools` (staging has no `platform_admins` row).
+- [x] Support channel and an "I found a bug" path for staff (#63). Still to do: set `GITHUB_SUPPORT_REPO` / `GITHUB_SUPPORT_TOKEN` in Vercel (token scoped to `schoolsync-support` only).
 
 ## 4. Production operations
 
@@ -38,11 +38,13 @@ Today the company site's "כניסה למערכת" button goes to `NEXT_PUBLIC_G
 - [ ] Confirm the 2 deactivated prod staff are banned and platform admins exist on prod (SQL in OPERATIONS.md §12).
 - [ ] Revoke the Vercel automation bypass secret if still active (it was exposed in a transcript).
 - [ ] Check Vercel Git settings — a push to `main` once created no deployment.
-- [ ] Backups/restore drill, error monitoring, uptime alerts.
+- [x] Backups/restore drill, error monitoring, uptime alerts (#65; OPERATIONS.md §8). Still to do: backup secrets on `schoolsync-support`; error alerts need the support env vars above.
 - [ ] Before enabling AI on prod: fix the AI quota race, then add `GROQ_API_KEY`.
 - [ ] Manual production checks never done: Google sign-in, real admin sign-in, `/platform/schools`, print and mobile layouts, personal iCal feeds.
 
 ## 5. Code health
+
+- [x] Builds no longer fetch Google Fonts; fonts are self-hosted in `app/fonts/` via `next/font/local` (#66).
 
 - [ ] `lib/auth/scopes.ts` and `softDelete` are only used by tests; either wire routes through `assertEditorScope` or delete them and test the routes' inline `scope_violation` checks.
 - [ ] Stale local branch `fix/calendar-outside-day-contrast` (`b89985e`, early version of the monthly-default change) — don't merge; delete.

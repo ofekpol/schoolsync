@@ -190,14 +190,14 @@ All three run on GitHub. **`ofekpol/schoolsync` is public** (Actions logs and ar
 | What | Where | How | Alert |
 |------|-------|-----|-------|
 | **Backup + restore drill** | `schoolsync-support`: `.github/workflows/backup-prod-db.yml` + `scripts/backup-prod-db.sh` | Nightly 23:00 UTC. Dumps prod `public` + `auth.users`/`auth.identities`, restores `public` into a throwaway Postgres 17, checks every table came back and `schools`/`staff_users`/`events`/`event_types` are non-empty, then uploads the dumps **gpg-encrypted** as a 30-day artifact. | A failed run emails whoever last edited the workflow (GitHub's default for scheduled runs). |
-| **Uptime** | `schoolsync`: `.github/workflows/uptime.yml` (runs from `main`, so it starts after the next promotion) | Every 15 min: `GET /api/health` (app + `select 1`) and `/auth/login` on `school-gantt.vercel.app`, three tries 20 s apart. Touches no secrets or data. | Opens one public `uptime` issue while down (GitHub emails repo watchers) and closes it on recovery. |
+| **Uptime** | `schoolsync`: `.github/workflows/uptime.yml` (runs from `main`; live since 2026-11-07) | Every 15 min: `GET /api/health` (app + `select 1`) and `/auth/login` on `school-gantt.vercel.app`, three tries 20 s apart. Touches no secrets or data. | Opens one public `uptime` issue while down (GitHub emails repo watchers) and closes it on recovery. |
 | **Server errors** | App → `schoolsync-support` issues | `instrumentation.ts` `onRequestError` → `lib/support/error-report.ts` files an issue labelled `error` (same env as support reports, §9). One issue per fingerprint (route + message) while it's open; at most 10 new ones per server instance; school tokens and query strings are redacted. | GitHub emails the support repo's watchers. |
 
 One-time setup:
 
 1. Backup secrets on the private repo (never on `ofekpol/schoolsync`): `gh secret set PROD_DATABASE_URL --repo ofekpol/schoolsync-support` (session pooler URL), and `openssl rand -base64 32` → save it in your password manager → `gh secret set BACKUP_PASSPHRASE --repo ofekpol/schoolsync-support`. Without the passphrase the job fails on purpose rather than upload plain dumps. **Losing it makes every backup unreadable.**
 2. Run the backup once by hand: `gh workflow run backup-prod-db.yml --repo ofekpol/schoolsync-support`.
-3. After the first promotion to `main`, run `gh workflow run uptime.yml` once. GitHub disables scheduled workflows in a **public** repo after 60 days without activity; re-enable uptime in the Actions tab if that happens.
+3. Uptime is live (first run 2026-11-07). GitHub disables scheduled workflows in a **public** repo after 60 days without activity; re-enable uptime in the Actions tab if that happens.
 4. Client-side (browser) errors are not reported; only server errors are.
 
 **Restoring from a backup:** download the artifact (`gh run download <run-id> --repo ofekpol/schoolsync-support`), then `gpg --decrypt public.dump.gpg > public.dump` (same for `auth.dump`), and restore with the steps in `scripts/refresh-staging-db.sh` (`restore_staging`), pointed at the target project. Rehearse on staging first.

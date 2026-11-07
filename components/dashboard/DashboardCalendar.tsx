@@ -24,6 +24,7 @@ import {
 import type { GradeColorMap } from "@/lib/grade-colors";
 import { GradeSelector } from "./GradeSelector";
 import { GradeColorLegend } from "@/components/GradeColorLegend";
+import { TOOLBAR_BUTTON_CLASS } from "./toolbar-styles";
 
 interface SerializedEvent {
   id: string;
@@ -61,6 +62,8 @@ interface Props {
   initialEventId?: string;
   /** Extra creation actions (e.g. the smart adder) shown beside "new event". */
   createActions?: ReactNode;
+  /** Extra actions shown beside the export button (e.g. admin calendar import). */
+  exportActions?: ReactNode;
 }
 
 /**
@@ -82,6 +85,7 @@ export function DashboardCalendar({
   canCreateEvents = true,
   initialEventId,
   createActions,
+  exportActions,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -281,8 +285,9 @@ export function DashboardCalendar({
         <ExportToGoogleCalendarButton
           labelKey="shortButton"
           loadPrintCalendar={loadPrintCalendar}
-          buttonClassName="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--sg-hairline)] bg-[var(--sg-surface)] px-3.5 text-[13px] font-medium text-[var(--sg-ink-mute)] transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          buttonClassName={TOOLBAR_BUTTON_CLASS}
         />
+        {exportActions}
       </div>
 
       {showGradeFilter && (

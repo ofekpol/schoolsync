@@ -21,7 +21,7 @@ describe("GET /api/v1/public/[school]/events/signature", () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=5, stale-while-revalidate=5");
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=0, s-maxage=5");
     await expect(res.json()).resolves.toEqual({
       signature: "12:42:2031-02-03T07:00:00.000Z",
     });

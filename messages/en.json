@@ -706,5 +706,20 @@
       "back": "Back to sign in",
       "link": "Forgot your password?"
     }
+  },
+  "demo": {
+    "pageTitle": "Try the school Gantt",
+    "intro": "Get your own sample school with a full year of events, and try everything a principal sees.",
+    "introPrivate": "The demo is private to you and is deleted automatically after 24 hours. No sign-up needed.",
+    "start": "Start the demo",
+    "continue": "Continue your demo",
+    "startOver": "Start over",
+    "expired": "The demo has ended — start a new one",
+    "busy": "We're busy right now, please try again later",
+    "unavailable": "The demo is unavailable right now. Please try again in a few minutes.",
+    "contact": "Contact us",
+    "backToSite": "Back to the site",
+    "banner": "This is a demo environment — its data will be deleted at {time}",
+    "staffDisabled": "In the demo you can't add staff, send invites or approve sign-up requests."
   }
 }

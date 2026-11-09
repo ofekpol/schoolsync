@@ -8,6 +8,7 @@ import { buildChatTools } from "@/lib/ai/chat/tools";
 import { buildChatSystemPrompt } from "@/lib/ai/chat/prompt";
 import { getSchoolById } from "@/lib/db/schools";
 import { jerusalemDateString } from "@/lib/datetime";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 const ChatRequestSchema = z.object({
   messages: z
@@ -24,6 +25,7 @@ function error(code: string, status: number, extra: Record<string, unknown> = {}
 /** Staff calendar assistant. Read-only, school-bound tools; answers stream as plain text. */
 export async function POST(request: NextRequest): Promise<Response> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return error("unauthorized", 401);
   if (user.status !== "active" || user.mustChangePassword) return error("forbidden", 403);
   if (!isAiEnabled()) return error("ai_disabled", 503);

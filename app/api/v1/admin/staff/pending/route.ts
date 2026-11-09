@@ -7,9 +7,11 @@ import {
   rejectPendingRegistration,
 } from "@/lib/db/pending";
 import { ApprovePendingSchema } from "@/lib/validations/admin";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   try {
     assertAdmin(user);
   } catch (e) {
@@ -23,6 +25,7 @@ export async function GET(): Promise<NextResponse> {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   try {
     assertAdmin(user);
   } catch (e) {

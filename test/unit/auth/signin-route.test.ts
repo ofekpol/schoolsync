@@ -42,6 +42,11 @@ vi.mock("@/lib/db/schools", () => ({
 
 import { POST } from "@/app/api/v1/auth/signin/route";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, delete: () => undefined }),
+}));
+
 describe("POST /api/v1/auth/signin", () => {
   beforeEach(() => {
     signInMock.mockReset();

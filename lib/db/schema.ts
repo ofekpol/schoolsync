@@ -55,6 +55,15 @@ export const schools = pgTable("schools", {
     .default(sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`),
   /** Nullable FK to academic_years; set after year is inserted to avoid circular. */
   activeAcademicYearId: uuid("active_academic_year_id"),
+  /** Set only on public demo schools (migration 0019); a school is a demo iff this is non-null. */
+  demoExpiresAt: timestamp("demo_expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+/** Demo creation ledger for abuse limits (migration 0019). Not tenant data; service pool only. */
+export const demoCreations = pgTable("demo_creations", {
+  id: uuid().defaultRandom().primaryKey(),
+  ipHash: text("ip_hash").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

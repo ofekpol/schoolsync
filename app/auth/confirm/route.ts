@@ -1,11 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { clearDemoCookie } from "@/lib/auth/demo-guard";
 import { createStaffUserFromInvite, getStaffUserByAuthId } from "@/lib/db/staff";
 import { createPendingRegistration, getPendingRegistrationByAuthId } from "@/lib/db/pending";
 import { resolveSchoolIdFromParam } from "@/lib/db/schools";
 import { getInviteByToken, markInviteUsed, updateInviteUsedBy } from "@/lib/db/invites";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  await clearDemoCookie();
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");

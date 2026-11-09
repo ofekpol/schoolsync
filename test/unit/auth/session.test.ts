@@ -16,6 +16,11 @@ vi.mock("@/lib/db/staff", () => ({
 
 import { getSession, getStaffUser } from "@/lib/auth/session";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, delete: () => undefined }),
+}));
+
 describe("AUTH-04: getSession()", () => {
   beforeEach(() => {
     getUserMock.mockReset();

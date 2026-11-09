@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { demoDisabledResponse, hasDemoSession } from "@/lib/auth/demo-guard";
 import { SchoolAccessTokenSchema } from "@/lib/validations/school";
 
 const RegisterSchema = z.object({
@@ -13,6 +14,8 @@ const RegisterSchema = z.object({
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Account creation and reset emails are outbound actions: off inside a demo session.
+  if (await hasDemoSession()) return demoDisabledResponse();
   const body = await request.json().catch(() => null);
   const parsed = RegisterSchema.safeParse(body);
   if (!parsed.success) {

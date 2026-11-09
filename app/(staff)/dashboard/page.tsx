@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { isDemoUser } from "@/lib/auth/demo-guard";
 import {
   getEditorAllowedGrades,
   getEditorDashboardEvents,
@@ -114,7 +115,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           canCreateEvents={user.role !== "viewer"}
           initialEventId={typeof sp.event === "string" ? sp.event : undefined}
           createActions={
-            isAiEnabled() ? (
+            isAiEnabled() && !isDemoUser(user) ? (
               <SmartAdderButton eventTypes={eventTypeList} allowedGrades={allowedGrades} />
             ) : undefined
           }

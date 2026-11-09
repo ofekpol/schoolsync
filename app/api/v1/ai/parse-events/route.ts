@@ -11,6 +11,7 @@ import { CandidateEventSchema, type CandidateEvent, type ExtractedEvent } from "
 import { getEditorAllowedGrades, isEventTypeAllowed, listEventTypes } from "@/lib/events/queries";
 import { jerusalemDateString } from "@/lib/datetime";
 import type { StaffUserRecord } from "@/lib/db/staff";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 const ParseEventsRequestSchema = z.object({ text: z.string().trim().min(1).max(3000) });
 const ParseEventsResponseSchema = z.object({ candidates: z.array(CandidateEventSchema) });
@@ -52,6 +53,7 @@ async function toCandidates(schoolId: string, extracted: ExtractedEvent[], ctx: 
 /** Smart event adder: free Hebrew text → reviewable candidate events. Never writes events. */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return error("unauthorized", 401);
   if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
     return error("forbidden", 403);

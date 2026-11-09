@@ -30,9 +30,11 @@ interface EventTypeRow {
 interface Props {
   initialStaff: StaffRow[];
   eventTypes: EventTypeRow[];
+  /** Demo schools: list only, no edit/deactivate controls. */
+  readOnly?: boolean;
 }
 
-export function StaffTable({ initialStaff, eventTypes }: Props) {
+export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props) {
   const t = useTranslations("admin.staff");
   const tc = useTranslations("common");
   const router = useRouter();
@@ -193,6 +195,7 @@ export function StaffTable({ initialStaff, eventTypes }: Props) {
           setEditingId(id);
         }}
         onDeactivate={handleDeactivate}
+        readOnly={readOnly}
       />
 
       <div className="hidden max-h-[620px] overflow-auto md:block">
@@ -203,7 +206,7 @@ export function StaffTable({ initialStaff, eventTypes }: Props) {
               <th className="py-3 pe-4 text-start">{t("role")}</th>
               <th className="py-3 pe-4 text-start">{t("status")}</th>
               <th className="py-3 pe-4 text-start">{t("scopes")}</th>
-              <th className="py-3 pe-4 text-start">{t("actions")}</th>
+              {!readOnly && <th className="py-3 pe-4 text-start">{t("actions")}</th>}
             </tr>
           </thead>
           <tbody>
@@ -227,6 +230,7 @@ export function StaffTable({ initialStaff, eventTypes }: Props) {
                   />
                 </td>
                 <td className="max-w-[320px] py-4 pe-4 text-neutral-700">{scopeLabel(s)}</td>
+                {!readOnly && (
                 <td className="py-4 pe-4">
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -261,6 +265,7 @@ export function StaffTable({ initialStaff, eventTypes }: Props) {
                     )}
                   </div>
                 </td>
+                )}
               </tr>
             ))}
           </tbody>

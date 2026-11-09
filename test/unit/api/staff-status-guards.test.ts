@@ -47,7 +47,7 @@ function jsonRequest(): NextRequest {
   return new NextRequest("http://localhost/x", { method: "POST", body: "{}" });
 }
 
-const eventParams = { params: Promise.resolve({ id: "e1" }) };
+const eventParams = { params: Promise.resolve({ id: "00000000-0000-4000-8000-0000000000e1" }) };
 
 describe("routes refuse staff who are not active", () => {
   beforeEach(() => {
@@ -67,10 +67,47 @@ describe("routes refuse staff who are not active", () => {
     expect(dataMock).not.toHaveBeenCalled();
   });
 
+  it("answers 404 for a malformed event id without querying", async () => {
+    getStaffUserMock.mockResolvedValue({ ...DEACTIVATED_ADMIN, status: "active" });
+    const res = await getEvent(jsonRequest(), { params: Promise.resolve({ id: "not-a-uuid" }) });
+    expect(res.status).toBe(404);
+    expect(getEventForEditorMock).not.toHaveBeenCalled();
+  });
+
   it("still serves an active admin", async () => {
     getStaffUserMock.mockResolvedValue({ ...DEACTIVATED_ADMIN, status: "active" });
     getEventForEditorMock.mockResolvedValue({ id: "e1" });
     const res = await getEvent(jsonRequest(), eventParams);
     expect(res.status).toBe(200);
+  });
+});
+
+describe("demo personal feed reuse", () => {
+  const DEMO_ADMIN = {
+    ...DEACTIVATED_ADMIN,
+    status: "active",
+    demoExpiresAt: new Date(Date.now() + 3_600_000),
+  };
+  const live = (id: string, filterGrades: number[] = [], filterEventTypes: string[] = []) => ({
+    id, token: `token-${id}`, filterGrades, filterEventTypes, createdAt: new Date(), revokedAt: null,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getStaffUserMock.mockResolvedValue(DEMO_ADMIN);
+    createPersonalMock.mockResolvedValue({ id: "new", token: "token-new" });
+  });
+
+  it("reuses the live unfiltered feed, never a newer filtered one", async () => {
+    listSubscriptionsMock.mockResolvedValue([live("filtered", [10]), live("complete")]);
+    const res = await createPersonalFeed(jsonRequest());
+    await expect(res.json()).resolves.toMatchObject({ id: "complete" });
+    expect(createPersonalMock).not.toHaveBeenCalled();
+  });
+
+  it("creates a complete feed when only filtered ones exist", async () => {
+    listSubscriptionsMock.mockResolvedValue([live("filtered", [], ["type-1"])]);
+    const res = await createPersonalFeed(jsonRequest());
+    await expect(res.json()).resolves.toMatchObject({ id: "new" });
   });
 });

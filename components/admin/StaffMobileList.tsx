@@ -33,6 +33,7 @@ export function StaffMobileList({
   busyId,
   onEdit,
   onDeactivate,
+  readOnly = false,
 }: {
   staff: StaffRow[];
   labels: Labels;
@@ -41,6 +42,7 @@ export function StaffMobileList({
   busyId: string | null;
   onEdit: (id: string) => void;
   onDeactivate: (id: string, deactivated: boolean) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div aria-label={labels.list} className="divide-y divide-neutral-100 p-3 md:hidden">
@@ -66,6 +68,7 @@ export function StaffMobileList({
               <dd className="mt-1 text-neutral-700">{scopeLabel(s)}</dd>
             </div>
           </dl>
+          {!readOnly && (
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Button
               variant="outline"
@@ -83,6 +86,7 @@ export function StaffMobileList({
               onDeactivate={onDeactivate}
             />
           </div>
+          )}
         </article>
       ))}
     </div>

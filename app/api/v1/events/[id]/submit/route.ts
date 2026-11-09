@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
 import { publishEvent } from "@/lib/events/approval";
@@ -9,10 +10,11 @@ import {
   isEventTypeAllowed,
 } from "@/lib/events/queries";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(
+async function handlePOST(
   request: NextRequest,
   { params }: RouteContext,
 ): Promise<NextResponse> {
@@ -20,6 +22,7 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
   try {
     if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -96,3 +99,6 @@ export async function POST(
     throw e;
   }
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

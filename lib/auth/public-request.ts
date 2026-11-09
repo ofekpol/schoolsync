@@ -21,9 +21,11 @@ const PUBLIC_PREFIXES = [
   "/api/v1/ical-subscriptions/personal",
 ];
 
+const DEMO_PUBLIC_PATHS = new Set(["/demo", "/api/v1/demo", "/api/cron/demo-cleanup"]);
+
 const RESERVED_PREFIXES = [
   "/auth", "/invite", "/ical", "/api", "/admin",
-  "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform", "/support",
+  "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform", "/support", "/demo",
 ];
 
 export function shouldBypassAuthRefresh(pathname: string): boolean {
@@ -34,6 +36,9 @@ export function shouldBypassAuthRefresh(pathname: string): boolean {
 
   // Exact match for read-only public schedule
   if (pathname === "/schedule" || pathname === "/schedule/") return true;
+
+  // Public demo entry + creation (reachable with no cookie or an expired one) and its cleanup cron.
+  if (DEMO_PUBLIC_PATHS.has(pathname)) return true;
 
   // Prefix match for auth and API public routes
   if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return true;

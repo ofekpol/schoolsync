@@ -4,6 +4,7 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { createStaffUserDirect, listStaffUsers } from "@/lib/db/staff";
 import { generateTempPassword } from "@/lib/auth/password";
 import { StaffUserCreateSchema } from "@/lib/validations/admin";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
@@ -19,6 +20,7 @@ export async function GET(): Promise<NextResponse> {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   try {
     assertAdmin(user);
   } catch (e) {

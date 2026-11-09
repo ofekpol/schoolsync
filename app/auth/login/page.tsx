@@ -23,7 +23,9 @@ export default async function LoginPage({
   const { next, token, confirmed, error, school: schoolParam } = await searchParams;
   const user = await getStaffUser();
   if (user) redirect(getPostLoginRedirect(user));
-  const school = await resolveSchoolFromParam(schoolParam);
+  const found = await resolveSchoolFromParam(schoolParam);
+  // Demo schools take no sign-ups (resolveSchoolIdFromParam refuses them too).
+  const school = found?.demoExpiresAt === null ? found : null;
   const t = await getTranslations("auth.forgotPassword");
 
   return (

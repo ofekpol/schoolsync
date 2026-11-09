@@ -90,4 +90,15 @@ describe.skipIf(skipIfNoTestDb)("AI-QUOTA: consumeAiQuota", () => {
     expect(rows[0].targetTable).toBe("ai_requests");
     expect(rows[0].payload).toEqual({ chars: 42 });
   });
+
+  it("lets only one of several simultaneous requests take the last slot", async () => {
+    if (shouldSkip()) return;
+    await seedRows(testSchoolA, staffId, "ai_parse_events", AI_DAILY_LIMITS.ai_parse_events - 1, NOW);
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        consumeAiQuota(testSchoolA, staffId, "ai_parse_events", { chars: 1 }, NOW),
+      ),
+    );
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+  });
 });

@@ -7,6 +7,7 @@ import { GuestViewButton } from "@/components/auth/GuestViewButton";
 import { redirect } from "next/navigation";
 import { resolveSchoolFromParam } from "@/lib/db/schools";
 import { authLinkQuery } from "@/lib/auth/redirects";
+import { getTranslations } from "next-intl/server";
 
 export default async function LoginPage({
   searchParams,
@@ -23,6 +24,7 @@ export default async function LoginPage({
   const user = await getStaffUser();
   if (user) redirect(getPostLoginRedirect(user));
   const school = await resolveSchoolFromParam(schoolParam);
+  const t = await getTranslations("auth.forgotPassword");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -46,6 +48,11 @@ export default async function LoginPage({
 
         <div className="space-y-4">
           <EmailPasswordSignInForm school={school?.accessToken} />
+          <p className="text-center text-sm">
+            <Link href="/auth/forgot-password" className="text-muted-foreground underline hover:text-foreground">
+              {t("link")}
+            </Link>
+          </p>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

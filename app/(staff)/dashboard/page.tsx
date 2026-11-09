@@ -14,6 +14,9 @@ import { buildCalendarRangeFromEvents } from "@/lib/views/date-range";
 import { getDashboardGradeSelection, visibleWeeklyGrades } from "@/lib/dashboard/grade-filter";
 import { getGradeColors } from "@/lib/db/grade-colors";
 import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar";
+import { TOOLBAR_BUTTON_CLASS } from "@/components/dashboard/toolbar-styles";
+import { CalendarImportButton } from "@/components/admin/CalendarImportButton";
+import { importTemplateCsv } from "@/lib/import/calendar-import";
 import { SmartAdderButton } from "@/components/ai/SmartAdderButton";
 import { isAiEnabled } from "@/lib/ai/model";
 
@@ -113,6 +116,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           createActions={
             isAiEnabled() ? (
               <SmartAdderButton eventTypes={eventTypeList} allowedGrades={allowedGrades} />
+            ) : undefined
+          }
+          exportActions={
+            user.role === "admin" ? (
+              <CalendarImportButton
+                template={importTemplateCsv()}
+                typeLabels={Object.fromEntries(eventTypeList.map((type) => [type.id, type.labelHe]))}
+                buttonClassName={TOOLBAR_BUTTON_CLASS}
+              />
             ) : undefined
           }
         />

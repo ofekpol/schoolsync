@@ -41,52 +41,75 @@ export async function createPublishedEvent(
   schoolId: string,
   createdBy: string,
   input: EventQuickPublishInput,
-): Promise<{ id: string; version: number; status: "approved" }> {
+): Promise<PublishedEventResult> {
+  return withSchool(schoolId, (tx) => insertPublishedEvent(tx, schoolId, createdBy, input));
+}
+
+/** Publishes many events in one transaction: all land or none do (calendar import). */
+export async function createPublishedEvents(
+  schoolId: string,
+  createdBy: string,
+  inputs: EventQuickPublishInput[],
+): Promise<PublishedEventResult[]> {
   return withSchool(schoolId, async (tx) => {
-    const [event] = await tx
-      .insert(events)
-      .values({
-        schoolId,
-        createdBy,
-        eventTypeId: input.eventTypeId,
-        title: input.title,
-        description: input.description,
-        location: input.location,
-        startAt: new Date(input.startAt),
-        endAt: new Date(input.endAt),
-        allDay: input.allDay ?? false,
-        status: "approved",
-        version: 1,
-      })
-      .returning({
-        id: events.id,
-        version: events.version,
-        eventTypeId: events.eventTypeId,
-        title: events.title,
-        description: events.description,
-        location: events.location,
-        startAt: events.startAt,
-        endAt: events.endAt,
-        allDay: events.allDay,
-        status: events.status,
-        createdBy: events.createdBy,
-        updatedAt: events.updatedAt,
-      });
+    const results: PublishedEventResult[] = [];
+    for (const input of inputs) results.push(await insertPublishedEvent(tx, schoolId, createdBy, input));
+    return results;
+  });
+}
 
-    await tx.insert(eventGrades).values(
-      input.grades.map((grade) => ({ eventId: event.id, grade, schoolId })),
-    );
+type PublishedEventResult = { id: string; version: number; status: "approved" };
+type SchoolTx = Parameters<Parameters<typeof withSchool>[1]>[0];
 
-    await tx.insert(eventRevisions).values({
-      eventId: event.id,
+async function insertPublishedEvent(
+  tx: SchoolTx,
+  schoolId: string,
+  createdBy: string,
+  input: EventQuickPublishInput,
+): Promise<PublishedEventResult> {
+  const [event] = await tx
+    .insert(events)
+    .values({
       schoolId,
-      snapshot: event as unknown as Record<string, unknown>,
-      decidedBy: createdBy,
-      decision: "published",
+      createdBy,
+      eventTypeId: input.eventTypeId,
+      title: input.title,
+      description: input.description,
+      location: input.location,
+      startAt: new Date(input.startAt),
+      endAt: new Date(input.endAt),
+      allDay: input.allDay ?? false,
+      status: "approved",
+      version: 1,
+    })
+    .returning({
+      id: events.id,
+      version: events.version,
+      eventTypeId: events.eventTypeId,
+      title: events.title,
+      description: events.description,
+      location: events.location,
+      startAt: events.startAt,
+      endAt: events.endAt,
+      allDay: events.allDay,
+      status: events.status,
+      createdBy: events.createdBy,
+      updatedAt: events.updatedAt,
     });
 
-    return { id: event.id, version: event.version, status: "approved" as const };
+  await tx.insert(eventGrades).values(
+    input.grades.map((grade) => ({ eventId: event.id, grade, schoolId })),
+  );
+
+  await tx.insert(eventRevisions).values({
+    eventId: event.id,
+    schoolId,
+    snapshot: event as unknown as Record<string, unknown>,
+    decidedBy: createdBy,
+    decision: "published",
   });
+
+  return { id: event.id, version: event.version, status: "approved" as const };
 }
 
 export type UpdateDraftResult =

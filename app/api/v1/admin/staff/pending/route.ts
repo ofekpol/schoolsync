@@ -1,4 +1,4 @@
-import { after, type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { assertAdmin } from "@/lib/auth/admin";
 import { getStaffUser } from "@/lib/auth/session";
 import {
@@ -6,7 +6,6 @@ import {
   listPendingRegistrations,
   rejectPendingRegistration,
 } from "@/lib/db/pending";
-import { sendApprovalEmail } from "@/lib/email/approval";
 import { ApprovePendingSchema } from "@/lib/validations/admin";
 
 export async function GET(): Promise<NextResponse> {
@@ -70,22 +69,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (isNotFound(e)) return NextResponse.json({ error: "Not found" }, { status: 404 });
     throw e;
   }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
-  // Send approval email off the response critical path. DB commit already
-  // happened; a slow/failing Resend call must not delay or fail the approval.
-  after(async () => {
-    try {
-      await sendApprovalEmail({
-        to: result.email,
-        fullName: result.fullName,
-        role,
-        loginUrl: `${appUrl}/auth/login`,
-      });
-    } catch (err) {
-      console.error("sendApprovalEmail failed", err);
-    }
-  });
 
   return NextResponse.json({ ok: true, staffUserId: result.staffUserId });
 }

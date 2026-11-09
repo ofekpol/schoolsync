@@ -16,11 +16,6 @@ vi.mock("@/lib/db/schools", () => ({
   listAllSchools: (...args: unknown[]) => listAllSchoolsMock(...args),
 }));
 
-const sendWelcomeEmailMock = vi.fn();
-vi.mock("@/lib/email/welcome", () => ({
-  sendWelcomeEmail: (...args: unknown[]) => sendWelcomeEmailMock(...args),
-}));
-
 import { GET, POST } from "@/app/api/v1/platform/schools/route";
 
 const VALID_BODY = {
@@ -53,7 +48,6 @@ describe("/api/v1/platform/schools", () => {
     requirePlatformAdminMock.mockResolvedValue({ id: "platform-admin" });
     provisionSchoolMock.mockReset();
     listAllSchoolsMock.mockReset();
-    sendWelcomeEmailMock.mockReset();
   });
 
   it("returns 401 when signed out and 403 for non-platform-admins, without provisioning", async () => {
@@ -86,31 +80,15 @@ describe("/api/v1/platform/schools", () => {
     expect((await POST(makeRequest(VALID_BODY))).status).toBe(409);
   });
 
-  it("provisions, emails the admin and hides the magic link when the email went out", async () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
+  it("provisions the school and returns the admin's magic link", async () => {
     provisionSchoolMock.mockResolvedValue(PROVISIONED);
     const res = await POST(makeRequest(VALID_BODY));
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({
       schoolId: PROVISIONED.schoolId,
       slug: "new-school",
-      emailSent: true,
-      magicLinkUrl: null,
+      magicLinkUrl: PROVISIONED.magicLinkUrl,
     });
-    expect(sendWelcomeEmailMock).toHaveBeenCalledWith(
-      expect.objectContaining({ to: VALID_BODY.adminEmail, magicLinkUrl: PROVISIONED.magicLinkUrl }),
-    );
-  });
-
-  it("returns the magic link when email is not configured", async () => {
-    vi.stubEnv("RESEND_API_KEY", "");
-    provisionSchoolMock.mockResolvedValue(PROVISIONED);
-    const res = await POST(makeRequest(VALID_BODY));
-    expect(res.status).toBe(201);
-    const body = await res.json();
-    expect(body.emailSent).toBe(false);
-    expect(body.magicLinkUrl).toBe(PROVISIONED.magicLinkUrl);
-    expect(sendWelcomeEmailMock).not.toHaveBeenCalled();
   });
 
   it("falls back to the request origin for the magic link when NEXT_PUBLIC_APP_URL is unset", async () => {

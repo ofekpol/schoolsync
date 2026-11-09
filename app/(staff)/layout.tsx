@@ -5,6 +5,7 @@ import { getSchoolById } from "@/lib/db/schools";
 import { isPlatformAdmin } from "@/lib/db/platform-admins";
 import { AppHeader } from "@/components/AppHeader";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { SupportLink } from "@/components/support/SupportLink";
 import { StaffEntryLoading } from "@/components/staff/StaffEntryLoading";
 import { buildNavLinks, getCurrentPath } from "@/lib/nav";
 import { StaffChatPanel } from "@/components/ai/StaffChatPanel";
@@ -46,6 +47,7 @@ async function StaffLayoutContent({ children }: { children: ReactNode }) {
         currentPath={currentPath}
         rightSlot={
           <>
+            <SupportLink currentPath={currentPath} />
             <span className="max-w-48 truncate text-sm font-medium text-neutral-900">
               {user.fullName}
             </span>

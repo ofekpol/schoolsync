@@ -147,7 +147,6 @@
       "revoked": "Revoked",
       "copyInvite": "Copy URL",
       "inviteCopied": "Invite copied",
-      "emailSent": "Email sent",
       "duplicateEmail": "Email address already exists",
       "createError": "Creation error",
       "staffCreated": "User created",
@@ -218,6 +217,45 @@
       "reset": "Restore defaults",
       "saved": "Saved",
       "error": "Save failed"
+    },
+    "import": {
+      "button": "Import calendar",
+      "close": "Close",
+      "title": "Import calendar",
+      "intro": "Bring the school's existing calendar into the system in one go, from an Excel file.",
+      "step1": "Download the template and fill it in Excel, one row per event. Keep the header row as is.",
+      "step2": "In \"סוג אירוע\" write one of: {types}. In \"שכבות\" write e.g. 7,8 or \"כל בית הספר\". No times = all-day event.",
+      "step3": "Save as CSV UTF-8 and upload. You'll see a preview; nothing is saved until you confirm.",
+      "templateFile": "event-import-template.csv",
+      "download": "Download template",
+      "upload": "Upload file",
+      "loading": "Checking the file...",
+      "failed": "The check failed. Try again.",
+      "empty": "No events found in the file.",
+      "hasErrors": "{count, plural, one {One row has an error} other {# rows have errors}}. Fix the file and upload it again.",
+      "ready": "{count, plural, one {One event is ready to import} other {# events are ready to import}}.",
+      "confirm": "Publish {count} events",
+      "imported": "{count} events published and now on the calendar.",
+      "ok": "OK",
+      "columns": {
+        "line": "Row",
+        "eventTitle": "Title",
+        "type": "Type",
+        "when": "When",
+        "grades": "Grades",
+        "status": "Status"
+      },
+      "errors": {
+        "bad_header": "The header row doesn't match the template. Download the template and copy your data into it.",
+        "too_many_rows": "File too long: up to 500 events per import.",
+        "missing_title": "Missing title",
+        "unknown_type": "Unknown event type",
+        "bad_date": "Invalid date (e.g. 27/10/2026)",
+        "bad_time": "Invalid time (e.g. 08:30)",
+        "bad_grades": "Unknown grade (7 to 12)",
+        "end_before_start": "Ends before it starts",
+        "invalid": "Invalid data"
+      }
     }
   },
   "invite": {
@@ -372,7 +410,13 @@
     },
     "linkRequired": {
       "title": "School link required",
-      "body": "To view the event calendar, open the link your school sent you."
+      "body": "Each school's event calendar opens only through the private link the school shares with parents, students and staff.",
+      "tipsTitle": "Where to find the link",
+      "tipMessages": "Look for a WhatsApp message or email from the school with a link to the calendar.",
+      "tipAsk": "Can't find it? Ask your homeroom teacher or the school office for the link.",
+      "tipFullLink": "Open the full link as you received it. A partial or mistyped link won't work.",
+      "staffPrompt": "School staff?",
+      "staffLogin": "Log in"
     }
   },
   "profile": {
@@ -542,11 +586,125 @@
       "slugHint": "Internal id: lowercase letters, digits and hyphens. Not part of any public link.",
       "submit": "Create school",
       "success": "School {slug} created.",
-      "emailSent": "A sign-in link was emailed to the admin.",
-      "emailNotSent": "The email was not sent. Give the admin this sign-in link (valid for 1 hour):",
+      "magicLink": "Give the admin this sign-in link (valid for 1 hour):",
       "duplicateSlug": "That slug is already taken.",
       "invalid": "Check the fields.",
       "error": "Setup failed. Try again."
+    }
+  },
+  "legal": {
+    "footer": {
+      "label": "Legal",
+      "accessibility": "Accessibility statement",
+      "privacy": "Privacy policy"
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "This policy explains what information the school event calendar stores, why, who receives it and what your rights are.",
+      "sections": [
+        {
+          "title": "Who is responsible",
+          "body": "The system is operated by {company}. Each school's data (events, staff and settings) belongs to the school, and we process it on the school's behalf and under its instructions."
+        },
+        {
+          "title": "Viewing without an account",
+          "body": "Parents, students and guests view the calendar through the school's link without signing up. We don't ask them for personal details. The hosting servers keep standard technical data, such as IP address and browser type, for security and operations."
+        },
+        {
+          "title": "Staff information",
+          "body": "For staff who sign up we store name, email, role, school, permissions, sign-in attempts and an activity log (for example, who published or edited an event). Passwords are stored hashed by the identity provider and we never see them."
+        },
+        {
+          "title": "Event content",
+          "body": "Event details a school publishes are visible to anyone who has the school's link. Do not put sensitive personal information about students in events."
+        },
+        {
+          "title": "How we use information",
+          "body": "Only to run the system: show the calendar, manage permissions, secure accounts, handle support requests and improve the service. We send no marketing email and never sell the information."
+        },
+        {
+          "title": "Who receives it",
+          "body": "Providers that run the system for us: Supabase (database and sign-in), Vercel (hosting and cookie-free aggregate performance metrics), Google (only if you choose Google sign-in), Groq (only when staff use the AI tools, to process the text entered) and GitHub (to track bug reports sent by staff). We also disclose information when the law requires it."
+        },
+        {
+          "title": "Transfers outside Israel",
+          "body": "Some providers operate outside Israel, so information may be stored or transferred outside Israel, including the United States and Europe."
+        },
+        {
+          "title": "Cookies",
+          "body": "The system only uses the cookies needed for staff sign-in. There are no advertising or tracking cookies."
+        },
+        {
+          "title": "Retention",
+          "body": "Information is kept while the school uses the system and is then deleted as agreed with the school. Deactivated staff remain in the activity log to keep the record complete."
+        },
+        {
+          "title": "Your rights",
+          "body": "You can ask to see, correct or delete your information. Contact your school's management or us and we will handle the request. You can also contact the Privacy Protection Authority."
+        }
+      ],
+      "contactLabel": "Privacy contact:",
+      "updated": "Last updated: {date}"
+    },
+    "accessibility": {
+      "title": "Accessibility statement",
+      "intro": "We want the school event calendar to be accessible to everyone, including people with disabilities: parents, students and staff.",
+      "levelTitle": "Accessibility level",
+      "levelBody": "The system was adapted under the Equal Rights for Persons with Disabilities regulations and {standard}.",
+      "adjustmentsTitle": "Adjustments made",
+      "adjustments": [
+        "Full keyboard navigation, including a skip-to-content link.",
+        "Headings, labels and semantic markup that work with screen readers.",
+        "Color contrast at level AA.",
+        "Event types are marked by both color and symbol, so they can be told apart without seeing color.",
+        "Text zoom up to 200% and a phone-friendly layout.",
+        "Print layout that stays legible in black and white.",
+        "Automated accessibility checks on every code change."
+      ],
+      "limitsTitle": "Known limits",
+      "limitsBody": "Despite our efforts, some parts of the system, such as the wide Gantt view, may not yet be fully accessible. The agenda view shows the same information as a simple list. If you run into a problem, tell us and we will help you get the information another way.",
+      "contactTitle": "Accessibility contact",
+      "contactBody": "Found an accessibility problem? We will handle it promptly and within 60 days. Contact:",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "checked": "Last checked: {date}"
+    }
+  },
+  "support": {
+    "link": "Help",
+    "title": "Help and bug reports",
+    "intro": "Something not working, a question or an idea? Write to us and we will reply by email.",
+    "disabled": "Support requests are not enabled yet. Contact your school management.",
+    "kindLabel": "Request type",
+    "kinds": {
+      "bug": "Bug",
+      "question": "Question",
+      "idea": "Suggestion"
+    },
+    "messageLabel": "Details",
+    "placeholders": {
+      "bug": "What were you trying to do, and what happened?",
+      "question": "How can we help?",
+      "idea": "What would help you?"
+    },
+    "privacyNote": "Your name, email, school and the page you came from are attached so we can get back to you.",
+    "submit": "Send",
+    "sending": "Sending...",
+    "sent": "Sent. Thank you! We will reply by email.",
+    "error": "Sending failed. Try again in a few minutes.",
+    "rateLimited": "Too many requests today. Try again tomorrow."
+  },
+  "auth": {
+    "forgotPassword": {
+      "title": "Reset password",
+      "body": "Enter the email you signed up with and we will send you a link to choose a new password.",
+      "email": "Email",
+      "submit": "Send link",
+      "sending": "Sending...",
+      "sent": "If an account exists for this email, we sent it a link to choose a new password. Check your spam folder too.",
+      "error": "Something went wrong. Check the email address and try again.",
+      "back": "Back to sign in",
+      "link": "Forgot your password?"
     }
   }
 }

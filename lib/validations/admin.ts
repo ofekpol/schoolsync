@@ -27,7 +27,6 @@ export const StaffInviteCreateSchema = z.object({
   gradeScopes: z.array(z.number().int().min(7).max(12)).optional(),
   eventTypeScopes: z.array(z.string().min(1).max(64)).optional(),
   multiUse: z.boolean().optional().default(false),
-  email: z.string().email().optional(),
 });
 
 export const ApprovePendingSchema = z.discriminatedUnion("action", [

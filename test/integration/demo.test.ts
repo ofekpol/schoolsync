@@ -209,6 +209,31 @@ describe.skipIf(skipIfNoTestDb)("DEMO: per-demo caps and text limits (trigger)",
     await expectLimit(testDb!.insert(schema.icalSubscriptions).values(sub()), 403, "demo_quota");
   });
 
+  it("bounds event dates in demos only", async () => {
+    if (shouldSkip()) return;
+    const demo = await newDemo();
+    const [type] = await testDb!.select({ id: schema.eventTypes.id }).from(schema.eventTypes)
+      .where(eq(schema.eventTypes.schoolId, demo.schoolId)).limit(1);
+    const huge = { ...eventRow(demo.schoolId, type.id, demo.staffId), endAt: new Date("9997-01-01T00:00:00Z") };
+    await expectLimit(testDb!.insert(schema.events).values(huge), 400, "demo_date_range");
+    const [existing] = await testDb!.select({ id: schema.events.id }).from(schema.events)
+      .where(eq(schema.events.schoolId, demo.schoolId)).limit(1);
+    await expectLimit(
+      testDb!.update(schema.events).set({ endAt: new Date("9997-01-01T00:00:00Z") }).where(eq(schema.events.id, existing.id)),
+      400,
+      "demo_date_range",
+    );
+    const [typeA] = await testDb!.select({ id: schema.eventTypes.id }).from(schema.eventTypes)
+      .where(eq(schema.eventTypes.schoolId, testSchoolA)).limit(1);
+    const [staffA] = await testDb!.select({ id: schema.staffUsers.id }).from(schema.staffUsers)
+      .where(eq(schema.staffUsers.schoolId, testSchoolA)).limit(1);
+    if (!typeA || !staffA) return;
+    const [real] = await testDb!.insert(schema.events)
+      .values({ ...eventRow(testSchoolA, typeA.id, staffA.id), endAt: new Date("2030-01-01T00:00:00Z") })
+      .returning({ id: schema.events.id });
+    await testDb!.delete(schema.events).where(eq(schema.events.id, real.id));
+  });
+
   it("limits text length in demos only", async () => {
     if (shouldSkip()) return;
     const demo = await newDemo();

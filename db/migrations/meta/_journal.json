@@ -141,6 +141,13 @@
       "when": 1791590760000,
       "tag": "0019_demo_schools",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791590820000,
+      "tag": "0020_demo_event_date_window",
+      "breakpoints": true
     }
   ]
 }

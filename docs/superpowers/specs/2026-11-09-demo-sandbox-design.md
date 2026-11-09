@@ -1,6 +1,6 @@
 # Public demo sandbox ("נסו את המערכת")
 
-Status: approved (revision 3), amended during build (revision 4, see "Build amendments") · 2026-11-09 · branch `feature/demo-sandbox` (from `staging`)
+Status: approved (revision 3), amended during build (revision 5, see "Build amendments") · 2026-11-09 · branch `feature/demo-sandbox` (from `staging`)
 
 ## Goal
 
@@ -32,7 +32,7 @@ A principal who reaches the EduSolutions site can click "נסו הדגמה", lan
 8. Demo schools never appear on `/platform/schools`; every `listAllSchools` caller is audited and excludes them.
 9. **Expiry is enforced everywhere, not only in layouts:** staff resolution (`getStaffUser`) treats a demo session whose school is expired or missing as signed-out, so API routes return their normal 401 and pages redirect. The middleware redirects page requests with an expired/invalid demo cookie to `/demo?expired=1` ("ההדגמה הסתיימה — התחילו חדשה") and clears the cookie.
 10. Abuse limits, enforced atomically: at most 3 demo creations per client IP per hour, at most 100 creations per rolling 24 h in total (= the maximum number of live demos), and no new demo while the database is larger than `DEMO_DB_SIZE_LIMIT_MB` (default 350, checked with `pg_database_size`). Beyond any of them, `/demo` shows "יש עומס כרגע, נסו שוב מאוחר יותר" plus the site's contact link. Only an HMAC of the IP is stored, never the raw IP.
-11. Per-demo growth caps (demo schools only): at most 500 event rows, 1,000 event revision rows, 50 event types and 10 iCal subscriptions (revoked ones count; the personal-feed endpoint reuses an existing live subscription), and text limits on every demo write (event title and location ≤ 200 characters, description ≤ 1,000, event-type labels ≤ 60). These cover manual creation, publish, PATCH, cancel, CSV import, event-type and subscription writers. Beyond them, writes return 403 `{ error: "demo_quota" }` (over-length text: 400 `{ error: "demo_text_too_long" }`); the existing forms show their generic error state. Real schools are unaffected.
+11. Per-demo growth caps (demo schools only): at most 500 event rows, 1,000 event revision rows, 50 event types and 10 iCal subscriptions (revoked ones count; the personal-feed endpoint reuses an existing live subscription), and text limits on every demo write (event title and location ≤ 200 characters, description ≤ 1,000, event-type labels ≤ 60), and a date window on demo events (start no earlier than 2 years ago, end no later than 3 years ahead, at most 366 days long; 400 `demo_date_range`). These cover manual creation, publish, PATCH, cancel, CSV import, event-type and subscription writers. Beyond them, writes return 403 `{ error: "demo_quota" }` (over-length text: 400 `{ error: "demo_text_too_long" }`); the existing forms show their generic error state. Real schools are unaffected.
 12. A visitor with a live demo who opens `/demo` sees "המשך להדגמה שלך" and "התחלה מחדש"; starting over deletes their previous demo school immediately (the creation still counts toward the limits).
 13. Expired demo schools are deleted with all their rows, opportunistically in `POST /api/v1/demo` (bounded batch, e.g. 20) and daily by a Vercel cron.
 14. The EduSolutions site's product card gets a second button "נסו הדגמה" linking to `${NEXT_PUBLIC_GANTT_URL}/demo` (separate PR in `C:\Users\ofekp\Projects\Personal\EduSolutions`; hidden when the env var is empty, like the existing button).
@@ -111,3 +111,7 @@ Changes made while building, each reflected in the sections above:
 1. Per-demo caps and text limits are a database trigger (migration 0019) instead of a per-writer `assertDemoQuota` call plus a Zod refinement: same lock-and-count semantics, but no writer can be missed.
 2. `POST /api/v1/demo` answers every outcome with a 303 redirect (dashboard, or `/demo?error=busy|unavailable`) instead of a 503, because it is a plain HTML form POST.
 3. Over-length demo text returns 400 `demo_text_too_long` (separate from the 403 `demo_quota`), and the forms show their existing generic error rather than a dedicated Hebrew message.
+4. Demo events are bounded to a date window (migration 0020, same trigger): an event spanning centuries made the calendar views build tens of thousands of months. Found by the second code inspection.
+
+### Known follow-up (not in this change)
+Creating an event that a demo limit then rejects can leave an empty draft (the create route commits the draft before updating and publishing it). The harm is confined to the visitor's own demo (it counts toward its 500-event cap). The fix is making the shared create/submit path one transaction for every school, which is a separate change.

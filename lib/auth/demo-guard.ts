@@ -14,10 +14,11 @@ export function demoDisabledResponse(): NextResponse {
   return NextResponse.json({ error: "demo_disabled" }, { status: 403 });
 }
 
-/** Messages raised by the demo_enforce_limits trigger (migration 0019). */
+/** Messages raised by the demo_enforce_limits trigger (migrations 0019, 0020). */
 const LIMIT_RESPONSES: Record<string, { error: string; status: number }> = {
   demo_quota: { error: "demo_quota", status: 403 },
   demo_text_too_long: { error: "demo_text_too_long", status: 400 },
+  demo_date_range: { error: "demo_date_range", status: 400 },
 };
 
 /** Maps a demo-limit database error (possibly wrapped by Drizzle in `cause`) to a response. */

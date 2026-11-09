@@ -144,6 +144,7 @@ describe("demo limit errors", () => {
     const wrapped = new Error("Failed query", { cause: new Error("demo_quota") });
     expect(demoLimitResponse(wrapped)?.status).toBe(403);
     expect(demoLimitResponse(new Error("demo_text_too_long"))?.status).toBe(400);
+    expect(demoLimitResponse(new Error("demo_date_range"))?.status).toBe(400);
     expect(demoLimitResponse(new Error("something else"))).toBeNull();
     const handler = withDemoLimits(async () => {
       throw wrapped;

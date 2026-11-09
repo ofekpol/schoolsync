@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { demoDisabledResponse, hasDemoSession } from "@/lib/auth/demo-guard";
 
 const ForgotPasswordSchema = z.object({ email: z.string().email() });
 
@@ -9,6 +10,8 @@ const ForgotPasswordSchema = z.object({ email: z.string().email() });
  * email so the response never reveals whether an account exists.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Account creation and reset emails are outbound actions: off inside a demo session.
+  if (await hasDemoSession()) return demoDisabledResponse();
   const body = await request.json().catch(() => null);
   const parsed = ForgotPasswordSchema.safeParse(body);
   if (!parsed.success) {

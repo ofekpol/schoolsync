@@ -6,8 +6,13 @@ vi.mock("@/lib/auth/session", () => ({
   getStaffUser: () => getStaffUserMock(),
   getSession: vi.fn(),
 }));
+const cookieJar = vi.hoisted(() => ({ token: undefined as string | undefined }));
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ get: () => undefined, has: () => false, delete: () => undefined }),
+  cookies: async () => ({
+    get: (name: string) => (name === "ss_demo" && cookieJar.token ? { value: cookieJar.token } : undefined),
+    has: (name: string) => name === "ss_demo" && cookieJar.token !== undefined,
+    delete: () => undefined,
+  }),
 }));
 
 // Every downstream side effect is a spy: a demo user must never reach any of them.
@@ -31,6 +36,9 @@ import { POST as support } from "@/app/api/v1/support/route";
 import { POST as aiChat } from "@/app/api/v1/ai/chat/route";
 import { POST as aiCheck } from "@/app/api/v1/ai/check-conflicts/route";
 import { POST as aiParse } from "@/app/api/v1/ai/parse-events/route";
+import { POST as register } from "@/app/api/v1/auth/register/route";
+import { POST as forgotPassword } from "@/app/api/v1/auth/forgot-password/route";
+import { signDemoSession } from "@/lib/auth/demo-session";
 
 const DEMO_ADMIN = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -61,12 +69,19 @@ const ROUTES: [string, () => Promise<Response>][] = [
   ["POST /ai/chat", () => aiChat(request())],
   ["POST /ai/check-conflicts", () => aiCheck(request())],
   ["POST /ai/parse-events", () => aiParse(request())],
+  ["POST /auth/register", () => register(request())],
+  ["POST /auth/forgot-password", () => forgotPassword(request())],
 ];
 
 describe("outbound and account routes refuse demo users", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     getStaffUserMock.mockResolvedValue(DEMO_ADMIN);
+    vi.stubEnv("DEMO_SESSION_SECRET", "g".repeat(32));
+    cookieJar.token = await signDemoSession(
+      { staffId: DEMO_ADMIN.id, schoolId: DEMO_ADMIN.schoolId, exp: Date.now() + 60_000 },
+      "g".repeat(32),
+    );
   });
 
   it.each(ROUTES)("%s → 403 demo_disabled", async (_name, call) => {

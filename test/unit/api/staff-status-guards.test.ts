@@ -81,3 +81,33 @@ describe("routes refuse staff who are not active", () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("demo personal feed reuse", () => {
+  const DEMO_ADMIN = {
+    ...DEACTIVATED_ADMIN,
+    status: "active",
+    demoExpiresAt: new Date(Date.now() + 3_600_000),
+  };
+  const live = (id: string, filterGrades: number[] = [], filterEventTypes: string[] = []) => ({
+    id, token: `token-${id}`, filterGrades, filterEventTypes, createdAt: new Date(), revokedAt: null,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getStaffUserMock.mockResolvedValue(DEMO_ADMIN);
+    createPersonalMock.mockResolvedValue({ id: "new", token: "token-new" });
+  });
+
+  it("reuses the live unfiltered feed, never a newer filtered one", async () => {
+    listSubscriptionsMock.mockResolvedValue([live("filtered", [10]), live("complete")]);
+    const res = await createPersonalFeed(jsonRequest());
+    await expect(res.json()).resolves.toMatchObject({ id: "complete" });
+    expect(createPersonalMock).not.toHaveBeenCalled();
+  });
+
+  it("creates a complete feed when only filtered ones exist", async () => {
+    listSubscriptionsMock.mockResolvedValue([live("filtered", [], ["type-1"])]);
+    const res = await createPersonalFeed(jsonRequest());
+    await expect(res.json()).resolves.toMatchObject({ id: "new" });
+  });
+});

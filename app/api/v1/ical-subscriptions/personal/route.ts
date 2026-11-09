@@ -15,7 +15,10 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
 
   // Demo schools reuse a live feed so repeated clicks don't hit the 10-subscription cap.
   const live = isDemoUser(user)
-    ? (await listSubscriptionsForStaff(user.schoolId, user.id)).find((row) => row.revokedAt === null)
+    ? (await listSubscriptionsForStaff(user.schoolId, user.id)).find(
+        // The demo admin's personal feed is unfiltered; never hand back a filtered one.
+        (row) => row.revokedAt === null && row.filterGrades.length === 0 && row.filterEventTypes.length === 0,
+      )
     : undefined;
   const result = live ?? (await createPersonalCalendarSubscription(user));
   const url = new URL(`/ical/${result.token}`, request.nextUrl.origin);

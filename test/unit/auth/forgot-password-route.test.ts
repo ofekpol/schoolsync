@@ -8,6 +8,11 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { POST } from "@/app/api/v1/auth/forgot-password/route";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, has: () => false, delete: () => undefined }),
+}));
+
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/v1/auth/forgot-password", {
     method: "POST",

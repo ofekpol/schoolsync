@@ -45,13 +45,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const reservation = await reserveDemoSlot(await demoHmacHex(secret, `ip:${clientIp(request)}`));
-  if (reservation !== "ok") return seeOther(request, "/demo?error=busy");
-
+  let createdSchoolId: string | null = null;
   try {
+    const reservation = await reserveDemoSlot(await demoHmacHex(secret, `ip:${clientIp(request)}`));
+    if (reservation !== "ok") return seeOther(request, "/demo?error=busy");
     await cleanupExpiredDemos(DEMO_CLEANUP_BATCH);
     await deletePreviousDemo(request, secret);
     const demo = await createDemoSchool();
+    createdSchoolId = demo.schoolId;
     await signOutSupabase();
     const exp = demo.expiresAt.getTime();
     const token = await signDemoSession({ staffId: demo.staffId, schoolId: demo.schoolId, exp }, secret);
@@ -60,6 +61,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return response;
   } catch (error) {
     console.error("[demo] creation failed", error instanceof Error ? error.message : error);
+    // A school the visitor can't reach would only sit there until expiry.
+    if (createdSchoolId) await deleteDemoSchool(createdSchoolId).catch(() => undefined);
     return seeOther(request, "/demo?error=unavailable");
   }
 }

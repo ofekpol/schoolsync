@@ -2,7 +2,7 @@ import "server-only";
 import type { Route } from "next";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { DEMO_COOKIE } from "@/lib/auth/demo-session";
+import { DEMO_COOKIE, demoSecret, verifyDemoSession } from "@/lib/auth/demo-session";
 
 /** True for the staff user of a public demo school (lib/db/demo.ts). */
 export function isDemoUser(user: { demoExpiresAt?: Date | null } | null | undefined): boolean {
@@ -54,4 +54,10 @@ export async function clearDemoCookie(): Promise<void> {
 /** Where a signed-out staff page sends the browser: the "demo ended" screen if it held a demo. */
 export async function signedOutPath(): Promise<Route> {
   return (await cookies()).has(DEMO_COOKIE) ? ("/demo?expired=1" as Route) : "/auth/login";
+}
+
+/** True when this request carries a valid demo session (no DB or Supabase lookup). */
+export async function hasDemoSession(): Promise<boolean> {
+  const token = (await cookies()).get(DEMO_COOKIE)?.value;
+  return (await verifyDemoSession(token, demoSecret())).status === "valid";
 }

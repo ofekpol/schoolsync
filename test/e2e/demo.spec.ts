@@ -21,8 +21,15 @@ function tomorrow(): string {
   return new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
 }
 
+/** Only a throwaway local/CI database may have its shared abuse ledger wiped. */
+function isDisposableDb(url: string | undefined): boolean {
+  if (!url || process.env.PLAYWRIGHT_BASE_URL) return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(new URL(url).hostname);
+}
+
 test.beforeAll(async () => {
   // Retries and reruns from one runner IP must not trip the 3-per-hour limit.
+  if (!isDisposableDb(process.env.DATABASE_URL)) return;
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   await pool.query("delete from demo_creations");
   await pool.end();

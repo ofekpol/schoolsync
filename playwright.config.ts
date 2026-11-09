@@ -34,7 +34,8 @@ export default defineConfig({
     : {
         // CI's demo step reuses the production build (`pnpm start`).
         command: process.env.PLAYWRIGHT_WEB_COMMAND ?? "pnpm dev",
-        url: "http://localhost:3000",
+        // /api/health needs only the DB, so the probe also works where Supabase isn't configured (CI demo step).
+        url: "http://localhost:3000/api/health",
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
       },

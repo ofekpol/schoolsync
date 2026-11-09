@@ -110,7 +110,8 @@ jobs:
         run: pnpm build
 
       - name: Install Playwright browsers
-        run: pnpm dlx playwright install chromium --with-deps
+        # The project's own Playwright version, so the browser build matches what tests launch.
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: "E2E: demo sandbox (Playwright)"
         # Always runs: the demo flow needs only the CI Postgres and a test-only secret.

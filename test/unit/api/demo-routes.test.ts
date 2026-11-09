@@ -16,7 +16,8 @@ vi.mock("@/lib/db/demo", () => ({
   createDemoSchool: db.create,
   deleteDemoSchool: db.remove,
 }));
-vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
+const supabaseMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: supabaseMock }));
 
 import { POST as startDemo } from "@/app/api/v1/demo/route";
 import { GET as cron } from "@/app/api/cron/demo-cleanup/route";
@@ -40,6 +41,7 @@ beforeEach(() => {
   db.reserve.mockResolvedValue("ok");
   db.cleanup.mockResolvedValue(0);
   db.create.mockResolvedValue(DEMO);
+  db.remove.mockResolvedValue(undefined);
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -85,6 +87,25 @@ describe("POST /api/v1/demo", () => {
     );
     await startDemo(post({ origin: ORIGIN, cookie: `${DEMO_COOKIE}=${previous}` }));
     expect(db.remove).toHaveBeenCalledWith("44444444-4444-4444-8444-444444444444");
+  });
+
+  it("deletes the new school when a step after creation fails", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://supabase.test");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    supabaseMock.mockRejectedValue(new Error("supabase down"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const res = await startDemo(post());
+    expect(res.headers.get("location")).toBe(`${ORIGIN}/demo?error=unavailable`);
+    expect(res.cookies.get(DEMO_COOKIE)).toBeUndefined();
+    expect(db.remove).toHaveBeenCalledWith(DEMO.schoolId);
+  });
+
+  it("shows the unavailable notice when the reservation itself fails", async () => {
+    db.reserve.mockRejectedValue(new Error("db down"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const res = await startDemo(post());
+    expect(res.headers.get("location")).toBe(`${ORIGIN}/demo?error=unavailable`);
+    expect(db.create).not.toHaveBeenCalled();
   });
 
   it("shows the unavailable notice when creation fails", async () => {

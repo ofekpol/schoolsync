@@ -308,31 +308,3 @@ export async function dismissCanceledEventForStaff(
 
   return { status: result };
 }
-
-/**
- * Backward-compatible draft deletion helper used by tests and lower-level code.
- * Published events are intentionally not canceled here; use deleteOrCancelEvent
- * from the API path when a user action should cancel published events.
- */
-export async function softDelete(
-  schoolId: string,
-  eventId: string,
-  userId: string,
-): Promise<{ deleted: boolean }> {
-  const result = await withSchool(schoolId, async (tx) => {
-    const [row] = await tx
-      .select({ id: events.id, createdBy: events.createdBy, status: events.status })
-      .from(events)
-      .where(and(eq(events.id, eventId), isNull(events.deletedAt)))
-      .limit(1);
-
-    if (!row) return false;
-    if (row.createdBy !== userId) return false;
-    if (row.status !== "draft") return false;
-
-    await tx.update(events).set({ deletedAt: new Date() }).where(eq(events.id, eventId));
-    return true;
-  });
-
-  return { deleted: result };
-}

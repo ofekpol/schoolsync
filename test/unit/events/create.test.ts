@@ -14,7 +14,6 @@ import {
   deleteOrCancelEvent,
   dismissCanceledEventForStaff,
   replaceEventGrades,
-  softDelete,
   updateDraft,
 } from "@/lib/events/crud";
 
@@ -226,44 +225,6 @@ describe("updateDraft: ownership, concurrency, and revision logic", () => {
         submittedBy: USER,
       }),
     );
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// softDelete
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("softDelete: ownership and status guards", () => {
-  it("returns {deleted: false} when the event does not exist", async () => {
-    useTx(makeTx({ selectRows: [] }));
-    expect(await softDelete(SCHOOL, EVENT, USER)).toEqual({ deleted: false });
-  });
-
-  it("returns {deleted: false} when the caller does not own the event", async () => {
-    useTx(
-      makeTx({
-        selectRows: [{ id: EVENT, createdBy: OTHER_USER, status: "draft" }],
-      }),
-    );
-    expect(await softDelete(SCHOOL, EVENT, USER)).toEqual({ deleted: false });
-  });
-
-  it("returns {deleted: false} when the event is not in draft status", async () => {
-    useTx(
-      makeTx({
-        selectRows: [{ id: EVENT, createdBy: USER, status: "approved" }],
-      }),
-    );
-    expect(await softDelete(SCHOOL, EVENT, USER)).toEqual({ deleted: false });
-  });
-
-  it("returns {deleted: true} when the caller owns a draft event", async () => {
-    useTx(
-      makeTx({
-        selectRows: [{ id: EVENT, createdBy: USER, status: "draft" }],
-      }),
-    );
-    expect(await softDelete(SCHOOL, EVENT, USER)).toEqual({ deleted: true });
   });
 });
 

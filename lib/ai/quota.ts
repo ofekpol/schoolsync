@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, gte } from "drizzle-orm";
+import { and, count, eq, gte, sql } from "drizzle-orm";
 import { withSchool } from "@/lib/db/client";
 import { auditLog } from "@/lib/db/schema";
 import { jerusalemDateString, jerusalemWallClockToIso } from "@/lib/datetime";
@@ -28,6 +28,8 @@ export async function consumeAiQuota(
   const limit = AI_DAILY_LIMITS[action];
   const dayStart = new Date(jerusalemWallClockToIso(jerusalemDateString(now), "00:00:00"));
   return withSchool(schoolId, async (tx) => {
+    // Serialize count+insert per user and action; without it, simultaneous requests all see the same count.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`ai_quota:${staffId}:${action}`}))`);
     const [{ used }] = await tx
       .select({ used: count() })
       .from(auditLog)

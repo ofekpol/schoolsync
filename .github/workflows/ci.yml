@@ -112,6 +112,14 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm dlx playwright install chromium --with-deps
 
+      - name: "E2E: demo sandbox (Playwright)"
+        # Always runs: the demo flow needs only the CI Postgres and a test-only secret.
+        run: pnpm playwright test/e2e/demo.spec.ts
+        env:
+          CI: "true"
+          DEMO_SESSION_SECRET: ci-only-demo-session-secret-not-used-anywhere-else
+          PLAYWRIGHT_WEB_COMMAND: pnpm start
+
       - name: E2E tests (Playwright)
         if: ${{ env.NEXT_PUBLIC_SUPABASE_URL != '' }}
         run: pnpm playwright

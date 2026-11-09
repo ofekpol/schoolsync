@@ -158,6 +158,14 @@ pnpm seed
 
 `db/seed.ts` refuses any database or Supabase project that isn't local or staging. Demo logins are the seed accounts listed under "Default credentials after `pnpm seed`" above (forced password change on first login).
 
+**Public demo sandbox (`/demo`):** visitors from the EduSolutions site press "התחילו הדגמה" and get a private, throwaway demo school (same name and 2026–2027 events as below) where they are the admin. Design: `docs/superpowers/specs/2026-11-09-demo-sandbox-design.md`.
+
+- Needs `DEMO_SESSION_SECRET` (≥ 32 random bytes: `openssl rand -base64 48`) and `CRON_SECRET` on Vercel Production (and Preview to try it on staging). Without the first, `/demo` shows "unavailable".
+- Demo schools have `schools.demo_expires_at` set (24 h), no Supabase Auth users, and never appear on `/platform/schools`. Outbound actions (staff, invites, sign-ups, support, AI, password change) are refused; a DB trigger caps each demo at 500 events, 1,000 revisions, 50 event types, 10 calendar feeds.
+- Limits: 3 new demos per IP per hour, 100 per rolling 24 h, none while the database is over `DEMO_DB_SIZE_LIMIT_MB` (default 350). Visitors over a limit see "יש עומס כרגע".
+- Cleanup: expired demos are deleted on each new demo and daily by the Vercel cron (`vercel.json` → `/api/cron/demo-cleanup`). By hand: `select count(*) from schools where demo_expires_at is not null;` shows how many exist.
+- A staging refresh copies live demo schools from prod; harmless, they expire and get cleaned up there too.
+
 **Sales demo school:** `edusolutions-demo` ("תיכון נווה ים (הדגמה)") holds a realistic 2026–2027 year (`db/demo-events.ts`: holidays, trips, exams and bagrut, parent meetings, ceremonies, counseling, grades 7–12). Staging needs a Vercel login, so sales meetings use production:
 
 1. On prod `/platform/schools`, provision slug `edusolutions-demo`, name `תיכון נווה ים (הדגמה)`, admin = a founder's email.

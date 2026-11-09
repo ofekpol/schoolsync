@@ -1,6 +1,6 @@
 # Public demo sandbox ("נסו את המערכת")
 
-Status: draft for review (revision 3) · 2026-11-09 · branch `feature/demo-sandbox` (from `staging`)
+Status: approved (revision 3), amended during build (revision 4, see "Build amendments") · 2026-11-09 · branch `feature/demo-sandbox` (from `staging`)
 
 ## Goal
 
@@ -32,7 +32,7 @@ A principal who reaches the EduSolutions site can click "נסו הדגמה", lan
 8. Demo schools never appear on `/platform/schools`; every `listAllSchools` caller is audited and excludes them.
 9. **Expiry is enforced everywhere, not only in layouts:** staff resolution (`getStaffUser`) treats a demo session whose school is expired or missing as signed-out, so API routes return their normal 401 and pages redirect. The middleware redirects page requests with an expired/invalid demo cookie to `/demo?expired=1` ("ההדגמה הסתיימה — התחילו חדשה") and clears the cookie.
 10. Abuse limits, enforced atomically: at most 3 demo creations per client IP per hour, at most 100 creations per rolling 24 h in total (= the maximum number of live demos), and no new demo while the database is larger than `DEMO_DB_SIZE_LIMIT_MB` (default 350, checked with `pg_database_size`). Beyond any of them, `/demo` shows "יש עומס כרגע, נסו שוב מאוחר יותר" plus the site's contact link. Only an HMAC of the IP is stored, never the raw IP.
-11. Per-demo growth caps (demo schools only): at most 500 event rows, 1,000 event revision rows, 50 event types and 10 iCal subscriptions (revoked ones count; the personal-feed endpoint reuses an existing live subscription), and text limits on every demo write (event title and location ≤ 200 characters, description ≤ 1,000, event-type labels ≤ 60). These cover manual creation, publish, PATCH, cancel, CSV import, event-type and subscription writers. Beyond them, writes return 403 `{ error: "demo_quota" }` with a Hebrew message. Real schools are unaffected.
+11. Per-demo growth caps (demo schools only): at most 500 event rows, 1,000 event revision rows, 50 event types and 10 iCal subscriptions (revoked ones count; the personal-feed endpoint reuses an existing live subscription), and text limits on every demo write (event title and location ≤ 200 characters, description ≤ 1,000, event-type labels ≤ 60). These cover manual creation, publish, PATCH, cancel, CSV import, event-type and subscription writers. Beyond them, writes return 403 `{ error: "demo_quota" }` (over-length text: 400 `{ error: "demo_text_too_long" }`); the existing forms show their generic error state. Real schools are unaffected.
 12. A visitor with a live demo who opens `/demo` sees "המשך להדגמה שלך" and "התחלה מחדש"; starting over deletes their previous demo school immediately (the creation still counts toward the limits).
 13. Expired demo schools are deleted with all their rows, opportunistically in `POST /api/v1/demo` (bounded batch, e.g. 20) and daily by a Vercel cron.
 14. The EduSolutions site's product card gets a second button "נסו הדגמה" linking to `${NEXT_PUBLIC_GANTT_URL}/demo` (separate PR in `C:\Users\ofekp\Projects\Personal\EduSolutions`; hidden when the env var is empty, like the existing button).
@@ -42,6 +42,7 @@ A principal who reaches the EduSolutions site can click "נסו הדגמה", lan
 ### Data (migration `0019_demo_schools.sql` + `lib/db/schema.ts`)
 - `schools.demo_expires_at timestamptz NULL` (a school is a demo iff not null), partial index on it.
 - `demo_creations (id uuid pk, ip_hash text not null, created_at timestamptz not null default now())` with an index on `created_at` and `(ip_hash, created_at)`. Not tenant data: `REVOKE ALL … FROM authenticated, anon`, accessed only through the service-role client in `lib/db/`. CI's revoke list in `.github/workflows/ci.yml` gets the same table.
+- Trigger function `demo_enforce_limits()` (SECURITY DEFINER, since `authenticated` cannot read `schools`) on `events` (insert/update), `event_revisions` (insert), `event_types` (insert/update) and `ical_subscriptions` (insert): for demo schools only, it checks text lengths and, on insert, takes `pg_advisory_xact_lock(hashtext('demo_quota:' || school_id))` and counts the school's rows against the cap, raising `demo_quota` / `demo_text_too_long`. Row-level BEFORE triggers see earlier rows of the same statement, so bulk inserts (CSV import) are counted too.
 - The school lookup used by staff resolution returns `demoExpiresAt` (the `schools` table stays unreadable inside `withSchool`, migration 0010).
 
 ### Demo session
@@ -57,12 +58,12 @@ A principal who reaches the EduSolutions site can click "נסו הדגמה", lan
 2. Run the opportunistic cleanup batch.
 3. Create the school by reusing provisioning internals: refactor `provisionSchool` (`lib/db/provision.ts`) into a shared core (school row, default event types, admin staff row with a supplied id/email and no Auth user) plus the existing magic-link wrapper; the demo path sets `demo_expires_at`.
 4. Insert the demo events through a shared function moved out of `scripts/seed-demo-events.ts` (the script keeps working and keeps its slug allowlist).
-5. On any failure after step 1, `deleteDemoSchool` whatever was created and return 503.
+5. On any failure after step 1, `deleteDemoSchool` whatever was created and redirect (303) to `/demo?error=unavailable` (the button is a plain form POST, so every outcome is a page).
 6. Route handler checks `Origin` equals the app origin, signs out any Supabase session (skipped when Supabase is not configured), sets `ss_demo`, redirects to `/dashboard`.
 
 ### Guards
 - `assertNotDemo(user)` → 403 `demo_disabled`, used by every route in criterion 6; UI receives `isDemo` and renders nothing for those controls.
-- `assertDemoQuota(tx, schoolId, kind, adding)` inside the writer's `withSchool` transaction for demo schools only: takes `pg_advisory_xact_lock(hashtext('demo_quota:' || schoolId))`, counts the relevant table for the school, and rejects with `demo_quota` when the write would exceed criterion 11. Called by every writer listed in criterion 11. Text limits are a demo-only Zod refinement applied in the same routes (real schools' validation is unchanged).
+- Quotas and text limits are enforced by the migration-0019 trigger inside each writer's own transaction (see Data), so every current and future writer is covered. Writer routes are wrapped in `withDemoLimits` (`lib/auth/demo-guard.ts`), which maps the trigger's errors to the responses in criterion 11. Real schools' validation is unchanged.
 - Event-type ownership check (criterion 7) for every role.
 
 ### Deleting a demo
@@ -84,7 +85,7 @@ All new strings in `messages/he.json` and `messages/en.json`; logical CSS proper
 ## Constraints
 - Every school-scoped query inside `withSchool`; service-role client only inside `lib/db/`.
 - New migration only; never edit existing migrations.
-- Zod on the new routes' input and output.
+- Zod at API boundaries. The new routes take no request data (`POST /api/v1/demo` is a field-less form; the cron is a GET with a bearer header), so there is nothing to parse; the demo session payload is Zod-validated in `lib/auth/demo-session.ts`.
 - Functions < 50 lines, files < 400 lines; no `any`.
 - New env vars, set by the user in Vercel (Production and Preview) before promotion: `DEMO_SESSION_SECRET` (≥ 32 random bytes) and `CRON_SECRET`. Demo creation and verification fail closed without the first; cron fails closed without the second.
 - CLAUDE.md and OPERATIONS.md updated: the demo-cookie exception to the auth rule, the new env vars, the cron, and that staging refreshes copy live demos (harmless; they expire).
@@ -103,3 +104,10 @@ All new strings in `messages/he.json` and `messages/en.json`; logical CSS proper
 - CI: the e2e job today runs Playwright only when `NEXT_PUBLIC_SUPABASE_URL` is set, and CI has only Postgres. Add a step that always runs `test/e2e/demo.spec.ts` against the CI Postgres with a test-only `DEMO_SESSION_SECRET`; every page and route the demo flow touches must work without Supabase configuration when a demo session is present.
 - E2E (`test/e2e/demo.spec.ts`): `/demo` → start → banner and seeded events → create and publish an event → it shows on the school's public agenda via its guest link → staff page shows no invite/add controls → logout clears the demo → letting the cookie's `exp` pass (fixed clock or a short-lived test secret) and navigating shows `/demo?expired=1`.
 - Manual on the staging preview (built-in browser, Vercel login), then on prod after promotion, desktop and mobile widths; confirm demos never show on `/platform/schools`.
+
+## Build amendments (revision 4)
+
+Changes made while building, each reflected in the sections above:
+1. Per-demo caps and text limits are a database trigger (migration 0019) instead of a per-writer `assertDemoQuota` call plus a Zod refinement: same lock-and-count semantics, but no writer can be missed.
+2. `POST /api/v1/demo` answers every outcome with a 303 redirect (dashboard, or `/demo?error=busy|unavailable`) instead of a 503, because it is a plain HTML form POST.
+3. Over-length demo text returns 400 `demo_text_too_long` (separate from the 403 `demo_quota`), and the forms show their existing generic error rather than a dedicated Hebrew message.

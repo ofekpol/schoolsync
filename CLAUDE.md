@@ -45,6 +45,7 @@ app/
   (viewer)/[school]/         — Full public viewer: Gantt (index), /calendar, /agenda. `[school]` is the school's secret access token, NOT the slug
   (public)/schedule/         — Read-only guest view: /schedule?school=<token>; no token = "link required" screen
   (public)/page.tsx          — `/` redirects to login
+  demo/                      — Public demo sandbox entry (/demo); POST /api/v1/demo creates a private demo school
   (staff)/                   — /dashboard (monthly/weekly calendar), /events/new (event form)
   (admin)/admin/             — /staff (staff, invites, pending sign-ups, school links, grade colors), /event-types
   (platform)/platform/schools — Platform admins: provision schools, list every school's links
@@ -116,7 +117,7 @@ Deleting a draft hides it (`deleted_at`, soft delete); deleting a published even
 
 ## Auth
 
-Email + password via Supabase Auth, plus Google OAuth. No custom session cookies.
+Email + password via Supabase Auth, plus Google OAuth. No custom session cookies, with one exception: **public demo schools** (`schools.demo_expires_at` set, migration 0019) use a signed `ss_demo` cookie and have no Supabase Auth users (`lib/auth/demo-session.ts`, checked first in `middleware.ts` and `getStaffUser`). Demo users get 403 `demo_disabled` on every outbound/account route (staff, invites, pending, change-password, support, AI); a DB trigger caps their rows and text. Design: `docs/superpowers/specs/2026-11-09-demo-sandbox-design.md`.
 
 Google OAuth requires the Google provider enabled in the Supabase dashboard (Client ID/Secret) with `/auth/callback` registered as a redirect URL. Sign-ups through a school link land in that school's `pending_registrations` and need admin activation; they do not auto-create an active `staff_users` row.
 
@@ -213,6 +214,8 @@ GITHUB_SUPPORT_TOKEN            # fine-grained token, Issues r/w on that repo on
 TEST_LOGIN_ENABLED              # e2e-only test login route; never on Production
 PLAYWRIGHT_BASE_URL             # run e2e against a deployment
 VERCEL_AUTOMATION_BYPASS_SECRET # e2e against protected previews; revoke after use
+DEMO_SESSION_SECRET             # demo cookie + IP hashing (>= 32 bytes); unset = demo unavailable
+CRON_SECRET                     # Vercel cron auth for /api/cron/demo-cleanup (daily, vercel.json)
 ```
 
 Never commit these. Never ask for or paste secret values in chat — have the user set them (e.g. `gh secret set NAME`, Vercel dashboard, `.env.staging.local`).

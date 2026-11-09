@@ -67,6 +67,13 @@ describe("routes refuse staff who are not active", () => {
     expect(dataMock).not.toHaveBeenCalled();
   });
 
+  it("answers 404 for a malformed event id without querying", async () => {
+    getStaffUserMock.mockResolvedValue({ ...DEACTIVATED_ADMIN, status: "active" });
+    const res = await getEvent(jsonRequest(), { params: Promise.resolve({ id: "not-a-uuid" }) });
+    expect(res.status).toBe(404);
+    expect(getEventForEditorMock).not.toHaveBeenCalled();
+  });
+
   it("still serves an active admin", async () => {
     getStaffUserMock.mockResolvedValue({ ...DEACTIVATED_ADMIN, status: "active" });
     getEventForEditorMock.mockResolvedValue({ id: "e1" });

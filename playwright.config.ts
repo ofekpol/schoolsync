@@ -32,7 +32,8 @@ export default defineConfig({
   webServer: remoteBaseUrl
     ? undefined
     : {
-        command: "pnpm dev",
+        // CI's demo step reuses the production build (`pnpm start`).
+        command: process.env.PLAYWRIGHT_WEB_COMMAND ?? "pnpm dev",
         url: "http://localhost:3000",
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,

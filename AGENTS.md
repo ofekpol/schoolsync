@@ -8,7 +8,7 @@ Staff editors create events in a single-page event form (`components/wizard/Wiza
 - The app is the first product of **EduSolutions** ("מערכות חכמות לבתי ספר"), founded by Ofek and partner Maor Mesika (a platform admin on staging).
 - Marketing site: https://edusolutions-site.vercel.app/ — source in `C:\Users\ofekp\Projects\Personal\EduSolutions` (separate repo). Its "כניסה למערכת" button goes to `NEXT_PUBLIC_GANTT_URL` (set in that repo).
 - The site promises: Gantt, printable calendar, mobile view and calendar sync; Hebrew-first; contact form; "המוצר הבא / בקרוב" placeholder card.
-- Go-forward checklist (school entry page, go-live, legal, ops): `docs/ROADMAP.md`.
+- Go-forward checklist (site + app, one list): Claude Doc "EduSolutions — What's next", https://claude.ai/artifact/XeeDn355VSgnX3Z4PgGe5H (read/tick via the Claude Docs connector).
 
 ## Tech Stack
 

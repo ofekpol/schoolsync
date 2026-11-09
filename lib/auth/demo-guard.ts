@@ -1,4 +1,5 @@
 import "server-only";
+import type { Route } from "next";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { DEMO_COOKIE } from "@/lib/auth/demo-session";
@@ -48,4 +49,9 @@ export function withDemoLimits<Args extends unknown[], R extends Response>(
 /** Real sign-in and logout drop any demo session so it cannot shadow a Supabase one. */
 export async function clearDemoCookie(): Promise<void> {
   (await cookies()).delete(DEMO_COOKIE);
+}
+
+/** Where a signed-out staff page sends the browser: the "demo ended" screen if it held a demo. */
+export async function signedOutPath(): Promise<Route> {
+  return (await cookies()).has(DEMO_COOKIE) ? ("/demo?expired=1" as Route) : "/auth/login";
 }

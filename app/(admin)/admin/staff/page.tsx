@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Clock, Link2, MailPlus, UserCheck, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { getStaffUser } from "@/lib/auth/session";
+import { isDemoUser } from "@/lib/auth/demo-guard";
 import { listStaffUsers } from "@/lib/db/staff";
 import { getSchoolById } from "@/lib/db/schools";
 import { listInvitesForSchool } from "@/lib/db/invites";
@@ -37,6 +38,8 @@ export default async function AdminStaffPage() {
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? `${requestHeaders.get("x-forwarded-proto") ?? "https"}://${requestHeaders.get("host")}`;
 
   const t = await getTranslations("admin.staff");
+  const tDemo = await getTranslations("demo");
+  const demo = isDemoUser(user);
   const activeCount = staff.filter((member) => !member.deactivatedAt).length;
   const editorCount = staff.filter(
     (member) => member.role === "editor" && !member.deactivatedAt,
@@ -78,15 +81,23 @@ export default async function AdminStaffPage() {
         <StaffTable initialStaff={staff} eventTypes={eventTypes} />
       </section>
 
-      <section className="space-y-3">
-        <SectionHeader title={t("pendingRequests")} count={pendingRegs.length} />
-        <PendingRequestsTable pending={pendingRegs} eventTypes={eventTypes} />
-      </section>
+      {demo ? (
+        <p role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+          {tDemo("staffDisabled")}
+        </p>
+      ) : (
+        <>
+          <section className="space-y-3">
+            <SectionHeader title={t("pendingRequests")} count={pendingRegs.length} />
+            <PendingRequestsTable pending={pendingRegs} eventTypes={eventTypes} />
+          </section>
 
-      <section className="sg-staff-card space-y-3 rounded-xl border bg-white p-4">
-        <h2 className="text-lg font-semibold">{t("create")}</h2>
-        <AddStaffForm eventTypes={eventTypes} />
-      </section>
+          <section className="sg-staff-card space-y-3 rounded-xl border bg-white p-4">
+            <h2 className="text-lg font-semibold">{t("create")}</h2>
+            <AddStaffForm eventTypes={eventTypes} />
+          </section>
+        </>
+      )}
 
       {school && (
         <section className="sg-staff-card space-y-3 rounded-xl border bg-white p-4">
@@ -94,21 +105,23 @@ export default async function AdminStaffPage() {
             <Link2 className="size-4" />
             {t("schoolLinks.title")}
           </h2>
-          <SchoolLinks accessToken={school.accessToken} origin={origin} />
+          <SchoolLinks accessToken={school.accessToken} origin={origin} guestOnly={demo} />
         </section>
       )}
 
-      <section className="sg-staff-card space-y-4 rounded-xl border bg-white p-4">
-        <SectionHeader
-          title={t("invites")}
-          count={openInviteCount}
-          icon={<MailPlus className="size-4" />}
-        />
-        <div className="space-y-4">
-          <InviteForm eventTypes={eventTypes} />
-          <InviteTable invites={invites} />
-        </div>
-      </section>
+      {!demo && (
+        <section className="sg-staff-card space-y-4 rounded-xl border bg-white p-4">
+          <SectionHeader
+            title={t("invites")}
+            count={openInviteCount}
+            icon={<MailPlus className="size-4" />}
+          />
+          <div className="space-y-4">
+            <InviteForm eventTypes={eventTypes} />
+            <InviteTable invites={invites} />
+          </div>
+        </section>
+      )}
     </main>
   );
 }

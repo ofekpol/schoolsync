@@ -9,15 +9,17 @@ interface SchoolLinksProps {
   accessToken: string;
   /** App origin, resolved on the server so SSR and hydration render the same URL. */
   origin: string;
+  /** Demo schools take no sign-ups, so only the guest view link is shown. */
+  guestOnly?: boolean;
 }
 
 /** Admin-only: the two shareable links for this school (account sign-up, guest view). */
-export function SchoolLinks({ accessToken, origin }: SchoolLinksProps) {
+export function SchoolLinks({ accessToken, origin, guestOnly = false }: SchoolLinksProps) {
   const t = useTranslations("admin.staff.schoolLinks");
   const links = [
     { key: "signup", label: t("signup"), url: `${origin}/auth/login?school=${accessToken}` },
     { key: "guest", label: t("guest"), url: `${origin}/schedule?school=${accessToken}` },
-  ];
+  ].filter((link) => !guestOnly || link.key === "guest");
   return (
     <div className="space-y-3">
       <p className="text-sm text-neutral-600">{t("hint")}</p>

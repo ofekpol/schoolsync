@@ -3,11 +3,13 @@ import { getStaffUser } from "@/lib/auth/session";
 import { assertAdmin } from "@/lib/auth/admin";
 import { updateStaffUser } from "@/lib/db/staff";
 import { StaffUserUpdateSchema } from "@/lib/validations/admin";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: RouteContext): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   try {
     assertAdmin(user);
   } catch (e) {

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
 import { isSupportEnabled } from "@/lib/support/github";
 import { SUPPORT_KINDS, sendSupportReport } from "@/lib/support/report";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 
 const SupportRequestSchema = z.object({
   kind: z.enum(SUPPORT_KINDS),
@@ -15,6 +16,7 @@ const MAX_USER_AGENT = 300;
 /** Any active staff member (viewers included) can report a problem or ask for help. */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
+  if (isDemoUser(user)) return demoDisabledResponse();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   if (user.status !== "active" || !user.schoolId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (!isSupportEnabled()) return NextResponse.json({ error: "support_disabled" }, { status: 503 });

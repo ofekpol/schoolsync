@@ -27,6 +27,11 @@ vi.mock("@/lib/db/schools", () => ({
 
 import { GET } from "@/app/auth/confirm/route";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, has: () => false, delete: () => undefined }),
+}));
+
 function confirm() {
   return GET(new NextRequest("http://localhost/auth/confirm?token_hash=validhash&type=signup"));
 }

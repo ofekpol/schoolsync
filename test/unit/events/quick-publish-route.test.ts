@@ -120,12 +120,14 @@ describe("POST /api/v1/events/publish", () => {
     expect(createPublishedEventMock).not.toHaveBeenCalled();
   });
 
-  it("skips the event-type scope check for admins", async () => {
-    getStaffUserMock.mockResolvedValue({ ...ACTIVE_EDITOR, role: "admin" });
+  it("checks event-type ownership for admins too", async () => {
+    const admin = { ...ACTIVE_EDITOR, role: "admin" };
+    getStaffUserMock.mockResolvedValue(admin);
     isEventTypeAllowedMock.mockResolvedValue(false);
     const res = await POST(makeRequest(VALID_BODY));
-    expect(res.status).toBe(201);
-    expect(isEventTypeAllowedMock).not.toHaveBeenCalled();
+    expect(res.status).toBe(403);
+    expect(isEventTypeAllowedMock).toHaveBeenCalledWith(admin, VALID_BODY.eventTypeId);
+    expect(createPublishedEventMock).not.toHaveBeenCalled();
   });
 
   it("creates a published event for valid editor requests", async () => {

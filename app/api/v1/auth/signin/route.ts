@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { clearDemoCookie } from "@/lib/auth/demo-guard";
 import {
   createStaffUserFromInvite,
   getStaffUserByAuthId,
@@ -23,6 +24,7 @@ const SignInSchema = z.object({
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  await clearDemoCookie();
   const body = await request.json().catch(() => null);
   const parsed = SignInSchema.safeParse(body);
   if (!parsed.success) {

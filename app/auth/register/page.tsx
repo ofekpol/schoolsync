@@ -10,7 +10,9 @@ interface PageProps {
 
 export default async function RegisterPage({ searchParams }: PageProps) {
   const { token, school: schoolParam } = await searchParams;
-  const school = await resolveSchoolFromParam(schoolParam);
+  const found = await resolveSchoolFromParam(schoolParam);
+  // Demo schools take no sign-ups (resolveSchoolIdFromParam refuses them too).
+  const school = found?.demoExpiresAt === null ? found : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

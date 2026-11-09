@@ -39,8 +39,17 @@ export interface ProvisionSchoolResult {
 
 type Tx = NodePgDatabase<typeof schema>;
 
+export interface SchoolRowInput {
+  slug: string;
+  name: string;
+  locale: string;
+  timezone: string;
+  /** Only for public demo schools (lib/db/demo.ts). */
+  demoExpiresAt?: Date;
+}
+
 /** Insert the tenant root row. Throws when slug already taken — never clobbers. */
-async function insertSchool(input: ProvisionSchoolInput): Promise<{ id: string; accessToken: string }> {
+export async function insertSchool(input: SchoolRowInput): Promise<{ id: string; accessToken: string }> {
   const inserted = await db
     .insert(schema.schools)
     .values({
@@ -48,6 +57,7 @@ async function insertSchool(input: ProvisionSchoolInput): Promise<{ id: string; 
       name: input.name,
       locale: input.locale,
       timezone: input.timezone,
+      demoExpiresAt: input.demoExpiresAt ?? null,
     })
     .onConflictDoNothing({ target: schema.schools.slug })
     .returning({ id: schema.schools.id, accessToken: schema.schools.accessToken });
@@ -57,10 +67,8 @@ async function insertSchool(input: ProvisionSchoolInput): Promise<{ id: string; 
   return inserted[0];
 }
 
-async function insertDefaultEventTypes(tx: Tx, schoolId: string): Promise<void> {
-  for (const et of DEFAULT_EVENT_TYPES) {
-    await tx.insert(schema.eventTypes).values({ schoolId, ...et });
-  }
+export async function insertDefaultEventTypes(tx: Tx, schoolId: string): Promise<void> {
+  await tx.insert(schema.eventTypes).values(DEFAULT_EVENT_TYPES.map((et) => ({ schoolId, ...et })));
 }
 
 const AUTH_USERS_PER_PAGE = 200;

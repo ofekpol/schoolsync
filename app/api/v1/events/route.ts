@@ -9,6 +9,7 @@ import {
   getEditorDashboardEvents,
   isEventTypeAllowed,
 } from "@/lib/events/queries";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 const CreateBodySchema = EventDraftSchema.extend({
   eventTypeId: z.string().uuid(),
@@ -25,7 +26,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ events }, { status: 200 });
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -100,3 +101,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json(draft, { status: 201 });
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
-import { createDraft, softDelete, updateDraft } from "@/lib/events/crud";
+import { createDraft, deleteOrCancelEvent, updateDraft } from "@/lib/events/crud";
 import { publishEvent } from "@/lib/events/approval";
 import {
   getDraftForResume,
@@ -10,7 +10,6 @@ import {
   getEditorDashboardEvents,
   getEventForEditor,
 } from "@/lib/events/queries";
-import { assertEditorScope } from "@/lib/auth/scopes";
 import { testDb, skipIfNoTestDb, shouldSkip, testSchoolA } from "./setup";
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -163,13 +162,11 @@ describe.skipIf(skipIfNoTestDb)("WIZARD-03: editor can resume draft from dashboa
 
 describe.skipIf(skipIfNoTestDb)("WIZARD-05: grade multi-select respects editor scope", () => {
   let scopedEditorId: string;
-  let adminId: string;
 
   beforeAll(async () => {
     if (shouldSkip()) return;
     scopedEditorId = (await ensureEditor(testSchoolA, "wiz-scope10@test")).id;
     await addGradeScope(scopedEditorId, testSchoolA, 10);
-    adminId = (await ensureEditor(testSchoolA, "wiz-admin@test", "admin")).id;
   });
 
   it("editor with grade=10 scope is allowed to select grade 10", async () => {
@@ -180,21 +177,6 @@ describe.skipIf(skipIfNoTestDb)("WIZARD-05: grade multi-select respects editor s
   it("editor with grade=10 scope cannot select grade 11", async () => {
     const allowed = await getEditorAllowedGrades(testSchoolA, scopedEditorId);
     expect(allowed).not.toContain(11);
-    await expect(
-      assertEditorScope(
-        { id: scopedEditorId, schoolId: testSchoolA, role: "editor", status: "active" },
-        11,
-      ),
-    ).rejects.toMatchObject({ status: 403 });
-  });
-
-  it("admin can select any grade without scope restriction", async () => {
-    await expect(
-      assertEditorScope(
-        { id: adminId, schoolId: testSchoolA, role: "admin", status: "active" },
-        11,
-      ),
-    ).resolves.toBeUndefined();
   });
 });
 
@@ -297,10 +279,10 @@ describe.skipIf(skipIfNoTestDb)("WIZARD-08: editor can soft-delete their own dra
     eventTypeId = await firstEventType(testSchoolA);
   });
 
-  it("softDelete sets deletedAt on the editor's own draft", async () => {
+  it("deleting the editor's own draft sets deletedAt", async () => {
     const { id } = await createDraft(testSchoolA, editorId, eventTypeId);
-    const result = await softDelete(testSchoolA, id, editorId);
-    expect(result.deleted).toBe(true);
+    const result = await deleteOrCancelEvent(testSchoolA, id, editorId, false);
+    expect(result.status).toBe("deleted");
     const [row] = await testDb!
       .select({ deletedAt: schema.events.deletedAt })
       .from(schema.events)
@@ -310,22 +292,22 @@ describe.skipIf(skipIfNoTestDb)("WIZARD-08: editor can soft-delete their own dra
 
   it("soft-deleted event no longer appears on the dashboard", async () => {
     const { id } = await createDraft(testSchoolA, editorId, eventTypeId);
-    await softDelete(testSchoolA, id, editorId);
+    await deleteOrCancelEvent(testSchoolA, id, editorId, false);
     const list = await getEditorDashboardEvents(testSchoolA, editorId);
     expect(list.some((e) => e.id === id)).toBe(false);
   });
 
   it("editor cannot delete another editor's event", async () => {
     const { id } = await createDraft(testSchoolA, otherEditorId, eventTypeId);
-    const result = await softDelete(testSchoolA, id, editorId);
-    expect(result.deleted).toBe(false);
+    const result = await deleteOrCancelEvent(testSchoolA, id, editorId, false);
+    expect(result.status).toBe("not_found");
   });
 
-  it("an approved event cannot be soft-deleted by an editor", async () => {
+  it("deleting an approved event cancels it instead of hiding it", async () => {
     const { id } = await createDraft(testSchoolA, editorId, eventTypeId);
     await publishEvent(testSchoolA, id, editorId);
-    const result = await softDelete(testSchoolA, id, editorId);
-    expect(result.deleted).toBe(false);
+    const result = await deleteOrCancelEvent(testSchoolA, id, editorId, false);
+    expect(result.status).toBe("canceled");
   });
 });
 

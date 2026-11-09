@@ -3,10 +3,11 @@ import { getStaffUser } from "@/lib/auth/session";
 import { assertAdmin } from "@/lib/auth/admin";
 import { updateEventType, deleteEventType } from "@/lib/admin/event-types";
 import { EventTypeSchema } from "@/lib/validations/admin";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function PATCH(request: NextRequest, { params }: RouteContext): Promise<NextResponse> {
+async function handlePATCH(request: NextRequest, { params }: RouteContext): Promise<NextResponse> {
   const user = await getStaffUser();
   try {
     assertAdmin(user);
@@ -46,3 +47,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext): Promi
     throw e;
   }
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const PATCH = withDemoLimits(handlePATCH);

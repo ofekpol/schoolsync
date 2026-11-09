@@ -6,6 +6,8 @@ import { isPlatformAdmin } from "@/lib/db/platform-admins";
 import { AppHeader } from "@/components/AppHeader";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { SupportLink } from "@/components/support/SupportLink";
+import { DemoBanner } from "@/components/demo/DemoBanner";
+import { isDemoUser, signedOutPath } from "@/lib/auth/demo-guard";
 import { StaffEntryLoading } from "@/components/staff/StaffEntryLoading";
 import { buildNavLinks, getCurrentPath } from "@/lib/nav";
 import { StaffChatPanel } from "@/components/ai/StaffChatPanel";
@@ -28,7 +30,7 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
 
 async function StaffLayoutContent({ children }: { children: ReactNode }) {
   const user = await getStaffUser();
-  if (!user) redirect("/auth/login");
+  if (!user) redirect(await signedOutPath());
   if (user.status === "pending") redirect("/auth/pending");
   if (user.status === "deactivated") redirect("/auth/deactivated");
   if (user.mustChangePassword) redirect("/auth/change-password");
@@ -40,14 +42,15 @@ async function StaffLayoutContent({ children }: { children: ReactNode }) {
   ]);
   return (
     <>
+      {user.demoExpiresAt && <DemoBanner expiresAt={user.demoExpiresAt} />}
       <AppHeader
         title={school?.name ?? user.fullName}
-        subtitle={user.email}
+        subtitle={isDemoUser(user) ? undefined : user.email}
         navLinks={navLinks}
         currentPath={currentPath}
         rightSlot={
           <>
-            <SupportLink currentPath={currentPath} />
+            {!isDemoUser(user) && <SupportLink currentPath={currentPath} />}
             <span className="max-w-48 truncate text-sm font-medium text-neutral-900">
               {user.fullName}
             </span>
@@ -56,7 +59,7 @@ async function StaffLayoutContent({ children }: { children: ReactNode }) {
         }
       />
       {children}
-      {isAiEnabled() && <StaffChatPanel />}
+      {isAiEnabled() && !isDemoUser(user) && <StaffChatPanel />}
     </>
   );
 }

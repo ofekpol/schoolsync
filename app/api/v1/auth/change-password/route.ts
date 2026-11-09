@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/auth/session";
+import { getSession, getStaffUser } from "@/lib/auth/session";
+import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 import { db } from "@/lib/db/client";
 import { staffUsers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -15,6 +16,7 @@ const ChangePasswordSchema = z.object({
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  if (isDemoUser(await getStaffUser())) return demoDisabledResponse();
   const authUser = await getSession();
   if (!authUser) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

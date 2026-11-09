@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { shouldBypassAuthRefresh } from "@/lib/auth/public-request";
+import { DEMO_COOKIE, demoSecret, verifyDemoSession } from "@/lib/auth/demo-session";
 
 /**
  * Auth gate + Supabase session refresh.
@@ -18,6 +19,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   if (shouldBypassAuthRefresh(pathname)) return response;
+
+  // Demo sessions are checked before (and instead of) Supabase.
+  const demoToken = request.cookies.get(DEMO_COOKIE)?.value;
+  if (demoToken) return handleDemoRequest(request, response, demoToken);
 
   // Skip Supabase setup in test envs without the keys.
   if (
@@ -61,6 +66,35 @@ export async function middleware(request: NextRequest) {
   }
 
   return response;
+}
+
+const PLATFORM_PREFIXES = ["/platform", "/api/v1/platform"];
+
+/**
+ * A valid demo cookie authenticates staff/admin routes (never platform ones).
+ * An invalid or expired one is cleared: pages go to the "demo ended" screen, APIs get 401.
+ */
+async function handleDemoRequest(
+  request: NextRequest,
+  response: NextResponse,
+  token: string,
+): Promise<NextResponse> {
+  const { pathname } = request.nextUrl;
+  const isApi = pathname.startsWith("/api/");
+  const check = await verifyDemoSession(token, demoSecret());
+  if (check.status === "valid") {
+    if (!PLATFORM_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+      return response;
+    }
+    return isApi
+      ? NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      : NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+  const ended = isApi
+    ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    : NextResponse.redirect(new URL("/demo?expired=1", request.url));
+  ended.cookies.delete(DEMO_COOKIE);
+  return ended;
 }
 
 export const config = {

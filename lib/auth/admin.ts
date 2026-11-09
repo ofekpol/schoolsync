@@ -3,7 +3,6 @@ import type { StaffUserRecord } from "@/lib/db/staff";
 
 /**
  * Guard for /admin/* routes. Throws Response(403) if user is not an admin.
- * Mirror style: lib/auth/scopes.ts assertEditorScope.
  */
 export function assertAdmin(
   user: StaffUserRecord | null,

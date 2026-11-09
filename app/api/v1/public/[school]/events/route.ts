@@ -14,7 +14,7 @@ export async function GET(_request: Request, context: RouteContext): Promise<Nex
   return NextResponse.json(payload, {
     status: 200,
     headers: {
-      "Cache-Control": "public, max-age=5, stale-while-revalidate=5",
+      "Cache-Control": "public, max-age=0, s-maxage=5",
     },
   });
 }

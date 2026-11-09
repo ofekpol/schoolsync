@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
 import { EventDraftSchema } from "@/lib/validations/events";
@@ -12,6 +13,7 @@ import {
   isEventTypeAllowed,
 } from "@/lib/events/queries";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -24,6 +26,7 @@ export async function GET(
   if (user.status !== "active") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
+  if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const result = await getEventForEditor(
     user.schoolId!,
     id,
@@ -34,7 +37,7 @@ export async function GET(
   return NextResponse.json(result, { status: 200 });
 }
 
-export async function PATCH(
+async function handlePATCH(
   request: NextRequest,
   { params }: RouteContext,
 ): Promise<NextResponse> {
@@ -45,6 +48,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
+  if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const ifMatch = request.headers.get("If-Match");
   const expectedVersion = ifMatch !== null ? Number(ifMatch) : null;
@@ -101,7 +105,7 @@ export async function PATCH(
   return NextResponse.json({ version: result.version }, { status: 200 });
 }
 
-export async function DELETE(
+async function handleDELETE(
   _req: NextRequest,
   { params }: RouteContext,
 ): Promise<NextResponse> {
@@ -112,6 +116,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (user.role === "viewer") {
     const dismissResult = await dismissCanceledEventForStaff(user.schoolId!, id, user.id);
     if (dismissResult.status === "not_found") {
@@ -132,3 +137,7 @@ export async function DELETE(
   }
   return NextResponse.json(dismissResult, { status: 200 });
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const PATCH = withDemoLimits(handlePATCH);
+export const DELETE = withDemoLimits(handleDELETE);

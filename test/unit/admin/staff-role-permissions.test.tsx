@@ -240,3 +240,29 @@ describe("admin staff role permissions", () => {
     expect(test).not.toBeChecked();
   });
 });
+
+describe("StaffTable in a demo school", () => {
+  it("lists staff without any edit or deactivate controls", () => {
+    render(
+      <StaffTable
+        initialStaff={[
+          {
+            id: "demo-admin",
+            email: "demo-x@demo.edusolutions.invalid",
+            fullName: "Demo Admin",
+            role: "admin",
+            deactivatedAt: null,
+            gradeScopes: [],
+            eventTypeScopes: [],
+          },
+        ]}
+        eventTypes={eventTypes}
+        readOnly
+      />,
+    );
+    expect(screen.getAllByText("Demo Admin").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /edit/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /deactivate/ })).toBeNull();
+    expect(screen.queryByText("actions")).toBeNull();
+  });
+});

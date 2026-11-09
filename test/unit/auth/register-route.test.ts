@@ -10,6 +10,11 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { POST } from "@/app/api/v1/auth/register/route";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, has: () => false, delete: () => undefined }),
+}));
+
 const SCHOOL_TOKEN = "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1";
 
 describe("POST /api/v1/auth/register", () => {

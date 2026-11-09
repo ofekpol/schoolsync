@@ -218,10 +218,20 @@ describe("listEventTypes: returns ordered event-type palette", () => {
 });
 
 describe("isEventTypeAllowed", () => {
-  it("allows admins without querying scopes", async () => {
+  it("allows admins for their own school's type without reading scopes", async () => {
+    const tx = makeTx([[{ key: "trip" }], [{ scopeValue: "exam" }]]);
+    const selectSpy = vi.spyOn(tx, "select");
+    useTx(tx);
     const allowed = await isEventTypeAllowed({ id: "a", schoolId: SCHOOL, role: "admin" }, "t");
     expect(allowed).toBe(true);
-    expect(withSchoolMock).not.toHaveBeenCalled();
+    expect(withSchoolMock).toHaveBeenCalledWith(SCHOOL, expect.any(Function));
+    expect(selectSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses another school's type for admins too (RLS hides it)", async () => {
+    useTx(makeTx([[]]));
+    const allowed = await isEventTypeAllowed({ id: "a", schoolId: SCHOOL, role: "admin" }, "t");
+    expect(allowed).toBe(false);
   });
 
   it("denies users without a school", async () => {

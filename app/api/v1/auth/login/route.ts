@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { clearDemoCookie } from "@/lib/auth/demo-guard";
 
 /**
  * Test-only email/password login endpoint.
@@ -15,6 +16,7 @@ const LoginSchema = z.object({
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  await clearDemoCookie();
   if (process.env.TEST_LOGIN_ENABLED !== "1") {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

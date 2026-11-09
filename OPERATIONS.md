@@ -158,6 +158,14 @@ pnpm seed
 
 `db/seed.ts` refuses any database or Supabase project that isn't local or staging. Demo logins are the seed accounts listed under "Default credentials after `pnpm seed`" above (forced password change on first login).
 
+**Public demo sandbox (`/demo`):** visitors from the EduSolutions site press "התחילו הדגמה" and get a private, throwaway demo school (same name and 2026–2027 events as below) where they are the admin. Design: `docs/superpowers/specs/2026-11-09-demo-sandbox-design.md`.
+
+- Needs `DEMO_SESSION_SECRET` (≥ 32 random bytes: `openssl rand -base64 48`) and `CRON_SECRET` on Vercel Production (and Preview to try it on staging). Without the first, `/demo` shows "unavailable".
+- Demo schools have `schools.demo_expires_at` set (24 h), no Supabase Auth users, and never appear on `/platform/schools`. Outbound actions (staff, invites, sign-ups, support, AI, password change) are refused; a DB trigger caps each demo at 500 events, 1,000 revisions, 50 event types, 10 calendar feeds.
+- Limits: 3 new demos per IP per hour, 100 per rolling 24 h, none while the database is over `DEMO_DB_SIZE_LIMIT_MB` (default 350). Visitors over a limit see "יש עומס כרגע".
+- Cleanup: expired demos are deleted on each new demo and daily by the Vercel cron (`vercel.json` → `/api/cron/demo-cleanup`). By hand: `select count(*) from schools where demo_expires_at is not null;` shows how many exist.
+- A staging refresh copies live demo schools from prod; harmless, they expire and get cleaned up there too.
+
 **Sales demo school:** `edusolutions-demo` ("תיכון נווה ים (הדגמה)") holds a realistic 2026–2027 year (`db/demo-events.ts`: holidays, trips, exams and bagrut, parent meetings, ceremonies, counseling, grades 7–12). Staging needs a Vercel login, so sales meetings use production:
 
 1. On prod `/platform/schools`, provision slug `edusolutions-demo`, name `תיכון נווה ים (הדגמה)`, admin = a founder's email.
@@ -183,6 +191,8 @@ The PRD targets and the corresponding observables:
 | WCAG 2.1 AA — zero serious/critical | `pnpm playwright` running `test/e2e/a11y.spec.ts` |
 | Auth lockout — 10 attempts / 15 min | `staff_users.locked_until` updates |
 
+Infrastructure cost tiers, current usage vs. plan limits, and upgrade triggers: see [docs/COST_PLAN.md](docs/COST_PLAN.md).
+
 ### Backups, uptime and error alerts
 
 All three run on GitHub. **`ofekpol/schoolsync` is public** (Actions logs and artifacts are readable by any signed-in GitHub user), so anything that touches prod data lives in the private repo `ofekpol/schoolsync-support` instead. Collaborators there (Settings → Collaborators) see the issues and backups and get the emails if they Watch → All activity.
@@ -190,14 +200,14 @@ All three run on GitHub. **`ofekpol/schoolsync` is public** (Actions logs and ar
 | What | Where | How | Alert |
 |------|-------|-----|-------|
 | **Backup + restore drill** | `schoolsync-support`: `.github/workflows/backup-prod-db.yml` + `scripts/backup-prod-db.sh` | Nightly 23:00 UTC. Dumps prod `public` + `auth.users`/`auth.identities`, restores `public` into a throwaway Postgres 17, checks every table came back and `schools`/`staff_users`/`events`/`event_types` are non-empty, then uploads the dumps **gpg-encrypted** as a 30-day artifact. | A failed run emails whoever last edited the workflow (GitHub's default for scheduled runs). |
-| **Uptime** | `schoolsync`: `.github/workflows/uptime.yml` (runs from `main`, so it starts after the next promotion) | Every 15 min: `GET /api/health` (app + `select 1`) and `/auth/login` on `school-gantt.vercel.app`, three tries 20 s apart. Touches no secrets or data. | Opens one public `uptime` issue while down (GitHub emails repo watchers) and closes it on recovery. |
+| **Uptime** | `schoolsync`: `.github/workflows/uptime.yml` (runs from `main`; live since 2026-11-07) | Every 15 min: `GET /api/health` (app + `select 1`) and `/auth/login` on `school-gantt.vercel.app`, three tries 20 s apart. Touches no secrets or data. | Opens one public `uptime` issue while down (GitHub emails repo watchers) and closes it on recovery. |
 | **Server errors** | App → `schoolsync-support` issues | `instrumentation.ts` `onRequestError` → `lib/support/error-report.ts` files an issue labelled `error` (same env as support reports, §9). One issue per fingerprint (route + message) while it's open; at most 10 new ones per server instance; school tokens and query strings are redacted. | GitHub emails the support repo's watchers. |
 
 One-time setup:
 
 1. Backup secrets on the private repo (never on `ofekpol/schoolsync`): `gh secret set PROD_DATABASE_URL --repo ofekpol/schoolsync-support` (session pooler URL), and `openssl rand -base64 32` → save it in your password manager → `gh secret set BACKUP_PASSPHRASE --repo ofekpol/schoolsync-support`. Without the passphrase the job fails on purpose rather than upload plain dumps. **Losing it makes every backup unreadable.**
 2. Run the backup once by hand: `gh workflow run backup-prod-db.yml --repo ofekpol/schoolsync-support`.
-3. After the first promotion to `main`, run `gh workflow run uptime.yml` once. GitHub disables scheduled workflows in a **public** repo after 60 days without activity; re-enable uptime in the Actions tab if that happens.
+3. Uptime is live (first run 2026-11-07). GitHub disables scheduled workflows in a **public** repo after 60 days without activity; re-enable uptime in the Actions tab if that happens.
 4. Client-side (browser) errors are not reported; only server errors are.
 
 **Restoring from a backup:** download the artifact (`gh run download <run-id> --repo ofekpol/schoolsync-support`), then `gpg --decrypt public.dump.gpg > public.dump` (same for `auth.dump`), and restore with the steps in `scripts/refresh-staging-db.sh` (`restore_staging`), pointed at the target project. Rehearse on staging first.

@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardLoadingSkeleton } from "@/components/staff/DashboardLoadingSkeleton";
 import { StaffEntryLoading } from "@/components/staff/StaffEntryLoading";
+// Static imports: a dynamic import inside a test spends its timeout transforming the module graph.
+import Layout from "@/app/(staff)/layout";
+import Loading from "@/app/(staff)/loading";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) =>
@@ -38,14 +41,11 @@ describe("staff loading states", () => {
     expect(view.getAllByTestId("dashboard-loading-cell")).not.toHaveLength(0);
   });
 
-  it("streams the entry state before the asynchronous staff guard", async () => {
-    const Layout = (await import("@/app/(staff)/layout")).default;
-
+  it("streams the entry state before the asynchronous staff guard", () => {
     expect(Layout({ children: <div /> })).toMatchObject({ type: Suspense });
   });
 
-  it("uses the dashboard skeleton for route-level loading", async () => {
-    const Loading = (await import("@/app/(staff)/loading")).default;
+  it("uses the dashboard skeleton for route-level loading", () => {
     const { container } = render(<Loading />);
 
     expect(within(container).getByRole("status")).toHaveTextContent("Loading your calendar");

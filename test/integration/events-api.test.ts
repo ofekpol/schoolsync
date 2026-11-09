@@ -5,8 +5,8 @@ import * as schema from "@/lib/db/schema";
 import {
   createDraft,
   createPublishedEvent,
+  deleteOrCancelEvent,
   replaceEventGrades,
-  softDelete,
   updateDraft,
 } from "@/lib/events/crud";
 import { getEditorDashboardEvents, getEventForEditor } from "@/lib/events/queries";
@@ -146,7 +146,7 @@ describe.skipIf(skipIfNoTestDb)(
 
     it("returns null for a soft-deleted event", async () => {
       const { id } = await createDraft(testSchoolA, ownerEditorId, eventTypeId);
-      await softDelete(testSchoolA, id, ownerEditorId);
+      await deleteOrCancelEvent(testSchoolA, id, ownerEditorId, false);
       const r = await getEventForEditor(testSchoolA, id, ownerEditorId, false);
       expect(r).toBeNull();
     });
@@ -190,9 +190,9 @@ describe.skipIf(skipIfNoTestDb)(
       expect(r.status).toBe("not_found");
     });
 
-    it("softDelete with school A context returns {deleted: false} for school B's event", async () => {
-      const r = await softDelete(testSchoolA, schoolBEventId, editorA);
-      expect(r).toEqual({ deleted: false });
+    it("deleteOrCancelEvent with school A context returns not_found for school B's event", async () => {
+      const r = await deleteOrCancelEvent(testSchoolA, schoolBEventId, editorA, true);
+      expect(r).toEqual({ status: "not_found" });
     });
 
     it("getEditorDashboardEvents does not leak events from the other school", async () => {
@@ -235,7 +235,7 @@ describe.skipIf(skipIfNoTestDb)(
 
     it("excludes soft-deleted events", async () => {
       const { id } = await createDraft(testSchoolA, editorA, eventTypeId);
-      await softDelete(testSchoolA, id, editorA);
+      await deleteOrCancelEvent(testSchoolA, id, editorA, false);
       const events = await getEditorDashboardEvents(testSchoolA, editorA);
       expect(events.map((e) => e.id)).not.toContain(id);
     });

@@ -133,7 +133,7 @@ Admins can also create staff directly from `/admin/staff`.
 Key files:
 
 - `lib/auth/session.ts` — `getSession()` (validates JWT via `getUser()`, never `getSession()`) and `getStaffUser()`
-- `lib/auth/scopes.ts` — `assertEditorScope(user, grade?, eventType?)`. **Currently only imported by tests**: the event routes (`app/api/v1/events/**`) enforce scope inline and return `scope_violation`. When touching scope logic, change the routes, not just this file.
+- Editor scope is enforced inline in the event routes (`app/api/v1/events/**`, returning `scope_violation`); there is no shared scope helper.
 - `lib/db/invites.ts` — invite CRUD; `getInviteByToken` uses service-role (school unknown pre-validation)
 
 Rules:

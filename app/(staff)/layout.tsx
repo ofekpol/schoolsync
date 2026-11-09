@@ -45,7 +45,7 @@ async function StaffLayoutContent({ children }: { children: ReactNode }) {
       {user.demoExpiresAt && <DemoBanner expiresAt={user.demoExpiresAt} />}
       <AppHeader
         title={school?.name ?? user.fullName}
-        subtitle={user.email}
+        subtitle={isDemoUser(user) ? undefined : user.email}
         navLinks={navLinks}
         currentPath={currentPath}
         rightSlot={

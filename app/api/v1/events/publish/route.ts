@@ -4,8 +4,9 @@ import { createPublishedEvent } from "@/lib/events/crud";
 import { getEditorAllowedGrades, isEventTypeAllowed } from "@/lib/events/queries";
 import { EventQuickPublishSchema } from "@/lib/validations/events";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,15 +35,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         { status: 403 },
       );
     }
-    if (!(await isEventTypeAllowed(user, parsed.data.eventTypeId))) {
-      return NextResponse.json(
-        { error: "scope_violation", eventTypeId: parsed.data.eventTypeId },
-        { status: 403 },
-      );
-    }
+  }
+  if (!(await isEventTypeAllowed(user, parsed.data.eventTypeId))) {
+    return NextResponse.json(
+      { error: "scope_violation", eventTypeId: parsed.data.eventTypeId },
+      { status: 403 },
+    );
   }
 
   const event = await createPublishedEvent(user.schoolId!, user.id, parsed.data);
   invalidatePublicViewerCache(user.schoolSlug);
   return NextResponse.json(event, { status: 201 });
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

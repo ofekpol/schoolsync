@@ -5,6 +5,7 @@ import {
   listSubscriptionsForStaff,
 } from "@/lib/ical/subscriptions";
 import { ICalSubscriptionSchema } from "@/lib/validations/events";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
@@ -14,7 +15,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ subscriptions: rows }, { status: 200 });
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (user.status !== "active" || user.mustChangePassword) {
@@ -40,3 +41,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     { status: 201 },
   );
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

@@ -41,10 +41,19 @@ export async function isEventTypeAllowed(
   user: { id: string; schoolId: string | null; role: string },
   eventTypeId: string,
 ): Promise<boolean> {
-  if (user.role === "admin") return true;
   if (!user.schoolId) return false;
   const staffUserId = user.id;
   return withSchool(user.schoolId, async (tx) => {
+    // RLS only shows this school's types, so this also refuses another school's id —
+    // for admins too (the events FK on event_type_id is not tenant-scoped).
+    const [type] = await tx
+      .select({ key: eventTypes.key })
+      .from(eventTypes)
+      .where(eq(eventTypes.id, eventTypeId))
+      .limit(1);
+    if (!type) return false;
+    if (user.role === "admin") return true;
+
     const scopeRows = await tx
       .select({ scopeValue: editorScopes.scopeValue })
       .from(editorScopes)
@@ -54,14 +63,7 @@ export async function isEventTypeAllowed(
           eq(editorScopes.scopeKind, "event_type"),
         ),
       );
-    if (scopeRows.length === 0) return true;
-
-    const [type] = await tx
-      .select({ key: eventTypes.key })
-      .from(eventTypes)
-      .where(eq(eventTypes.id, eventTypeId))
-      .limit(1);
-    return type !== undefined && scopeRows.some((row) => row.scopeValue === type.key);
+    return scopeRows.length === 0 || scopeRows.some((row) => row.scopeValue === type.key);
   });
 }
 

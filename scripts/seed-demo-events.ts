@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import { db, withSchool } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
 import { DEFAULT_EVENT_TYPES } from "@/lib/db/provision";
-import { demoEventRange, demoEvents } from "@/db/demo-events";
+import { insertDemoEvents } from "@/lib/db/demo-content";
 
 export const DEMO_SLUGS = new Set(["demo-school", "edusolutions-demo"]);
 
@@ -35,32 +35,10 @@ async function main(slug: string): Promise<void> {
     for (const type of DEFAULT_EVENT_TYPES) {
       await tx.insert(schema.eventTypes).values({ schoolId: school.id, ...type }).onConflictDoNothing();
     }
-    const types = await tx.select().from(schema.eventTypes);
-    const typeIdByKey = new Map(types.map((type) => [type.key, type.id]));
 
     // event_grades, revisions and dismissals cascade.
     await tx.delete(schema.events).where(eq(schema.events.schoolId, school.id));
-
-    for (const event of demoEvents()) {
-      const eventTypeId = typeIdByKey.get(event.typeKey);
-      if (!eventTypeId) throw new Error(`missing event type "${event.typeKey}"`);
-      const [row] = await tx
-        .insert(schema.events)
-        .values({
-          schoolId: school.id,
-          eventTypeId,
-          title: event.title,
-          description: event.description ?? null,
-          location: event.location ?? null,
-          ...demoEventRange(event),
-          allDay: event.time === undefined,
-          status: "approved",
-          createdBy: admin.id,
-        })
-        .returning({ id: schema.events.id });
-      await tx.insert(schema.eventGrades).values(event.grades.map((grade) => ({ eventId: row.id, grade, schoolId: school.id })));
-    }
-    return demoEvents().length;
+    return insertDemoEvents(tx, school.id, admin.id);
   });
   console.log(`Seeded ${count} demo events into ${slug}.`);
 }

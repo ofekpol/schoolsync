@@ -6,6 +6,7 @@ import { listEventTypes } from "@/lib/admin/event-types";
 import { createPublishedEvents } from "@/lib/events/crud";
 import { parseCalendarImport } from "@/lib/import/calendar-import";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 const MAX_CSV_CHARS = 1_000_000;
 
@@ -19,7 +20,7 @@ const ImportRequestSchema = z.object({
  * Calendar import for a new school's existing year (admin only).
  * Preview first, then commit; a commit is all-or-nothing.
  */
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   try {
     assertAdmin(user);
@@ -53,3 +54,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   invalidatePublicViewerCache(user!.schoolSlug);
   return NextResponse.json({ error: null, rows, imported: inputs.length }, { status: 201 });
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

@@ -34,6 +34,11 @@ vi.mock("@/lib/db/schools", () => ({
 
 import { GET } from "@/app/auth/callback/route";
 
+// Route handlers read the demo cookie; there is no request scope in unit tests.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined, delete: () => undefined }),
+}));
+
 function callback(query: string) {
   return GET(new NextRequest(`http://localhost/auth/callback?code=c${query}`));
 }

@@ -3,6 +3,7 @@ import { getStaffUser } from "@/lib/auth/session";
 import { assertAdmin, assertCanCreateEventType } from "@/lib/auth/admin";
 import { createEventType, listEventTypes } from "@/lib/admin/event-types";
 import { EventTypeSchema } from "@/lib/validations/admin";
+import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
@@ -16,7 +17,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ eventTypes: eventTypesList }, { status: 200 });
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   try {
     assertCanCreateEventType(user);
@@ -32,3 +33,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const result = await createEventType(user!.schoolId, parsed.data);
   return NextResponse.json(result, { status: 201 });
 }
+
+// Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.
+export const POST = withDemoLimits(handlePOST);

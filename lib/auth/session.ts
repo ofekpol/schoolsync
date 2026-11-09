@@ -1,8 +1,11 @@
 import "server-only";
 import { cache } from "react";
+import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getStaffUserByAuthId, type StaffUserRecord } from "@/lib/db/staff";
+import { getDemoStaffUser } from "@/lib/db/demo";
+import { DEMO_COOKIE, demoSecret, verifyDemoSession } from "@/lib/auth/demo-session";
 
 /**
  * Returns the authenticated Supabase auth user or null.
@@ -24,6 +27,13 @@ export type { StaffUserRecord };
  * client directly (CLAUDE.md: the service-role client must only be imported inside `lib/db/`).
  */
 async function resolveStaffUser(): Promise<StaffUserRecord | null> {
+  // A demo cookie is checked first and never touches Supabase (demo schools have no Auth users).
+  const demoToken = (await cookies()).get(DEMO_COOKIE)?.value;
+  if (demoToken) {
+    const check = await verifyDemoSession(demoToken, demoSecret());
+    if (check.status !== "valid") return null;
+    return getDemoStaffUser(check.session.staffId, check.session.schoolId);
+  }
   const authUser = await getSession();
   if (!authUser) return null;
   // Bind by auth id only: an email match would let any account with that email inherit the row.

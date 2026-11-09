@@ -47,7 +47,7 @@ function jsonRequest(): NextRequest {
   return new NextRequest("http://localhost/x", { method: "POST", body: "{}" });
 }
 
-const eventParams = { params: Promise.resolve({ id: "e1" }) };
+const eventParams = { params: Promise.resolve({ id: "00000000-0000-4000-8000-0000000000e1" }) };
 
 describe("routes refuse staff who are not active", () => {
   beforeEach(() => {

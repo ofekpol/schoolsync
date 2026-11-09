@@ -14,6 +14,8 @@ export interface StaffUserRecord {
   email: string;
   fullName: string;
   mustChangePassword: boolean;
+  /** Set only for public demo schools; non-null means every outbound action is disabled. */
+  demoExpiresAt?: Date | null;
 }
 
 /**
@@ -38,6 +40,7 @@ export async function getStaffUserByAuthId(authId: string): Promise<StaffUserRec
       email: staffUsers.email,
       fullName: staffUsers.fullName,
       mustChangePassword: staffUsers.mustChangePassword,
+      demoExpiresAt: schools.demoExpiresAt,
     })
     .from(staffUsers)
     .leftJoin(schools, eq(staffUsers.schoolId, schools.id))

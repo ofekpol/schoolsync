@@ -41,7 +41,7 @@ export function AddStaffDialog({
     <>
       <Button
         variant={triggerVariant}
-        className="h-10 gap-2 px-4"
+        className={cn("h-10 gap-2 px-4", triggerVariant === "default" && "sg-button-primary")}
         onClick={() => {
           setMode(initialMode);
           setOpen(true);

@@ -686,25 +686,34 @@
   },
   "support": {
     "link": "Help",
-    "title": "Help and bug reports",
-    "intro": "Something not working, a question or an idea? Write to us and we will reply by email.",
+    "title": "How can we help?",
+    "intro": "Something not working, a question or an idea? Write us a few words and we will reply by email.",
     "disabled": "Support requests are not enabled yet. Contact your school management.",
-    "kindLabel": "Request type",
+    "kindLabel": "What is this about?",
     "kinds": {
       "bug": "Bug",
       "question": "Question",
       "idea": "Suggestion"
     },
-    "messageLabel": "Details",
+    "kindHints": {
+      "bug": "Something isn't working right",
+      "question": "Not sure how to do something",
+      "idea": "An idea to make the app better"
+    },
+    "messageLabel": "Tell us a bit more",
     "placeholders": {
       "bug": "What were you trying to do, and what happened?",
       "question": "How can we help?",
       "idea": "What would help you?"
     },
+    "charCount": "{count} / {max}",
     "privacyNote": "Your name, email, school and the page you came from are attached so we can get back to you.",
-    "submit": "Send",
+    "submit": "Send request",
     "sending": "Sending...",
-    "sent": "Sent. Thank you! We will reply by email.",
+    "sentTitle": "Thank you! We got your request",
+    "sent": "We read every word and will reply by email soon.",
+    "back": "Back to where you were",
+    "sendAnother": "Send another request",
     "error": "Sending failed. Try again in a few minutes.",
     "rateLimited": "Too many requests today. Try again tomorrow."
   },

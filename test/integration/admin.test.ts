@@ -7,6 +7,7 @@ import {
   updateEventType,
   deleteEventType,
   listEventTypes,
+  reorderEventTypes,
 } from "@/lib/admin/event-types";
 import {
   createStaffUserFromInvite,
@@ -156,13 +157,49 @@ describe.skipIf(skipIfNoTestDb)(
       expect(result).toEqual({ updated: false });
     });
 
-    it("listEventTypes returns school A's types ordered by Hebrew label", async () => {
+    it("listEventTypes returns school A's types in display (sort_order) order", async () => {
       const types = await listEventTypes(testSchoolA);
       expect(types.length).toBeGreaterThan(0);
-      // Sorted by Hebrew label ascending
+      const rows = await testDb!
+        .select({ id: schema.eventTypes.id, sortOrder: schema.eventTypes.sortOrder })
+        .from(schema.eventTypes)
+        .where(eq(schema.eventTypes.schoolId, testSchoolA));
+      const order = new Map(rows.map((r) => [r.id, r.sortOrder]));
       for (let i = 1; i < types.length; i++) {
-        expect(types[i].labelHe.localeCompare(types[i - 1].labelHe, "he")).toBeGreaterThanOrEqual(0);
+        expect(order.get(types[i].id)!).toBeGreaterThanOrEqual(order.get(types[i - 1].id)!);
       }
+    });
+
+    it("createEventType without a key derives a unique one and appends to the order", async () => {
+      const first = await createEventType(testSchoolA, {
+        labelHe: "סיור", labelEn: "Field Visit!", colorHex: "#111111", glyph: "F",
+      });
+      const second = await createEventType(testSchoolA, {
+        labelHe: "סיור 2", labelEn: "Field Visit", colorHex: "#222222", glyph: "F",
+      });
+      expect(first.key).toMatch(/^field_visit(_\d+)?$/);
+      expect(second.key).not.toBe(first.key);
+      const types = await listEventTypes(testSchoolA);
+      expect(types.at(-1)!.id).toBe(second.id);
+      await deleteEventType(testSchoolA, first.id);
+      await deleteEventType(testSchoolA, second.id);
+    });
+
+    it("reorderEventTypes applies the given order and rejects a partial or foreign list", async () => {
+      const ids = (await listEventTypes(testSchoolA)).map((t) => t.id);
+      const reversed = ids.slice().reverse();
+      expect(await reorderEventTypes(testSchoolA, reversed)).toEqual({ reordered: true });
+      expect((await listEventTypes(testSchoolA)).map((t) => t.id)).toEqual(reversed);
+      expect(await reorderEventTypes(testSchoolA, ids.slice(1))).toEqual({ reordered: false });
+      const [schoolBType] = await testDb!
+        .select({ id: schema.eventTypes.id })
+        .from(schema.eventTypes)
+        .where(eq(schema.eventTypes.schoolId, testSchoolB))
+        .limit(1);
+      expect(
+        await reorderEventTypes(testSchoolA, [...ids.slice(1), schoolBType.id]),
+      ).toEqual({ reordered: false });
+      expect(await reorderEventTypes(testSchoolA, ids)).toEqual({ reordered: true });
     });
 
     it("cross-school: updateEventType from school A on school B's event type returns {updated: false}", async () => {

@@ -44,14 +44,24 @@ export const ApprovePendingSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const EventTypeSchema = z.object({
-  key: z.string().min(1).max(64),
-  labelHe: z.string().min(1),
-  labelEn: z.string().min(1),
+/** Editable fields of an event type. The key is internal and never edited. */
+export const EventTypeUpdateSchema = z.object({
+  labelHe: z.string().trim().min(1).max(80),
+  labelEn: z.string().trim().min(1).max(80),
   /** Hex color in #RRGGBB format */
   colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be #RRGGBB"),
   /** Single glyph or short string for the event type icon */
-  glyph: z.string().min(1).max(8),
+  glyph: z.string().trim().min(1).max(8),
+});
+
+/** Create input. `key` is optional: when omitted it is derived from labelEn. */
+export const EventTypeSchema = EventTypeUpdateSchema.extend({
+  key: z.string().trim().min(1).max(64).optional(),
+});
+
+/** New display order: every event type id of the school, first to last. */
+export const EventTypeOrderSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
 });
 
 const GradeColorEntrySchema = z.object({

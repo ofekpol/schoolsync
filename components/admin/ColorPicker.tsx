@@ -1,11 +1,11 @@
 "use client";
 
-import { useId } from "react";
 import { useTranslations } from "next-intl";
+import { Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Color-blind-safe preset palette (Tableau 10 + greys). */
-const PRESETS = [
+export const COLOR_PRESETS = [
   "#1f77b4",
   "#d62728",
   "#9467bd",
@@ -26,47 +26,51 @@ interface Props {
 }
 
 /**
- * Color selector: a grid of clickable preset swatches plus a native
- * picker for custom hex. Emits #RRGGBB (matches EventTypeSchema regex).
+ * Compact color selector: one row of preset swatches plus a native picker
+ * for a custom hex. Emits #RRGGBB (matches the event-type schema regex).
  */
 export function ColorPicker({ value, onChange }: Props) {
   const t = useTranslations("admin.eventTypes");
-  const customId = useId();
   const normalized = value.toLowerCase();
+  const isCustom = !COLOR_PRESETS.includes(normalized);
 
   return (
-    <div className="space-y-2">
-      <div role="radiogroup" aria-label={t("chooseColor")} className="flex flex-wrap gap-1.5">
-        {PRESETS.map((hex) => {
-          const selected = hex.toLowerCase() === normalized;
-          return (
-            <button
-              key={hex}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              aria-label={hex}
-              title={hex}
-              onClick={() => onChange(hex)}
-              style={{ background: hex }}
-              className={cn(
-                "h-7 w-7 rounded-md border transition focus:outline-none focus:ring-2 focus:ring-offset-1",
-                selected ? "ring-2 ring-offset-1 ring-black border-black" : "border-black/20",
-              )}
-            />
-          );
-        })}
-      </div>
-      <label htmlFor={customId} className="flex items-center gap-2 text-sm">
+    <div role="radiogroup" aria-label={t("chooseColor")} className="flex flex-wrap items-center gap-1">
+      {COLOR_PRESETS.map((hex) => {
+        const selected = hex === normalized;
+        return (
+          <button
+            key={hex}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={hex}
+            title={hex}
+            onClick={() => onChange(hex)}
+            style={{ background: hex }}
+            className={cn(
+              "size-6 rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+              selected ? "ring-2 ring-neutral-900 ring-offset-1" : "border-black/15 hover:scale-110",
+            )}
+          />
+        );
+      })}
+      <label
+        title={t("customColor")}
+        className={cn(
+          "relative inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-dashed border-neutral-400 text-neutral-500 focus-within:ring-2 focus-within:ring-ring",
+          isCustom && "border-solid ring-2 ring-neutral-900 ring-offset-1",
+        )}
+        style={isCustom ? { background: normalized } : undefined}
+      >
+        {!isCustom && <Pipette aria-hidden="true" className="size-3" />}
         <input
-          id={customId}
           type="color"
+          aria-label={t("customColor")}
           value={normalized}
           onChange={(e) => onChange(e.target.value)}
-          className="h-7 w-10 cursor-pointer rounded border p-0"
+          className="absolute inset-0 size-full cursor-pointer opacity-0"
         />
-        <span>{t("customColor")}</span>
-        <span className="font-mono text-xs text-muted-foreground">{normalized}</span>
       </label>
     </div>
   );

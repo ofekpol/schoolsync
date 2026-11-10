@@ -30,8 +30,22 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
-  const result = await createEventType(user!.schoolId, parsed.data);
-  return NextResponse.json(result, { status: 201 });
+  try {
+    const result = await createEventType(user!.schoolId, parsed.data);
+    return NextResponse.json(result, { status: 201 });
+  } catch (e) {
+    if (isUniqueViolation(e)) return NextResponse.json({ error: "duplicate_key" }, { status: 409 });
+    throw e;
+  }
+}
+
+/** Postgres 23505 (possibly wrapped by Drizzle in `cause`): an explicit key already exists. */
+function isUniqueViolation(error: unknown): boolean {
+  for (let current: unknown = error, depth = 0; current && depth < 4; depth++) {
+    if ((current as { code?: unknown }).code === "23505") return true;
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
 }
 
 // Demo-school limits (migration 0019 trigger) surface as 403/400, not 500.

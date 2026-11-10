@@ -30,9 +30,9 @@ export function EventTypeListItem(props: Props) {
       <div className="flex min-h-9 items-center gap-2.5">
         {canManage && <MoveButtons {...props} />}
         <GlyphChip colorHex={row.colorHex} glyph={row.glyph} />
-        <div className="min-w-0 flex-1 truncate">
-          <span className="text-sm font-medium">{row.labelHe}</span>
-          <span dir="ltr" className="ms-2 text-xs text-neutral-500">{row.labelEn}</span>
+        <div className="flex min-w-0 flex-1 items-baseline gap-2">
+          <span className="truncate text-sm font-medium">{row.labelHe}</span>
+          <span dir="ltr" className="truncate text-xs text-neutral-500">{row.labelEn}</span>
         </div>
         {canManage &&
           (confirming ? (

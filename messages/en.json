@@ -226,7 +226,9 @@
       "reset": "Restore defaults",
       "saved": "Saved",
       "error": "Save failed",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "changeColor": "Change the color of grade {grade}",
+      "duplicatePair": "Grades {a} and {b} share a color"
     },
     "import": {
       "button": "Import calendar",

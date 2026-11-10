@@ -226,7 +226,9 @@
       "reset": "שחזור ברירת מחדל",
       "saved": "נשמר",
       "error": "השמירה נכשלה",
-      "saving": "שומר…"
+      "saving": "שומר…",
+      "changeColor": "שינוי הצבע של שכבה {grade}",
+      "duplicatePair": "לשכבות {a} ו־{b} יש אותו צבע"
     },
     "import": {
       "button": "ייבוא לוח",

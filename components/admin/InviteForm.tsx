@@ -6,7 +6,9 @@ import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useRouteProgress } from "@/components/RouteProgress";
+import { Check, Copy } from "lucide-react";
 import { ALL_GRADES, ScopeFields } from "@/components/admin/ScopeFields";
+import { Field, RoleHint, fieldClass } from "@/components/admin/staff-ui";
 
 interface EventTypeRow {
   key: string;
@@ -69,29 +71,28 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
   }
 
   return (
-    <form
-      key={formKey}
-      action={create}
-      data-testid="invite-form"
-      className="space-y-3 rounded border p-3"
-    >
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          name="role"
-          defaultValue="editor"
-          className="rounded border px-2 py-1"
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <option value="viewer">{t("roleViewer")}</option>
-          <option value="editor">{t("roleEditor")}</option>
-          <option value="admin">{t("roleAdmin")}</option>
-        </select>
-        <label className="flex items-center gap-2 text-sm text-neutral-700">
-          <input type="checkbox" name="multiUse" />
+    <form key={formKey} action={create} data-testid="invite-form" className="space-y-5">
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+        <div className="space-y-1.5">
+          <Field label={t("role")}>
+            <select
+              name="role"
+              defaultValue="editor"
+              className={`${fieldClass} sm:w-56`}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="viewer">{t("roleViewer")}</option>
+              <option value="editor">{t("roleEditor")}</option>
+              <option value="admin">{t("roleAdmin")}</option>
+            </select>
+          </Field>
+        </div>
+        <label className="flex h-10 items-center gap-2 text-sm text-neutral-700">
+          <input type="checkbox" name="multiUse" className="size-4 accent-violet-600" />
           {t("multiUse")}
         </label>
-        <InviteSubmitButton label={t("createInvite")} loadingLabel={tc("saving")} />
       </div>
+      <RoleHint role={role} />
 
       {role === "editor" && (
         <ScopeFields
@@ -106,28 +107,36 @@ export function InviteForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
             selectAllEventTypes: t("selectAllEventTypes"),
             clearAllEventTypes: t("clearAllEventTypes"),
           }}
-          wrapperClassName="lg:grid-cols-1 xl:grid-cols-2"
-          legendClassName="text-neutral-950"
-          optionClassName="rounded-none border-0 px-0 py-0"
         />
       )}
 
       {url && (
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="break-all text-sm text-green-700">
-            {t("inviteCreated")}: {url}
+        <div role="status" className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-emerald-900">
+            <Check className="size-4" aria-hidden />
+            {t("inviteCreated")}
           </p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => copyUrl(url)}
-          >
-            {copied ? t("inviteCopied") : t("copyInvite")}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              readOnly
+              value={url}
+              dir="ltr"
+              aria-label={t("inviteCreated")}
+              onFocus={(event) => event.currentTarget.select()}
+              className={`${fieldClass} min-w-0 flex-1 bg-white font-mono text-xs`}
+            />
+            <Button type="button" variant="outline" className="h-10" onClick={() => copyUrl(url)}>
+              <Copy className="size-3.5" aria-hidden />
+              {copied ? t("inviteCopied") : t("copyInvite")}
+            </Button>
+          </div>
+          <p className="text-xs text-emerald-800">{t("inviteShareHint")}</p>
         </div>
       )}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex justify-end border-t border-neutral-100 pt-4">
+        <InviteSubmitButton label={t("createInvite")} loadingLabel={tc("saving")} />
+      </div>
     </form>
   );
 }
@@ -141,7 +150,7 @@ function InviteSubmitButton({
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="px-4">
       {pending ? loadingLabel : label}
     </Button>
   );

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
 import { assertAdmin } from "@/lib/auth/admin";
 import { updateEventType, deleteEventType } from "@/lib/admin/event-types";
-import { EventTypeSchema } from "@/lib/validations/admin";
+import { EventTypeUpdateSchema } from "@/lib/validations/admin";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -17,7 +17,7 @@ async function handlePATCH(request: NextRequest, { params }: RouteContext): Prom
   }
   const { id } = await params;
   const body = await request.json().catch(() => null);
-  const parsed = EventTypeSchema.partial().safeParse(body);
+  const parsed = EventTypeUpdateSchema.partial().safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }

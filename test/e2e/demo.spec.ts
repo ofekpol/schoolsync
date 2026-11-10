@@ -39,7 +39,7 @@ test("DEMO: a visitor tries the product in a private school", async ({ page, con
   test.setTimeout(90_000);
 
   await page.goto("/demo");
-  await expect(page.getByRole("heading", { name: "נסו את הגאנט הבית־ספרי" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "נסו את SchoolSync" })).toBeVisible();
   await page.getByRole("button", { name: "התחילו הדגמה" }).click();
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 20_000 });
   await expect(page.getByRole("note").filter({ hasText: "זוהי סביבת הדגמה" })).toBeVisible();

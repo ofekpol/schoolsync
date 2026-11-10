@@ -18,6 +18,13 @@ export async function middleware(request: NextRequest) {
   });
 
   const { pathname } = request.nextUrl;
+  // Opening the login page leaves the demo; otherwise it bounces straight back into it.
+  if (pathname === "/auth/login" && request.cookies.has(DEMO_COOKIE)) {
+    request.cookies.delete(DEMO_COOKIE);
+    response = NextResponse.next({ request: { headers: request.headers } });
+    response.cookies.delete(DEMO_COOKIE);
+    return response;
+  }
   if (shouldBypassAuthRefresh(pathname)) return response;
 
   // Demo sessions are checked before (and instead of) Supabase.

@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import { formatGradeLabel } from "@/lib/grades";
 import {
   DEFAULT_GRADE_COLORS,
-  GRADE_COLOR_OPTIONS,
   SCHOOL_GRADES,
   gradeTextColor,
   type GradeColorMap,
 } from "@/lib/grade-colors";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { GradeColorGrid } from "@/components/admin/GradeColorGrid";
+import { cn } from "@/lib/utils";
 
 interface Props {
   initial: GradeColorMap;
@@ -17,100 +20,89 @@ interface Props {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-/** Admin picker for per-grade calendar colors (curated palette only). */
+async function persist(colors: GradeColorMap): Promise<boolean> {
+  const res = await fetch("/api/v1/admin/grade-colors", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      colors: SCHOOL_GRADES.map((grade) => ({ grade, colorHex: colors[grade] })),
+    }),
+  }).catch(() => null);
+  return Boolean(res?.ok);
+}
+
+/** Pairs of grades that share a color, each pair once (e.g. [[7, 9]]). */
+function duplicatePairs(colors: GradeColorMap): [number, number][] {
+  const pairs: [number, number][] = [];
+  SCHOOL_GRADES.forEach((a, i) => {
+    for (const b of SCHOOL_GRADES.slice(i + 1)) if (colors[a] === colors[b]) pairs.push([a, b]);
+  });
+  return pairs;
+}
+
+/**
+ * Admin per-grade calendar colors: one chip per grade; clicking a chip opens
+ * the palette. Saves on every pick.
+ */
 export function GradeColorSettings({ initial }: Props) {
   const t = useTranslations("admin.gradeColors");
   const [colors, setColors] = useState<GradeColorMap>(initial);
   const [state, setState] = useState<SaveState>("idle");
+  const [openGrade, setOpenGrade] = useState<number | null>(null);
 
-  function pick(grade: number, color: string) {
-    setColors((current) => ({ ...current, [grade]: color }));
-    setState("idle");
-  }
-
-  async function save() {
+  async function apply(next: GradeColorMap) {
+    const previous = colors;
+    setColors(next);
+    setOpenGrade(null);
     setState("saving");
-    const res = await fetch("/api/v1/admin/grade-colors", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        colors: SCHOOL_GRADES.map((grade) => ({ grade, colorHex: colors[grade] })),
-      }),
-    }).catch(() => null);
-    setState(res?.ok ? "saved" : "error");
+    const ok = await persist(next);
+    if (!ok) setColors(previous);
+    setState(ok ? "saved" : "error");
   }
 
+  const status = { idle: "", saving: t("saving"), saved: t("saved"), error: t("error") }[state];
+
   return (
-    <section aria-labelledby="grade-colors-title" className="mt-10 max-w-3xl">
-      <h2 id="grade-colors-title" className="text-xl font-bold">{t("title")}</h2>
-      <p className="mt-1 text-sm text-neutral-600">{t("description")}</p>
-      <ul className="mt-4 divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+    <section aria-labelledby="grade-colors-title">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="grade-colors-title" className="text-base font-semibold">{t("title")}</h2>
+        <span role="status" className={cn("text-xs", state === "error" ? "text-destructive" : "text-neutral-500")}>
+          {status}
+        </span>
+      </div>
+      <p className="mb-3 text-xs text-neutral-500">{t("description")}</p>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {SCHOOL_GRADES.map((grade) => (
-          <GradeColorRow
-            key={grade}
-            grade={grade}
-            color={colors[grade]}
-            duplicateOf={SCHOOL_GRADES.find((other) => other !== grade && colors[other] === colors[grade])}
-            onPick={(color) => pick(grade, color)}
-          />
+          <Popover key={grade} open={openGrade === grade}
+            onOpenChange={(open) => setOpenGrade(open ? grade : null)}>
+            <PopoverTrigger
+              aria-label={t("changeColor", { grade: formatGradeLabel(grade) })}
+              className="flex h-9 items-center justify-center gap-1 rounded-md text-xs font-semibold shadow-xs ring-1 ring-black/10 transition hover:ring-black/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ backgroundColor: colors[grade], color: gradeTextColor(colors[grade]) }}
+            >
+              {t("gradeLabel", { grade: formatGradeLabel(grade) })}
+              <ChevronDown aria-hidden="true" className="size-3 opacity-60" />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+              <GradeColorGrid grade={grade} colors={colors}
+                onPick={(color) => (color === colors[grade] ? setOpenGrade(null) : apply({ ...colors, [grade]: color }))} />
+            </PopoverContent>
+          </Popover>
         ))}
-      </ul>
-      <div className="mt-4 flex items-center gap-3">
-        <button type="button" onClick={save} disabled={state === "saving"} className="sg-button-primary rounded-md px-4 py-2 text-sm">
-          {t("save")}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setColors({ ...DEFAULT_GRADE_COLORS }); setState("idle"); }}
-          className="rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm"
-        >
-          {t("reset")}
-        </button>
-        <span role="status" className="text-sm text-neutral-600">
-          {state === "saved" ? t("saved") : state === "error" ? t("error") : ""}
-        </span>
       </div>
-    </section>
-  );
-}
-
-interface RowProps {
-  grade: number;
-  color: string;
-  duplicateOf: number | undefined;
-  onPick: (color: string) => void;
-}
-
-function GradeColorRow({ grade, color, duplicateOf, onPick }: RowProps) {
-  const t = useTranslations("admin.gradeColors");
-  const label = formatGradeLabel(grade);
-  return (
-    <li className="flex flex-wrap items-center gap-4 px-4 py-3">
-      <span
-        className="inline-flex h-9 min-w-24 items-center justify-center rounded-md px-3 text-sm font-semibold"
-        style={{ backgroundColor: color, color: gradeTextColor(color) }}
+      {duplicatePairs(colors).map(([a, b]) => (
+        <p key={`${a}-${b}`} className="mt-2 text-xs font-medium text-amber-800">
+          {t("duplicatePair", { a: formatGradeLabel(a), b: formatGradeLabel(b) })}
+        </p>
+      ))}
+      <button
+        type="button"
+        onClick={() => apply({ ...DEFAULT_GRADE_COLORS })}
+        disabled={state === "saving"}
+        className="mt-2 text-xs text-neutral-500 underline-offset-2 hover:text-neutral-900 hover:underline"
       >
-        {t("gradeLabel", { grade: label })}
-      </span>
-      <div role="radiogroup" aria-label={t("gradeLabel", { grade: label })} className="flex flex-wrap gap-1.5">
-        {GRADE_COLOR_OPTIONS.map((option) => (
-          <button
-            key={option}
-            type="button"
-            role="radio"
-            aria-checked={option === color}
-            aria-label={t("colorOption", { grade: label, color: option })}
-            onClick={() => onPick(option)}
-            className={`size-8 rounded-full border ${option === color ? "ring-2 ring-neutral-900 ring-offset-2" : "border-black/15"}`}
-            style={{ backgroundColor: option }}
-          />
-        ))}
-      </div>
-      {duplicateOf !== undefined && (
-        <span className="text-sm font-medium text-amber-800">
-          {t("duplicate", { grade: formatGradeLabel(duplicateOf) })}
-        </span>
-      )}
-    </li>
+        {t("reset")}
+      </button>
+    </section>
   );
 }

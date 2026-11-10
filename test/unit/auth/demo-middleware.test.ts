@@ -77,6 +77,15 @@ describe("middleware: demo sessions", () => {
     expect(api.status).toBe(401);
   });
 
+  it("ends the demo when the visitor opens the login page", async () => {
+    const valid = await demoCookie(60_000);
+    const res = await middleware(request("/auth/login", valid));
+    expect(passedThrough(res)).toBe(true);
+    expect(res.headers.get("set-cookie")).toMatch(new RegExp(`^${DEMO_COOKIE}=;`));
+    // The login page itself must not see the cookie, or it redirects back into the demo.
+    expect(res.headers.get("x-middleware-request-cookie") ?? "").not.toContain(DEMO_COOKIE);
+  });
+
   it("treats every demo cookie as invalid when the secret is missing", async () => {
     const valid = await demoCookie(60_000);
     vi.stubEnv("DEMO_SESSION_SECRET", "");

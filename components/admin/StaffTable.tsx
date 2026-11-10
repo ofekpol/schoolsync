@@ -44,7 +44,7 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
   const [busyId, setBusyId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<StaffRow["role"] | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "deactivated">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "deactivated">("active");
 
   const filteredStaff = initialStaff.filter((staff) => {
     const haystack =

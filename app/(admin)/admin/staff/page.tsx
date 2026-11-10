@@ -77,7 +77,7 @@ export default async function AdminStaffPage() {
       </div>
 
       <section className="space-y-3">
-        <SectionHeader title={t("activeStaff")} count={staff.length} />
+        <SectionHeader title={t("activeStaff")} count={activeCount} />
         <StaffTable initialStaff={staff} eventTypes={eventTypes} readOnly={demo} />
       </section>
 

@@ -75,6 +75,51 @@ describe("admin staff role permissions", () => {
     expect(within(mobileList).getByRole("button", { name: "copyInvite roleEditor" })).toBeInTheDocument();
   });
 
+  it("hides used and revoked invites until history is shown, without copy actions", async () => {
+    const user = userEvent.setup();
+    const base = { role: "editor" as const, gradeScopes: [], eventTypeScopes: [], multiUse: false };
+    render(
+      <InviteTable
+        invites={[
+          { ...base, id: "open", token: "a", revokedAt: null, usedAt: null },
+          { ...base, id: "used", token: "b", revokedAt: null, usedAt: "2026-11-01" },
+          { ...base, id: "revoked", token: "c", revokedAt: "2026-11-02", usedAt: null },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByText("used")).toBeNull();
+    expect(screen.queryByText("revoked")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "showInviteHistory" }));
+
+    expect(screen.getAllByText("used").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("revoked").length).toBeGreaterThan(0);
+    // one open invite × (mobile + desktop) copy buttons
+    expect(screen.getAllByRole("button", { name: "copyInvite roleEditor" })).toHaveLength(2);
+  });
+
+  it("hides deactivated staff until the status filter is changed", async () => {
+    const user = userEvent.setup();
+    const base = { role: "editor" as const, gradeScopes: [], eventTypeScopes: [] };
+    render(
+      <StaffTable
+        initialStaff={[
+          { ...base, id: "a", email: "a@test", fullName: "Active One", deactivatedAt: null },
+          { ...base, id: "d", email: "d@test", fullName: "Gone One", deactivatedAt: "2026-11-01" },
+        ]}
+        eventTypes={eventTypes}
+      />,
+    );
+
+    expect(screen.getAllByText("Active One").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Gone One")).toBeNull();
+
+    await user.selectOptions(screen.getByLabelText("filterByStatus"), "all");
+
+    expect(screen.getAllByText("Gone One").length).toBeGreaterThan(0);
+  });
+
   it("renders staff mobile cards with edit and status actions", async () => {
     const user = userEvent.setup();
 

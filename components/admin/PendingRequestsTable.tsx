@@ -1,14 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import type { ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { Clock, Search, ShieldCheck, UserCheck, Users, X } from "lucide-react";
+import { Check, Clock, Inbox, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatGradeLabel } from "@/lib/grades";
-
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+import { ALL_GRADES, ScopeFields } from "@/components/admin/ScopeFields";
+import {
+  Field,
+  RoleHint,
+  StaffAvatar,
+  StaffDialog,
+  fieldClass,
+} from "@/components/admin/staff-ui";
 
 // Pinned locale + timezone so SSR (Node) and the client agree — a bare
 // toLocaleString() uses each runtime's default locale and triggers a
@@ -47,15 +51,6 @@ export function PendingRequestsTable({
   const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [approvalRole, setApprovalRole] = useState<"editor" | "admin" | "viewer">("viewer");
-
-  useEffect(() => {
-    if (!activeId) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setActiveId(null);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [activeId]);
 
   async function approve(row: PendingRow, form: FormData) {
     if (busyId) return;
@@ -125,204 +120,143 @@ export function PendingRequestsTable({
 
   if (pending.filter((p) => !resolvedIds.has(p.id)).length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-8 text-center text-sm text-neutral-500">
-        {t("noPendingRequests")}
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-12 text-center">
+        <Inbox className="size-7 text-neutral-400" aria-hidden />
+        <p className="text-sm font-medium text-neutral-700">{t("noPendingRequests")}</p>
+        <p className="max-w-sm text-xs text-neutral-500">{t("noPendingHint")}</p>
       </div>
     );
   }
 
+  const busy = busyId !== null || isPending;
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 bg-amber-50/60 p-4">
-        <label className="relative block max-w-lg">
-          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-neutral-500" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("searchPending")}
-            aria-label={t("searchPending")}
-            className="h-10 w-full rounded-md border border-neutral-300 bg-white ps-10 pe-3 text-sm transition outline-none focus:border-neutral-900 focus:ring-3 focus:ring-neutral-200"
-          />
-        </label>
-      </div>
+    <div className="space-y-3">
+      <label className="relative block sm:max-w-md">
+        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("searchPending")}
+          aria-label={t("searchPending")}
+          className={`${fieldClass} ps-9`}
+        />
+      </label>
 
-      <div className="max-h-[520px] divide-y divide-neutral-100 overflow-y-auto">
-        {visible.map((row) => (
-          <div
-            key={row.id}
-            className="grid gap-3 p-4 transition hover:bg-neutral-50 lg:grid-cols-[1fr_auto] lg:items-center"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium text-neutral-950">{row.fullName}</span>
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                  {t("pending")}
-                </span>
-              </div>
-              <div className="mt-1 text-sm break-all text-neutral-600">{row.email}</div>
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500">
-                <Clock className="size-3.5" />
-                {REQUESTED_AT_FMT.format(new Date(row.requestedAt))}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  setApprovalRole("viewer");
-                  setActiveId(row.id);
-                }}
-                disabled={busyId !== null || isPending}
-              >
-                {t("approve")}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => reject(row.id)}
-                disabled={busyId !== null || isPending}
-              >
-                {busyId === row.id ? `${t("reject")}…` : t("reject")}
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {visible.length === 0 && (
-        <div className="px-4 py-10 text-center text-sm text-neutral-500">
+      {visible.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-10 text-center text-sm text-neutral-500">
           {t("noPendingMatches")}
         </div>
+      ) : (
+        <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+          {visible.map((row) => (
+            <li key={row.id} className="flex flex-wrap items-center gap-3 p-4">
+              <StaffAvatar name={row.fullName} email={row.email} role="viewer" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-neutral-950">{row.fullName}</div>
+                <div className="truncate text-sm text-neutral-500">
+                  <bdi>{row.email}</bdi>
+                </div>
+                <div className="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
+                  <Clock className="size-3.5" aria-hidden />
+                  {t("requestedAt")} {REQUESTED_AT_FMT.format(new Date(row.requestedAt))}
+                </div>
+              </div>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <Button
+                  className="h-9 flex-1 gap-1.5 px-4 sm:flex-none"
+                  onClick={() => {
+                    setApprovalRole("viewer");
+                    setActiveId(row.id);
+                  }}
+                  disabled={busy}
+                >
+                  <Check className="size-4" aria-hidden />
+                  {t("approve")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-9 flex-1 text-neutral-600 hover:text-red-700 sm:flex-none"
+                  onClick={() => reject(row.id)}
+                  disabled={busy}
+                >
+                  {busyId === row.id ? `${t("reject")}…` : t("reject")}
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
+      {error && !activeRow && <p className="text-sm text-red-600">{error}</p>}
 
       {activeRow && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="approve-pending-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setActiveId(null)}
+        <StaffDialog
+          titleId="approve-pending-title"
+          title={t("approveUserTitle")}
+          subtitle={activeRow.email}
+          closeLabel={t("cancel")}
+          onClose={() => setActiveId(null)}
         >
           <form
             action={(form) => {
               void approve(activeRow, form);
             }}
-            onClick={(event) => event.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg border border-neutral-200 bg-white p-5 shadow-2xl"
+            className="mt-5 space-y-5"
           >
             <input type="hidden" name="pendingId" value={activeRow.id} />
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 id="approve-pending-title" className="text-lg font-semibold text-neutral-950">
-                  {t("approveUserTitle")}
-                </h3>
-                <p className="mt-1 text-sm break-all text-neutral-600">{activeRow.email}</p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setActiveId(null)}
-                aria-label={t("cancel")}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px]">
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-neutral-700">{t("fullName")}</span>
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+              <Field label={t("fullName")}>
                 <input
                   name="fullName"
                   defaultValue={activeRow.fullName}
-                  className="h-10 w-full rounded-md border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900 focus:ring-3 focus:ring-neutral-200"
+                  className={fieldClass}
                   required
                 />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-neutral-700">{t("role")}</span>
+              </Field>
+              <Field label={t("role")}>
                 <select
                   name="role"
                   value={approvalRole}
                   onChange={(event) =>
                     setApprovalRole(event.target.value as "editor" | "admin" | "viewer")
                   }
-                  className="h-10 w-full rounded-md border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900 focus:ring-3 focus:ring-neutral-200"
+                  className={fieldClass}
                 >
                   <option value="viewer">{t("roleViewer")}</option>
                   <option value="editor">{t("roleEditor")}</option>
                   <option value="admin">{t("roleAdmin")}</option>
                 </select>
-              </label>
+              </Field>
             </div>
+            <RoleHint role={approvalRole} />
 
             {approvalRole === "editor" && (
-              <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                <fieldset className="rounded-lg border border-neutral-200 p-3">
-                  <legend className="px-1 text-sm font-medium text-neutral-800">
-                    {t("gradeScopes")}
-                  </legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {ALL_GRADES.map((g) => (
-                      <label
-                        key={g}
-                        className="flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-sm"
-                      >
-                        <input type="checkbox" name={`grade-${g}`} /> {formatGradeLabel(g)}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-                <fieldset className="rounded-lg border border-neutral-200 p-3">
-                  <legend className="px-1 text-sm font-medium text-neutral-800">
-                    {t("eventTypeScopes")}
-                  </legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {eventTypes.map((et) => (
-                      <label
-                        key={et.key}
-                        className="flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-sm"
-                      >
-                        <input type="checkbox" name={`type-${et.key}`} /> {et.labelHe}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              </div>
+              <ScopeFields
+                eventTypes={eventTypes}
+                gradeName={(grade) => `grade-${grade}`}
+                typeName={(key) => `type-${key}`}
+                labels={{
+                  gradeScopes: t("gradeScopes"),
+                  eventTypeScopes: t("eventTypeScopes"),
+                  selectAllGrades: t("selectAllGrades"),
+                  clearAllGrades: t("clearAllGrades"),
+                  selectAllEventTypes: t("selectAllEventTypes"),
+                  clearAllEventTypes: t("clearAllEventTypes"),
+                }}
+              />
             )}
 
-            <div className="mt-5 grid gap-2 rounded-lg bg-neutral-50 p-3 text-sm text-neutral-700 sm:grid-cols-3">
-              <ModalHint icon={<Users className="size-4" />} text={t("viewerHint")} />
-              <ModalHint icon={<UserCheck className="size-4" />} text={t("editorHint")} />
-              <ModalHint icon={<ShieldCheck className="size-4" />} text={t("adminHint")} />
-            </div>
-
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={busyId !== null || isPending}>
-                {busyId === activeId ? `${t("approve")}…` : t("approve")}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setActiveId(null)}
-                disabled={busyId !== null || isPending}
-              >
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setActiveId(null)} disabled={busy}>
                 {t("cancel")}
               </Button>
-              {error && <span className="text-sm text-red-600">{error}</span>}
+              <Button type="submit" disabled={busy} className="px-4">
+                {busyId === activeId ? `${t("approve")}…` : t("approve")}
+              </Button>
             </div>
           </form>
-        </div>
+        </StaffDialog>
       )}
-    </div>
-  );
-}
-
-function ModalHint({ icon, text }: { icon: ReactNode; text: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-neutral-500">{icon}</span>
-      <span>{text}</span>
     </div>
   );
 }

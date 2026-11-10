@@ -1,8 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Clock, Link2, MailPlus, UserCheck, Users } from "lucide-react";
-import type { ReactNode } from "react";
 import { getStaffUser } from "@/lib/auth/session";
 import { isDemoUser } from "@/lib/auth/demo-guard";
 import { listStaffUsers } from "@/lib/db/staff";
@@ -12,142 +10,103 @@ import { listPendingRegistrations } from "@/lib/db/pending";
 import { listEventTypes } from "@/lib/admin/event-types";
 import { StaffTable } from "@/components/admin/StaffTable";
 import { PendingRequestsTable } from "@/components/admin/PendingRequestsTable";
-import { InviteForm } from "@/components/admin/InviteForm";
-import { AddStaffForm } from "@/components/admin/AddStaffForm";
+import { AddStaffDialog } from "@/components/admin/AddStaffDialog";
 import { InviteTable } from "@/components/admin/InviteTable";
 import { SchoolLinks } from "@/components/admin/SchoolLinks";
+import { StaffTabs, type StaffTab } from "@/components/admin/StaffTabs";
 
 /**
  * Admin staff management page — Server Component.
- * Lists all staff in the school with create/edit/deactivate controls.
- * ADMIN-01 entry point.
+ * Tabs: staff list / pending sign-ups / invite links / school links, with one
+ * "Add staff" dialog (create account or invite link). ADMIN-01 entry point.
  */
-export default async function AdminStaffPage() {
+export default async function AdminStaffPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const user = await getStaffUser();
   if (!user?.schoolId) redirect("/auth/login");
   if (user.role !== "admin") redirect("/dashboard");
 
-  const [staff, eventTypes, pendingRegs, invites, school, requestHeaders] = await Promise.all([
-    listStaffUsers(user.schoolId),
-    listEventTypes(user.schoolId),
-    listPendingRegistrations(user.schoolId),
-    listInvitesForSchool(user.schoolId),
-    getSchoolById(user.schoolId),
-    headers(),
-  ]);
+  const [staff, eventTypes, pendingRegs, invites, school, requestHeaders, params] =
+    await Promise.all([
+      listStaffUsers(user.schoolId),
+      listEventTypes(user.schoolId),
+      listPendingRegistrations(user.schoolId),
+      listInvitesForSchool(user.schoolId),
+      getSchoolById(user.schoolId),
+      headers(),
+      searchParams,
+    ]);
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? `${requestHeaders.get("x-forwarded-proto") ?? "https"}://${requestHeaders.get("host")}`;
 
   const t = await getTranslations("admin.staff");
   const tDemo = await getTranslations("demo");
   const demo = isDemoUser(user);
   const activeCount = staff.filter((member) => !member.deactivatedAt).length;
-  const editorCount = staff.filter(
-    (member) => member.role === "editor" && !member.deactivatedAt,
-  ).length;
-  const openInviteCount = invites.filter(
-    (invite) => !invite.usedAt && !invite.revokedAt,
-  ).length;
+  const openInviteCount = invites.filter((invite) => !invite.usedAt && !invite.revokedAt).length;
 
-  return (
-    <main className="space-y-6 bg-[var(--sg-page)] p-4 text-neutral-950 md:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-4">
-        <StaffStat
-          icon={<Users className="size-4" />}
-          label={t("totalStaff")}
-          value={staff.length}
-        />
-        <StaffStat
-          icon={<UserCheck className="size-4" />}
-          label={t("activeStaff")}
-          value={activeCount}
-        />
-        <StaffStat icon={<Users className="size-4" />} label={t("editors")} value={editorCount} />
-        <StaffStat
-          icon={<Clock className="size-4" />}
-          label={t("pendingRequests")}
-          value={pendingRegs.length}
-        />
-      </div>
-
-      <section className="space-y-3">
-        <SectionHeader title={t("activeStaff")} count={activeCount} />
-        <StaffTable initialStaff={staff} eventTypes={eventTypes} readOnly={demo} />
-      </section>
-
-      {demo ? (
+  const staffPanel = (
+    <div className="space-y-4">
+      {demo && (
         <p role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
           {tDemo("staffDisabled")}
         </p>
-      ) : (
-        <>
-          <section className="space-y-3">
-            <SectionHeader title={t("pendingRequests")} count={pendingRegs.length} />
-            <PendingRequestsTable pending={pendingRegs} eventTypes={eventTypes} />
-          </section>
-
-          <section className="sg-staff-card space-y-3 rounded-xl border bg-white p-4">
-            <h2 className="text-lg font-semibold">{t("create")}</h2>
-            <AddStaffForm eventTypes={eventTypes} />
-          </section>
-        </>
       )}
+      <StaffTable initialStaff={staff} eventTypes={eventTypes} readOnly={demo} />
+    </div>
+  );
 
-      {school && (
-        <section className="sg-staff-card space-y-3 rounded-xl border bg-white p-4">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <Link2 className="size-4" />
-            {t("schoolLinks.title")}
-          </h2>
-          <SchoolLinks accessToken={school.accessToken} origin={origin} guestOnly={demo} />
-        </section>
-      )}
-
-      {!demo && (
-        <section className="sg-staff-card space-y-4 rounded-xl border bg-white p-4">
-          <SectionHeader
-            title={t("invites")}
-            count={openInviteCount}
-            icon={<MailPlus className="size-4" />}
-          />
+  const tabs: StaffTab[] = [{ id: "staff", label: t("tabs.staff"), count: activeCount, panel: staffPanel }];
+  if (!demo) {
+    tabs.push(
+      {
+        id: "requests",
+        label: t("tabs.requests"),
+        count: pendingRegs.length,
+        attention: pendingRegs.length > 0,
+        panel: <PendingRequestsTable pending={pendingRegs} eventTypes={eventTypes} />,
+      },
+      {
+        id: "invites",
+        label: t("tabs.invites"),
+        count: openInviteCount,
+        panel: (
           <div className="space-y-4">
-            <InviteForm eventTypes={eventTypes} />
-            <InviteTable invites={invites} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="max-w-xl text-sm text-neutral-600">{t("invitesHint")}</p>
+              <AddStaffDialog
+                eventTypes={eventTypes}
+                initialMode="invite"
+                triggerLabel={t("newInvite")}
+                triggerVariant="outline"
+              />
+            </div>
+            <InviteTable invites={invites} eventTypes={eventTypes} />
           </div>
-        </section>
-      )}
-    </main>
-  );
-}
+        ),
+      },
+    );
+  }
+  if (school) {
+    tabs.push({
+      id: "links",
+      label: t("schoolLinks.title"),
+      panel: <SchoolLinks accessToken={school.accessToken} origin={origin} guestOnly={demo} />,
+    });
+  }
 
-function StaffStat({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return (
-    <div className="sg-card sg-interactive rounded-xl p-4">
-      <div className="flex items-center gap-2 text-sm text-neutral-600">
-        <span className="text-neutral-500">{icon}</span>
-        {label}
+    <main className="mx-auto w-full max-w-5xl space-y-6 p-4 text-neutral-950 md:p-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
+        </div>
+        {!demo && <AddStaffDialog eventTypes={eventTypes} triggerLabel={t("addStaff")} />}
       </div>
-      <div className="mt-2 text-2xl font-semibold text-neutral-950 tabular-nums">{value}</div>
-    </div>
-  );
-}
-
-function SectionHeader({ title, count, icon }: { title: string; count: number; icon?: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="flex items-center gap-2 text-lg font-semibold">
-        {icon}
-        {title}
-      </h2>
-      <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600">
-        {count}
-      </span>
-    </div>
+      <StaffTabs tabs={tabs} initialTab={params.tab} pendingCount={pendingRegs.length} />
+    </main>
   );
 }

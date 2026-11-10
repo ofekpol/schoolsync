@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Check, Copy, History, Link2, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatGradeLabel } from "@/lib/grades";
+import { RoleBadge, ScopeChips } from "@/components/admin/staff-ui";
 
 interface InviteRow {
   id: string;
@@ -15,6 +16,17 @@ interface InviteRow {
   multiUse: boolean;
   revokedAt: Date | string | null;
   usedAt: Date | string | null;
+  createdAt?: Date | string;
+}
+
+// Pinned locale + timezone so SSR and the client render the same date.
+const CREATED_FMT = new Intl.DateTimeFormat("he-IL", {
+  timeZone: "Asia/Jerusalem",
+  dateStyle: "short",
+});
+
+function createdTime(invite: InviteRow): number {
+  return invite.createdAt ? new Date(invite.createdAt).getTime() : 0;
 }
 
 /** Open = still redeemable; used and revoked invites are history. */
@@ -22,14 +34,23 @@ function isOpen(invite: InviteRow): boolean {
   return !invite.usedAt && !invite.revokedAt;
 }
 
-export function InviteTable({ invites }: { invites: InviteRow[] }) {
+export function InviteTable({
+  invites,
+  eventTypes = [],
+}: {
+  invites: InviteRow[];
+  eventTypes?: { key: string; labelHe: string }[];
+}) {
   const t = useTranslations("admin.staff");
   const router = useRouter();
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   const closedCount = invites.filter((invite) => !isOpen(invite)).length;
-  const visible = showHistory ? invites : invites.filter(isOpen);
+  const visible = (showHistory ? invites : invites.filter(isOpen))
+    .slice()
+    .sort((a, b) => createdTime(b) - createdTime(a));
 
   async function handleRevoke(id: string) {
     if (!confirm(t("revokeConfirm"))) return;
@@ -43,130 +64,113 @@ export function InviteTable({ invites }: { invites: InviteRow[] }) {
     }
   }
 
+  function copy(invite: InviteRow) {
+    const url = `${window.location.origin}/invite/${invite.token}`;
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(invite.id);
+      setTimeout(() => setCopiedId((current) => (current === invite.id ? null : current)), 2000);
+    });
+  }
+
   function statusLabel(invite: InviteRow) {
     if (invite.usedAt) return t("used");
     if (invite.revokedAt) return t("revoked");
     return t("active");
   }
 
-  function actions(invite: InviteRow, role: string, size: "mobile" | "desktop") {
-    if (!isOpen(invite)) return null;
-    return (
-      <>
-        <Button
-          size="sm"
-          variant={size === "mobile" ? "outline" : "ghost"}
-          aria-label={`${t("copyInvite")} ${role}`}
-          onClick={() => copyInviteUrl(invite.token)}
-        >
-          {t("copyInvite")}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-destructive hover:text-destructive"
-          aria-label={`${t("revokeInvite")} ${role}`}
-          disabled={revoking === invite.id}
-          onClick={() => handleRevoke(invite.id)}
-        >
-          {t("revokeInvite")}
-        </Button>
-      </>
-    );
-  }
-
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {visible.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t("noInvites")}</p>
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-12 text-center">
+          <Link2 className="size-7 text-neutral-400" aria-hidden />
+          <p className="text-sm font-medium text-neutral-700">{t("noInvites")}</p>
+        </div>
       ) : (
-        <div className="rounded-lg border border-neutral-200">
-          <div aria-label={t("mobileInviteListLabel")} className="space-y-3 p-3 md:hidden">
-            {visible.map((invite) => {
-              const role = t(`role${capitalize(invite.role)}`);
-              return (
-                <article key={invite.id} className="rounded-lg border border-neutral-200 p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-medium text-neutral-950">{role}</h3>
-                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">
-                      {statusLabel(invite)}
-                    </span>
-                  </div>
+        <ul
+          aria-label={t("inviteListLabel")}
+          className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white"
+        >
+          {visible.map((invite) => {
+            const role = t(`role${capitalize(invite.role)}`);
+            const open = isOpen(invite);
+            return (
+              <li
+                key={invite.id}
+                className={`flex flex-wrap items-center gap-x-4 gap-y-2 p-4 ${open ? "" : "bg-neutral-50/60"}`}
+              >
+                <div className="flex shrink-0 items-center gap-2 sm:w-44">
+                  <RoleBadge role={invite.role} />
                   {invite.multiUse && (
-                    <span className="mt-3 inline-flex rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-800">
+                      <Repeat className="size-3" aria-hidden />
                       {t("multiUseBadge")}
                     </span>
                   )}
-                  <dl className="mt-4 text-sm">
-                    <dt className="text-xs font-medium text-neutral-500">{t("scopes")}</dt>
-                    <dd className="mt-1 text-neutral-700">{formatInviteScopes(invite) || "—"}</dd>
-                  </dl>
-                  {isOpen(invite) && (
-                    <div className="mt-4 grid grid-cols-2 gap-2">{actions(invite, role, "mobile")}</div>
+                </div>
+                <div className="min-w-0 flex-1 basis-48 space-y-1">
+                  <ScopeChips
+                    role={invite.role}
+                    gradeScopes={invite.gradeScopes}
+                    eventTypeScopes={invite.eventTypeScopes}
+                    eventTypes={eventTypes}
+                  />
+                  {invite.createdAt && (
+                    <p className="text-xs text-neutral-500">
+                      {t("createdOn", { date: CREATED_FMT.format(new Date(invite.createdAt)) })}
+                    </p>
                   )}
-                </article>
-              );
-            })}
-          </div>
-
-          <div className="hidden max-h-[420px] overflow-auto md:block">
-            <table className="w-full min-w-[600px] text-sm">
-              <thead className="sticky top-0 z-10 bg-white text-xs font-semibold text-neutral-500 uppercase shadow-[0_1px_0_var(--color-border)]">
-                <tr>
-                  <th className="py-3 ps-4 pe-4 text-start">{t("role")}</th>
-                  <th className="py-3 pe-4 text-start">{t("scopes")}</th>
-                  <th className="py-3 pe-4 text-start">{t("status")}</th>
-                  <th className="py-3 pe-4 text-start">{t("actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((invite) => {
-                  const role = t(`role${capitalize(invite.role)}`);
-                  return (
-                    <tr key={invite.id} className="border-t border-neutral-100 hover:bg-neutral-50">
-                      <td className="py-3 ps-4 pe-4">
-                        <span>{role}</span>
-                        {invite.multiUse && (
-                          <span className="ms-2 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
-                            {t("multiUseBadge")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="max-w-[340px] py-3 pe-4 text-neutral-700">
-                        {formatInviteScopes(invite) || "—"}
-                      </td>
-                      <td className="py-3 pe-4">{statusLabel(invite)}</td>
-                      <td className="py-3 pe-4">
-                        <div className="flex gap-2">{actions(invite, role, "desktop")}</div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </div>
+                {open ? (
+                  <div className="flex w-full gap-2 sm:w-auto">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      aria-label={`${t("copyInvite")} ${role}`}
+                      onClick={() => copy(invite)}
+                    >
+                      {copiedId === invite.id ? (
+                        <Check className="size-3.5" aria-hidden />
+                      ) : (
+                        <Copy className="size-3.5" aria-hidden />
+                      )}
+                      {copiedId === invite.id ? t("inviteCopied") : t("copyInvite")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1 text-neutral-500 hover:text-red-700 sm:flex-none"
+                      aria-label={`${t("revokeInvite")} ${role}`}
+                      disabled={revoking === invite.id}
+                      onClick={() => handleRevoke(invite.id)}
+                    >
+                      {t("revokeInvite")}
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-600">
+                    {statusLabel(invite)}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       {closedCount > 0 && (
-        <Button size="sm" variant="ghost" onClick={() => setShowHistory((value) => !value)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="gap-1.5 text-neutral-600"
+          onClick={() => setShowHistory((value) => !value)}
+        >
+          <History className="size-3.5" aria-hidden />
           {showHistory ? t("hideInviteHistory") : t("showInviteHistory", { count: closedCount })}
         </Button>
       )}
     </div>
   );
-}
-
-function copyInviteUrl(token: string) {
-  const url = `${window.location.origin}/invite/${token}`;
-  void navigator.clipboard.writeText(url);
-}
-
-function formatInviteScopes(invite: Pick<InviteRow, "gradeScopes" | "eventTypeScopes">) {
-  return [
-    ...invite.gradeScopes.map((g) => formatGradeLabel(g)),
-    ...invite.eventTypeScopes,
-  ].join(", ");
 }
 
 function capitalize(value: string) {

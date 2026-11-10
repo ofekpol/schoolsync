@@ -394,7 +394,7 @@
     }
   },
   "home": {
-    "title": "School Gantt Chart System",
+    "title": "SchoolSync",
     "subtitle": "Choose a school to view its event calendar.",
     "viewGantt": "Gantt",
     "viewAgenda": "Agenda"
@@ -731,7 +731,7 @@
     }
   },
   "demo": {
-    "pageTitle": "Try the school Gantt",
+    "pageTitle": "Try SchoolSync",
     "intro": "Get your own sample school with a full year of events, and try everything a principal sees.",
     "introPrivate": "The demo is private to you and is deleted automatically after 24 hours. No sign-up needed.",
     "start": "Start the demo",

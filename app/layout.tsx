@@ -51,8 +51,8 @@ const ibmPlexMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "School Gantt",
-  description: "Multi-tenant school event calendar",
+  title: "SchoolSync",
+  description: "SchoolSync: the school's event calendar",
 };
 
 export const viewport: Viewport = {

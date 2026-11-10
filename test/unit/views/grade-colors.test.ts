@@ -11,6 +11,7 @@ import {
   sortBySelection,
   swatchFor,
 } from "@/lib/grade-colors";
+import { relativeLuminance } from "@/lib/colors";
 import { calendarEventVisual } from "@/components/CalendarEventChip";
 
 const ALL = [7, 8, 9, 10, 11, 12];
@@ -30,6 +31,23 @@ describe("resolveGradeColors", () => {
   it("offers every default color in the curated palette", () => {
     for (const color of Object.values(DEFAULT_GRADE_COLORS)) {
       expect(GRADE_COLOR_OPTIONS).toContain(color);
+    }
+  });
+});
+
+describe("grade palette", () => {
+  function ratio(a: string, b: string): number {
+    const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  it("gives every option its own text tone that meets WCAG AA on the fill", () => {
+    expect(new Set(GRADE_COLOR_OPTIONS).size).toBe(GRADE_COLOR_OPTIONS.length);
+    for (const fill of GRADE_COLOR_OPTIONS) {
+      const swatch = swatchFor(fill);
+      expect(swatch.fill).toBe(fill);
+      expect(ratio(swatch.ink, fill)).toBeGreaterThanOrEqual(4.5);
+      expect(swatch.accent).not.toBe(fill);
     }
   });
 });

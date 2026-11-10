@@ -35,6 +35,16 @@ export const GRADE_COLOR_OPTIONS = [
   "#DDF5D0",
   "#FFF2C2",
   "#DCE3EC",
+  // Stronger tones of the same hues, plus peach, lime and orchid.
+  "#A9CCF5",
+  "#FFD27A",
+  "#A6E3BD",
+  "#F5B3D2",
+  "#C9B6F5",
+  "#9FDFE8",
+  "#FFD9C2",
+  "#E6F5B0",
+  "#F0D2F5",
 ] as const;
 
 export type GradeColorOption = (typeof GRADE_COLOR_OPTIONS)[number];
@@ -49,6 +59,15 @@ const SWATCHES: Record<GradeColorOption, GradeSwatch> = {
   "#DDF5D0": { fill: "#DDF5D0", accent: "#5C9A2E", ink: "#24400F" },
   "#FFF2C2": { fill: "#FFF2C2", accent: "#B8960F", ink: "#4D3D00" },
   "#DCE3EC": { fill: "#DCE3EC", accent: "#5B6F8C", ink: "#1F2A3A" },
+  "#A9CCF5": { fill: "#A9CCF5", accent: "#2F6DB8", ink: "#0F2F55" },
+  "#FFD27A": { fill: "#FFD27A", accent: "#B07A0A", ink: "#4A3300" },
+  "#A6E3BD": { fill: "#A6E3BD", accent: "#25864D", ink: "#0B381F" },
+  "#F5B3D2": { fill: "#F5B3D2", accent: "#B4477A", ink: "#521A35" },
+  "#C9B6F5": { fill: "#C9B6F5", accent: "#6A48BA", ink: "#2C1D5E" },
+  "#9FDFE8": { fill: "#9FDFE8", accent: "#1F8794", ink: "#0A3F46" },
+  "#FFD9C2": { fill: "#FFD9C2", accent: "#C46A2E", ink: "#5A2C0E" },
+  "#E6F5B0": { fill: "#E6F5B0", accent: "#7A9A1A", ink: "#334208" },
+  "#F0D2F5": { fill: "#F0D2F5", accent: "#A04BB0", ink: "#4A1A52" },
 };
 
 /** Light-pastel defaults, one distinct hue per grade. */

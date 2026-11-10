@@ -96,7 +96,7 @@ function GradeColorRow({ grade, color, duplicateOf, onPick }: RowProps) {
       >
         {t("gradeLabel", { grade: label })}
       </span>
-      <div role="radiogroup" aria-label={t("gradeLabel", { grade: label })} className="flex flex-wrap gap-1">
+      <div role="radiogroup" aria-label={t("gradeLabel", { grade: label })} className="grid grid-cols-9 gap-1">
         {GRADE_COLOR_OPTIONS.map((option) => (
           <button
             key={option}

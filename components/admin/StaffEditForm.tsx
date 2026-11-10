@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ALL_GRADES, ScopeFields } from "@/components/admin/ScopeFields";
+import { Field, RoleHint, fieldClass } from "@/components/admin/staff-ui";
 
 interface StaffRow {
   id: string;
@@ -46,31 +47,25 @@ export function EditStaffForm({
   }, [row.id, row.role]);
 
   return (
-    <form action={(form) => onSave(row, form)} className="mt-5 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px]">
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium text-neutral-700">{t("fullName")}</span>
-          <input
-            name="fullName"
-            defaultValue={row.fullName}
-            className="h-10 w-full rounded-md border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900 focus:ring-3 focus:ring-neutral-200"
-            required
-          />
-        </label>
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium text-neutral-700">{t("role")}</span>
+    <form action={(form) => onSave(row, form)} className="mt-5 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <Field label={t("fullName")}>
+          <input name="fullName" defaultValue={row.fullName} className={fieldClass} required />
+        </Field>
+        <Field label={t("role")}>
           <select
             name="role"
             value={role}
             onChange={(event) => setRole(event.target.value as StaffRow["role"])}
-            className="h-10 w-full rounded-md border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900 focus:ring-3 focus:ring-neutral-200"
+            className={fieldClass}
           >
             <option value="viewer">{t("roleViewer")}</option>
             <option value="editor">{t("roleEditor")}</option>
             <option value="admin">{t("roleAdmin")}</option>
           </select>
-        </label>
+        </Field>
       </div>
+      <RoleHint role={role} />
       {role === "editor" && (
         <ScopeFields
           eventTypes={eventTypes}
@@ -88,14 +83,14 @@ export function EditStaffForm({
           }}
         />
       )}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={busy}>
-          {busy ? tc("saving") : t("save")}
-        </Button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
           {t("cancel")}
         </Button>
-        {error && <span className="text-sm text-red-600">{error}</span>}
+        <Button type="submit" disabled={busy} className="px-4">
+          {busy ? tc("saving") : t("save")}
+        </Button>
       </div>
     </form>
   );

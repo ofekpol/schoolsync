@@ -50,9 +50,10 @@ describe("admin staff role permissions", () => {
     }
   });
 
-  it("renders invite mobile cards with copy actions", () => {
+  it("renders invites with readable scopes and copy actions", () => {
     render(
       <InviteTable
+        eventTypes={eventTypes}
         invites={[
           {
             id: "invite-1",
@@ -68,11 +69,13 @@ describe("admin staff role permissions", () => {
       />,
     );
 
-    const mobileList = screen.getByLabelText("mobileInviteListLabel");
+    const list = screen.getByLabelText("inviteListLabel");
 
-    expect(within(mobileList).getByText("roleEditor")).toBeInTheDocument();
-    expect(within(mobileList).getByText("ז, trip")).toBeInTheDocument();
-    expect(within(mobileList).getByRole("button", { name: "copyInvite roleEditor" })).toBeInTheDocument();
+    expect(within(list).getByText("roleEditor")).toBeInTheDocument();
+    // useTranslations is mocked to return the key, so the grade chip reads "gradeChip".
+    expect(within(list).getByText("gradeChip")).toBeInTheDocument();
+    expect(within(list).getByText("טיול")).toBeInTheDocument();
+    expect(within(list).getByRole("button", { name: "copyInvite roleEditor" })).toBeInTheDocument();
   });
 
   it("hides used and revoked invites until history is shown, without copy actions", async () => {
@@ -95,8 +98,8 @@ describe("admin staff role permissions", () => {
 
     expect(screen.getAllByText("used").length).toBeGreaterThan(0);
     expect(screen.getAllByText("revoked").length).toBeGreaterThan(0);
-    // one open invite × (mobile + desktop) copy buttons
-    expect(screen.getAllByRole("button", { name: "copyInvite roleEditor" })).toHaveLength(2);
+    // only the open invite can be copied
+    expect(screen.getAllByRole("button", { name: "copyInvite roleEditor" })).toHaveLength(1);
   });
 
   it("hides deactivated staff until the status filter is changed", async () => {
@@ -120,7 +123,7 @@ describe("admin staff role permissions", () => {
     expect(screen.getAllByText("Gone One").length).toBeGreaterThan(0);
   });
 
-  it("renders staff mobile cards with edit and status actions", async () => {
+  it("renders staff rows with edit and status actions", async () => {
     const user = userEvent.setup();
 
     render(
@@ -140,12 +143,13 @@ describe("admin staff role permissions", () => {
       />,
     );
 
-    const mobileList = screen.getByLabelText("mobileListLabel");
-    expect(within(mobileList).getByText("Editor User")).toBeInTheDocument();
-    expect(within(mobileList).getByText("editor@test")).toBeInTheDocument();
-    expect(within(mobileList).getByText("roleEditor")).toBeInTheDocument();
+    const list = screen.getByLabelText("staffListLabel");
+    expect(within(list).getByText("Editor User")).toBeInTheDocument();
+    expect(within(list).getByText("editor@test")).toBeInTheDocument();
+    expect(within(list).getByText("roleEditor")).toBeInTheDocument();
+    expect(within(list).getByRole("button", { name: "deactivate Editor User" })).toBeInTheDocument();
 
-    await user.click(within(mobileList).getByRole("button", { name: "edit Editor User" }));
+    await user.click(within(list).getByRole("button", { name: "edit Editor User" }));
 
     expect(screen.getByRole("dialog", { name: "editUserTitle" })).toBeInTheDocument();
   });
@@ -170,7 +174,7 @@ describe("admin staff role permissions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "edit" }));
+    await user.click(screen.getByRole("button", { name: /^edit / }));
 
     expect(screen.queryByText("gradeScopes")).not.toBeInTheDocument();
     expect(screen.queryByText("eventTypeScopes")).not.toBeInTheDocument();
@@ -234,7 +238,7 @@ describe("admin staff role permissions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "edit" }));
+    await user.click(screen.getByRole("button", { name: /^edit / }));
 
     const grade7 = screen.getByRole("checkbox", { name: "ז" });
     const grade12 = screen.getByRole("checkbox", { name: "יב" });

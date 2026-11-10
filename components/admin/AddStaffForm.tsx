@@ -6,7 +6,9 @@ import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useRouteProgress } from "@/components/RouteProgress";
+import { Check, Copy, KeyRound } from "lucide-react";
 import { ALL_GRADES, ScopeFields } from "@/components/admin/ScopeFields";
+import { Field, RoleHint, fieldClass } from "@/components/admin/staff-ui";
 
 interface EventTypeRow {
   key: string;
@@ -83,40 +85,36 @@ export function AddStaffForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
   }
 
   return (
-    <form
-      key={formKey}
-      action={create}
-      data-testid="add-staff-form"
-      className="space-y-3 rounded border p-3"
-    >
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          name="role"
-          defaultValue="editor"
-          className="rounded border px-2 py-1"
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <option value="viewer">{t("roleViewer")}</option>
-          <option value="editor">{t("roleEditor")}</option>
-          <option value="admin">{t("roleAdmin")}</option>
-        </select>
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder={t("email")}
-          className="w-56 rounded border px-2 py-1"
-          aria-label={t("email")}
-        />
-        <input
-          name="fullName"
-          type="text"
-          required
-          placeholder={t("fullName")}
-          className="w-56 rounded border px-2 py-1"
-          aria-label={t("fullName")}
-        />
-        <AddStaffSubmitButton label={t("create")} loadingLabel={tc("saving")} />
+    <form key={formKey} action={create} data-testid="add-staff-form" className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t("fullName")}>
+          <input name="fullName" type="text" required className={fieldClass} />
+        </Field>
+        <Field label={t("email")}>
+          <input
+            name="email"
+            type="email"
+            required
+            dir="ltr"
+            placeholder="name@school.org.il"
+            className={fieldClass}
+          />
+        </Field>
+      </div>
+      <div className="space-y-1.5">
+        <Field label={t("role")}>
+          <select
+            name="role"
+            defaultValue="editor"
+            className={`${fieldClass} sm:w-56`}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="viewer">{t("roleViewer")}</option>
+            <option value="editor">{t("roleEditor")}</option>
+            <option value="admin">{t("roleAdmin")}</option>
+          </select>
+        </Field>
+        <RoleHint role={role} />
       </div>
 
       {role === "editor" && (
@@ -132,42 +130,44 @@ export function AddStaffForm({ eventTypes }: { eventTypes: EventTypeRow[] }) {
             selectAllEventTypes: t("selectAllEventTypes"),
             clearAllEventTypes: t("clearAllEventTypes"),
           }}
-          wrapperClassName="lg:grid-cols-1 xl:grid-cols-2"
-          legendClassName="text-neutral-950"
-          optionClassName="rounded-none border-0 px-0 py-0"
         />
       )}
 
       {created && (
         <div
           data-testid="temp-password-panel"
-          className="space-y-1 rounded border border-green-200 bg-green-50 p-3"
+          role="status"
+          className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
         >
-          <p className="text-sm font-medium text-green-800">
-            {t("staffCreated")}: {created.email}
+          <p className="flex items-center gap-2 text-sm font-medium text-emerald-900">
+            <Check className="size-4" aria-hidden />
+            {t("staffCreated")}: <bdi>{created.email}</bdi>
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-neutral-700">
-              {t("temporaryPassword")}:{" "}
-              <code className="rounded bg-white px-2 py-0.5 font-mono">
-                {created.temporaryPassword}
-              </code>
-            </span>
+            <KeyRound className="size-4 text-emerald-800" aria-hidden />
+            <span className="text-sm text-emerald-900">{t("temporaryPassword")}:</span>
+            <code className="rounded-md bg-white px-2.5 py-1 font-mono text-sm ring-1 ring-emerald-200">
+              {created.temporaryPassword}
+            </code>
             <Button
               type="button"
               size="sm"
               variant="outline"
               onClick={() => copyPassword(created.temporaryPassword)}
             >
+              <Copy className="size-3.5" aria-hidden />
               {copied ? t("passwordCopied") : t("copyPassword")}
             </Button>
           </div>
-          <p className="text-xs text-neutral-600">
+          <p className="text-xs text-emerald-800">
             {t("tempPasswordWarning", { email: created.email })}
           </p>
         </div>
       )}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex justify-end border-t border-neutral-100 pt-4">
+        <AddStaffSubmitButton label={t("create")} loadingLabel={tc("saving")} />
+      </div>
     </form>
   );
 }
@@ -181,7 +181,7 @@ function AddStaffSubmitButton({
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="px-4">
       {pending ? loadingLabel : label}
     </Button>
   );

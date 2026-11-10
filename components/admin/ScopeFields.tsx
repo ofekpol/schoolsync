@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 export const ALL_GRADES = [7, 8, 9, 10, 11, 12];
 const EMPTY_GRADES: number[] = [];
 const EMPTY_EVENT_TYPES: string[] = [];
+const OPTION_CLASS =
+  "flex cursor-pointer items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm transition-colors select-none hover:border-neutral-300 has-[:checked]:border-violet-300 has-[:checked]:bg-violet-50 has-[:checked]:text-violet-900 [&_input]:accent-violet-600";
 
 interface EventTypeRow {
   key: string;
@@ -56,7 +58,7 @@ export function ScopeFields({
   }, [defaultEventTypeScopes, defaultGradeScopes]);
 
   return (
-    <div className={cn("grid gap-4 lg:grid-cols-2", wrapperClassName)}>
+    <div className={cn("grid gap-4 rounded-xl bg-neutral-50 p-4", wrapperClassName)}>
       <ScopeGroup
         title={labels.gradeScopes}
         toggleLabel={
@@ -73,10 +75,7 @@ export function ScopeFields({
         {ALL_GRADES.map((grade) => (
           <label
             key={grade}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-sm",
-              optionClassName,
-            )}
+            className={cn(OPTION_CLASS, optionClassName)}
           >
             <input
               type="checkbox"
@@ -113,10 +112,7 @@ export function ScopeFields({
         {eventTypes.map((eventType) => (
           <label
             key={eventType.key}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-sm",
-              optionClassName,
-            )}
+            className={cn(OPTION_CLASS, optionClassName)}
           >
             <input
               type="checkbox"
@@ -159,7 +155,13 @@ function ScopeGroup({
         <legend className={cn("text-sm font-medium text-neutral-800", legendClassName)}>
           {title}
         </legend>
-        <Button type="button" variant="outline" size="sm" onClick={onToggleAll}>
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="h-auto px-0 text-violet-700"
+          onClick={onToggleAll}
+        >
           {toggleLabel}
         </Button>
       </div>

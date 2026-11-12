@@ -310,7 +310,9 @@ export function EventDrawer({
                     dir="ltr"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr auto",
+                      // minmax(0, …) lets the time inputs shrink below their intrinsic
+                      // width; plain 1fr pushed the start time off-screen on phones.
+                      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                       gap: 8,
                       alignItems: "center",
                     }}
@@ -321,7 +323,7 @@ export function EventDrawer({
                       value={draft.startTime}
                       disabled={draft.allDay}
                       onChange={(e) => patchDraft({ startTime: e.target.value })}
-                      style={inputStyle}
+                      style={{ ...inputStyle, minWidth: 0 }}
                     />
                     <input
                       type="time"
@@ -329,11 +331,11 @@ export function EventDrawer({
                       value={draft.endTime}
                       disabled={draft.allDay}
                       onChange={(e) => patchDraft({ endTime: e.target.value })}
-                      style={inputStyle}
+                      style={{ ...inputStyle, minWidth: 0 }}
                     />
                     <label
                       dir="rtl"
-                      style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 12, whiteSpace: "nowrap" }}
+                      style={{ gridColumn: "1 / -1", display: "flex", gap: 6, alignItems: "center", fontSize: 12, whiteSpace: "nowrap" }}
                     >
                       <input
                         type="checkbox"
@@ -465,7 +467,7 @@ export function EventDrawer({
 
         {/* Footer */}
         <div style={{
-          display: "flex", gap: 8, padding: 14,
+          display: "flex", flexWrap: "wrap", gap: 8, padding: 14,
           justifyContent: "flex-end",
           borderTop: "1px solid var(--sg-hairline)",
           background: "var(--sg-surface-2)",
@@ -556,7 +558,7 @@ export function EventDrawer({
             type="button"
             onClick={onClose}
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
+              display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
               height: 32, padding: "0 14px",
               borderRadius: 8, border: "1px solid var(--sg-hairline)",
               background: "transparent", color: "var(--sg-ink-mute)",
@@ -586,6 +588,7 @@ const inputStyle: CSSProperties = {
 
 const primaryButtonStyle: CSSProperties = {
   display: "inline-flex",
+  whiteSpace: "nowrap",
   alignItems: "center",
   gap: 6,
   height: 32,
@@ -601,6 +604,7 @@ const primaryButtonStyle: CSSProperties = {
 
 const secondaryButtonStyle: CSSProperties = {
   display: "inline-flex",
+  whiteSpace: "nowrap",
   alignItems: "center",
   gap: 6,
   height: 32,
@@ -616,6 +620,7 @@ const secondaryButtonStyle: CSSProperties = {
 
 const dangerButtonStyle: CSSProperties = {
   display: "inline-flex",
+  whiteSpace: "nowrap",
   alignItems: "center",
   gap: 6,
   height: 32,

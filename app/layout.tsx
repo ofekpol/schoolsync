@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { dirFor, isLocale, DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { RouteProgressProvider } from "@/components/RouteProgress";
 import { VercelSpeedInsights } from "@/components/VercelSpeedInsights";
+import { Analytics } from "@vercel/analytics/next";
 import { LegalFooter } from "@/components/legal/LegalFooter";
 
 // Fonts are committed under app/fonts (OFL, see OFL-*.txt) so builds never
@@ -96,6 +97,7 @@ export default async function RootLayout({
           </RouteProgressProvider>
         </NextIntlClientProvider>
         <VercelSpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

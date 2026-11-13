@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin } from "@/lib/auth/admin";
 import { getGradeColors, setGradeColors } from "@/lib/db/grade-colors";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
@@ -23,6 +24,8 @@ export async function GET(): Promise<NextResponse> {
   } catch (e) {
     return forbidden(e);
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   return respond(await getGradeColors(user!.schoolId));
 }
 
@@ -33,6 +36,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   } catch (e) {
     return forbidden(e);
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const body = await request.json().catch(() => null);
   const parsed = GradeColorsUpdateSchema.safeParse(body);
   if (!parsed.success) {

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { isAiEnabled } from "@/lib/ai/model";
 import { consumeAiQuota } from "@/lib/ai/quota";
 import { extractEvents } from "@/lib/ai/adder/extract";
@@ -58,6 +59,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
     return error("forbidden", 403);
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   if (!isAiEnabled()) return error("ai_disabled", 503);
 
   const parsed = ParseEventsRequestSchema.safeParse(await request.json().catch(() => null));

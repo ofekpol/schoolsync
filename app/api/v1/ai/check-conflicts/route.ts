@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { findConflicts } from "@/lib/ai/adder/conflicts";
 import { AdderWarningSchema, CandidateEventSchema } from "@/lib/ai/adder/types";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
@@ -19,6 +20,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid_input" }, { status: 400 });
 

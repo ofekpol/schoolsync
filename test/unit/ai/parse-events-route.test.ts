@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+// Every school here has the Gantt service; the guard itself is tested in service-guard.test.ts.
+vi.mock("@/lib/auth/service-guard", () => ({ serviceDisabledResponse: async () => null }));
 import { NextRequest } from "next/server";
 import type { ExtractedEvent } from "@/lib/ai/adder/types";
 

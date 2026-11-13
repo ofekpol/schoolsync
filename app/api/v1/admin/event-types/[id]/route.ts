@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin } from "@/lib/auth/admin";
 import { updateEventType, deleteEventType } from "@/lib/admin/event-types";
 import { EventTypeUpdateSchema } from "@/lib/validations/admin";
@@ -15,6 +16,8 @@ async function handlePATCH(request: NextRequest, { params }: RouteContext): Prom
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const { id } = await params;
   const body = await request.json().catch(() => null);
   const parsed = EventTypeUpdateSchema.partial().safeParse(body);
@@ -34,6 +37,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext): Promi
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const { id } = await params;
   try {
     const result = await deleteEventType(user!.schoolId, id);

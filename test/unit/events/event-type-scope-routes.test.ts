@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+// Every school here has the Gantt service; the guard itself is tested in service-guard.test.ts.
+vi.mock("@/lib/auth/service-guard", () => ({ serviceDisabledResponse: async () => null }));
 import { NextRequest } from "next/server";
 
 const getStaffUserMock = vi.fn();

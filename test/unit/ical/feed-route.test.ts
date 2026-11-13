@@ -5,17 +5,9 @@ vi.mock("@/lib/ical/subscriptions", () => ({
   getSubscriptionByToken: (...args: unknown[]) => getSubscriptionByTokenMock(...args),
 }));
 
-const schoolRows = [{ slug: "kfar-galim", name: "כפר גלים" }];
-vi.mock("@/lib/db/client", () => ({
-  db: {
-    select: () => ({
-      from: () => ({
-        where: () => ({
-          limit: async () => schoolRows,
-        }),
-      }),
-    }),
-  },
+const getSchoolByIdMock = vi.fn();
+vi.mock("@/lib/db/schools", () => ({
+  getSchoolById: (...args: unknown[]) => getSchoolByIdMock(...args),
 }));
 
 const listEventTypesMock = vi.fn();
@@ -51,11 +43,19 @@ beforeEach(() => {
     filterEventTypes: [],
     revokedAt: null,
   });
+  getSchoolByIdMock.mockResolvedValue({ slug: "kfar-galim", name: "כפר גלים", services: ["gantt"] });
   listEventTypesMock.mockResolvedValue([]);
   serializeCalendarMock.mockReturnValue("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
 });
 
 describe("GET /ical/[token]", () => {
+  it("returns 404 once the school no longer has the Gantt service", async () => {
+    getSchoolByIdMock.mockResolvedValue({ slug: "kfar-galim", name: "כפר גלים", services: ["timetable"] });
+    const res = await GET(new Request("http://x/ical/t") as never, { params: Promise.resolve({ token: "t" }) });
+    expect(res.status).toBe(404);
+    expect(getAgendaForSchoolMock).not.toHaveBeenCalled();
+  });
+
   it("includes canceled events marked as STATUS:CANCELLED so Google reflects the cancellation", async () => {
     getAgendaForSchoolMock.mockResolvedValue([
       agendaEvent({ id: "approved-1", title: "Visible lesson", isCanceled: false }),

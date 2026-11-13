@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTextStreamResponse, isStepCount, streamText, toTextStream } from "ai";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { getAiModel, isAiEnabled } from "@/lib/ai/model";
 import { consumeAiQuota } from "@/lib/ai/quota";
 import { buildChatTools } from "@/lib/ai/chat/tools";
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return error("unauthorized", 401);
   if (user.status !== "active" || user.mustChangePassword) return error("forbidden", 403);
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   if (!isAiEnabled()) return error("ai_disabled", 503);
 
   const parsed = ChatRequestSchema.safeParse(await request.json().catch(() => null));

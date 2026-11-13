@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin, assertCanCreateEventType } from "@/lib/auth/admin";
 import { createEventType, listEventTypes } from "@/lib/admin/event-types";
 import { EventTypeSchema } from "@/lib/validations/admin";
@@ -13,6 +14,8 @@ export async function GET(): Promise<NextResponse> {
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const eventTypesList = await listEventTypes(user!.schoolId);
   return NextResponse.json({ eventTypes: eventTypesList }, { status: 200 });
 }
@@ -25,6 +28,8 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const body = await request.json().catch(() => null);
   const parsed = EventTypeSchema.safeParse(body);
   if (!parsed.success) {

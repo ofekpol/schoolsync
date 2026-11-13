@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { EventDraftSchema } from "@/lib/validations/events";
 import {
   deleteOrCancelEvent,
@@ -24,6 +25,8 @@ export async function GET(
   const user = await getStaffUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (user.status !== "active") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
 
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -46,6 +49,8 @@ async function handlePATCH(
   if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
 
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -114,6 +119,8 @@ async function handleDELETE(
   if (user.status !== "active" || user.mustChangePassword) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
 
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });

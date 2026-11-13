@@ -3,6 +3,7 @@ import { cache } from "react";
 import { asc, eq, isNull, type SQL } from "drizzle-orm";
 import { db, rethrowWithDatabaseHint } from "@/lib/db/client";
 import { schools } from "@/lib/db/schema";
+import { hasService, type Service } from "@/lib/services";
 import { SchoolAccessTokenSchema } from "@/lib/validations/school";
 
 export interface PublicSchoolRecord {
@@ -15,6 +16,7 @@ export interface PublicSchoolRecord {
   accessToken: string;
   /** Non-null only for public demo schools (migration 0019). */
   demoExpiresAt: Date | null;
+  services: Service[];
 }
 
 /**
@@ -33,6 +35,7 @@ const SCHOOL_COLUMNS = {
   timezone: schools.timezone,
   accessToken: schools.accessToken,
   demoExpiresAt: schools.demoExpiresAt,
+  services: schools.services,
 };
 
 async function findSchool(where: SQL): Promise<PublicSchoolRecord | null> {
@@ -60,6 +63,12 @@ export async function resolveSchoolFromParam(raw: unknown): Promise<PublicSchool
   const parsed = SchoolAccessTokenSchema.safeParse(raw);
   if (!parsed.success) return null;
   return findSchool(eq(schools.accessToken, parsed.data));
+}
+
+/** `resolveSchoolFromParam` for the public Gantt surfaces: a school without `gantt` is "no school". */
+export async function resolveGanttSchoolFromParam(raw: unknown): Promise<PublicSchoolRecord | null> {
+  const school = await resolveSchoolFromParam(raw);
+  return school && hasService(school, "gantt") ? school : null;
 }
 
 /**
@@ -104,5 +113,15 @@ export async function listAllSchools(): Promise<PublicSchoolRecord[]> {
       .orderBy(asc(schools.name));
   } catch (error) {
     rethrowWithDatabaseHint(error, "Failed to list schools");
+  }
+}
+
+/** Platform admins only. Returns false when no school has this id. */
+export async function updateSchoolServices(schoolId: string, services: Service[]): Promise<boolean> {
+  try {
+    const rows = await db.update(schools).set({ services }).where(eq(schools.id, schoolId)).returning({ id: schools.id });
+    return rows.length > 0;
+  } catch (error) {
+    rethrowWithDatabaseHint(error, "Failed to update school services");
   }
 }

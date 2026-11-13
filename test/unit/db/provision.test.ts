@@ -7,15 +7,19 @@ const createUserMock = vi.fn();
 const generateLinkMock = vi.fn();
 const withSchoolMock = vi.fn();
 const deleteWhereMock = vi.fn();
+const insertValuesMock = vi.fn();
 
 vi.mock("@/lib/db/client", () => ({
   db: {
     insert: () => ({
-      values: () => ({
+      values: (...args: unknown[]) => {
+        insertValuesMock(...args);
+        return {
         onConflictDoNothing: () => ({
           returning: async () => [{ id: SCHOOL_ID, accessToken: "tok" }],
         }),
-      }),
+        };
+      },
     }),
     delete: () => ({ where: (...args: unknown[]) => deleteWhereMock(...args) }),
   },
@@ -63,6 +67,20 @@ beforeEach(() => {
 });
 
 describe("provisionSchool", () => {
+  it("stores the chosen services on the school row", async () => {
+    listUsersMock.mockResolvedValueOnce(usersPage(1, { index: 0, email: INPUT.adminEmail, id: "a" }));
+    await provisionSchool({ ...INPUT, services: ["gantt", "timetable"] }, "https://app.test");
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ services: ["gantt", "timetable"] }),
+    );
+  });
+
+  it("defaults services to gantt only", async () => {
+    listUsersMock.mockResolvedValueOnce(usersPage(1, { index: 0, email: INPUT.adminEmail, id: "a" }));
+    await provisionSchool(INPUT, "https://app.test");
+    expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({ services: ["gantt"] }));
+  });
+
   it("finds an existing admin auth user beyond the first page of users", async () => {
     listUsersMock
       .mockResolvedValueOnce(usersPage(200))

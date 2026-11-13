@@ -57,6 +57,7 @@ function parseFlags(): ProvisionSchoolInput {
     timezone: values.timezone ?? "Asia/Jerusalem",
     adminEmail: values["admin-email"]!,
     adminName: values["admin-name"]!,
+    services: ["gantt"],
   };
 }
 

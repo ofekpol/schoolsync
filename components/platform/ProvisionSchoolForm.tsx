@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { SERVICES, type Service } from "@/lib/services";
 
 interface ProvisionResponse {
   slug: string;
@@ -20,13 +21,15 @@ export function ProvisionSchoolForm() {
   const [created, setCreated] = useState<ProvisionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [services, setServices] = useState<Service[]>(["gantt"]);
 
   async function create(form: FormData) {
     setError(null);
     setCreated(null);
-    const body = Object.fromEntries(
+    const body = Object.fromEntries<string | string[]>(
       [...TEXT_FIELDS, "locale"].map((field) => [field, String(form.get(field) ?? "").trim()]),
     );
+    body.services = form.getAll("services").map(String);
     const res = await fetch("/api/v1/platform/schools", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -37,6 +40,7 @@ export function ProvisionSchoolForm() {
       return;
     }
     setCreated((await res.json()) as ProvisionResponse);
+    setServices(["gantt"]);
     setFormKey((k) => k + 1);
     router.refresh();
   }
@@ -65,8 +69,27 @@ export function ProvisionSchoolForm() {
           </select>
         </label>
       </div>
+      <fieldset className="flex flex-wrap gap-4 text-sm">
+        <legend className="mb-1">{t("services.title")}</legend>
+        {SERVICES.map((service) => (
+          <label key={service} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              name="services"
+              value={service}
+              checked={services.includes(service)}
+              onChange={(e) =>
+                setServices((prev) =>
+                  e.target.checked ? [...prev, service] : prev.filter((s) => s !== service),
+                )
+              }
+            />
+            {t(`services.${service}`)}
+          </label>
+        ))}
+      </fieldset>
       <p className="text-xs text-neutral-600">{t("slugHint")}</p>
-      <SubmitButton label={t("submit")} loadingLabel={tc("saving")} />
+      <SubmitButton label={t("submit")} loadingLabel={tc("saving")} disabled={services.length === 0} />
       {created && (
         <div role="status" className="space-y-1 text-sm text-green-700">
           <p>{t("success", { slug: created.slug })}</p>
@@ -80,10 +103,18 @@ export function ProvisionSchoolForm() {
   );
 }
 
-function SubmitButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+function SubmitButton({
+  label,
+  loadingLabel,
+  disabled,
+}: {
+  label: string;
+  loadingLabel: string;
+  disabled: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending || disabled}>
       {pending ? loadingLabel : label}
     </Button>
   );

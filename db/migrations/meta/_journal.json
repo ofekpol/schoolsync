@@ -148,6 +148,13 @@
       "when": 1791590820000,
       "tag": "0020_demo_event_date_window",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791590940000,
+      "tag": "0022_profile_categories",
+      "breakpoints": true
     }
   ]
 }

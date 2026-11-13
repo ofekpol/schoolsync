@@ -293,6 +293,39 @@
         "end_before_start": "Ends before it starts",
         "invalid": "Invalid data"
       }
+    },
+    "categories": {
+      "title": "Profile categories",
+      "description": "Define categories and options (for example subject, grade, role). Staff are asked to pick theirs at their next sign-in. Labels only describe people and never grant permissions.",
+      "demoNote": "In the demo you can view categories but not change them.",
+      "listLabel": "Category list",
+      "empty": "No categories yet. Until there is one, no staff member is asked to fill in a profile.",
+      "create": "Add category",
+      "name": "Category name",
+      "multiSelect": "Several can be picked",
+      "singleSelect": "Single choice",
+      "required": "Required",
+      "options": "Options",
+      "optionNumber": "Option {number}",
+      "addOption": "Add option",
+      "removeOption": "Remove {name}",
+      "noOptions": "No options",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "editNamed": "Edit {name}",
+      "archive": "Archive",
+      "archiveNamed": "Archive {name}",
+      "confirmArchive": "Archive {name}?",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "errorSave": "Saving failed. Try again.",
+      "errorDuplicate": "A category with this name already exists.",
+      "errorDuplicateOption": "The same option appears twice.",
+      "errorLimit": "You have reached the maximum number of categories.",
+      "errorArchive": "Archiving failed. Try again.",
+      "errorReorder": "Reordering failed. Try again.",
+      "errorDemo": "Categories cannot be changed in the demo."
     }
   },
   "invite": {
@@ -473,7 +506,19 @@
     "filterSummary": "Grades: {grades} · {types} types",
     "freshTokenTitle": "Subscription created",
     "freshTokenHint": "Copy the URL and paste it into Google Calendar (\"From URL\"). It's only visible now.",
-    "errorGeneric": "Something went wrong"
+    "errorGeneric": "Something went wrong",
+    "intro": "Tick what describes you. Management uses these labels to find staff; they do not change permissions.",
+    "required": "Required",
+    "multiHint": "You can pick several",
+    "none": "None",
+    "noOptions": "This category has no options yet.",
+    "save": "Save",
+    "saving": "Saving…",
+    "errorSave": "Saving failed. Try again.",
+    "errorDemo": "Labels cannot be saved in the demo.",
+    "errorTooMany": "One of the categories allows a single option only.",
+    "errorRequiredMissing": "A required category has no choice.",
+    "errorUnknownOption": "One of the options no longer exists. Refresh the page and try again."
   },
   "wizard": {
     "step1": {

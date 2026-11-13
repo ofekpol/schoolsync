@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getStaffUser } from "@/lib/auth/session";
 import { isDemoUser } from "@/lib/auth/demo-guard";
+import { requireService } from "@/lib/auth/service-guard";
 import {
   getEditorAllowedGrades,
   getEditorDashboardEvents,
@@ -42,6 +43,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const user = await getStaffUser();
   if (!user) redirect("/");
   if (!user.schoolId) redirect("/auth/pending");
+  await requireService(user, "gantt");
 
   const sp = await searchParams;
   const view =

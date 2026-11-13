@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { resolveSchoolFromParam } from "@/lib/db/schools";
+import { resolveGanttSchoolFromParam } from "@/lib/db/schools";
 import { getAgendaForSchool } from "@/lib/views/agenda";
 import { serializeCalendar, type ICalEvent } from "@/lib/ical/serializer";
 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
   const { school: accessToken, grades, eventTypes } = parsed.data;
 
-  const school = await resolveSchoolFromParam(accessToken);
+  const school = await resolveGanttSchoolFromParam(accessToken);
   if (!school) return new NextResponse("Not found", { status: 404 });
 
   const events = await getAgendaForSchool(school.id, {

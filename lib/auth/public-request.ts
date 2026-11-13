@@ -26,6 +26,7 @@ const DEMO_PUBLIC_PATHS = new Set(["/demo", "/api/v1/demo", "/api/cron/demo-clea
 const RESERVED_PREFIXES = [
   "/auth", "/invite", "/ical", "/api", "/admin",
   "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform", "/support", "/demo",
+  "/timetable",
 ];
 
 export function shouldBypassAuthRefresh(pathname: string): boolean {

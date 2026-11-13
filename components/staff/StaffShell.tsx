@@ -26,7 +26,7 @@ export async function StaffShell({ user, withChat, children }: StaffShellProps) 
     getTranslations("nav"),
     user.schoolId ? getSchoolById(user.schoolId) : null,
   ]);
-  const navLinks = await buildNavLinks(user.role, platform);
+  const navLinks = await buildNavLinks(user.role, platform, school?.services);
   return (
     <>
       {user.demoExpiresAt && <DemoBanner expiresAt={user.demoExpiresAt} />}

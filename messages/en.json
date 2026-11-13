@@ -42,7 +42,8 @@
     "gantt": "Gantt",
     "agenda": "Agenda",
     "calendar": "Calendar",
-    "platform": "Schools"
+    "platform": "Schools",
+    "timetable": "Timetable"
   },
   "grades": {
     "label_7": "ז",
@@ -776,5 +777,11 @@
     "backToSite": "Back to the site",
     "banner": "This is a demo environment — its data will be deleted at {time}",
     "staffDisabled": "In the demo you can't add staff, send invites or approve sign-up requests."
+  },
+  "timetable": {
+    "shell": {
+      "title": "Timetable",
+      "empty": "Coming soon"
+    }
   }
 }

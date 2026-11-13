@@ -1,6 +1,6 @@
 import "server-only";
 import { revalidateTag, unstable_cache } from "next/cache";
-import { resolveSchoolFromParam, type PublicSchoolRecord } from "@/lib/db/schools";
+import { resolveGanttSchoolFromParam, type PublicSchoolRecord } from "@/lib/db/schools";
 import { getGradeColors } from "@/lib/db/grade-colors";
 import type { GradeColorMap } from "@/lib/grade-colors";
 import { listEventTypes } from "@/lib/events/queries";
@@ -48,7 +48,7 @@ export function invalidatePublicViewerCache(slug: string | null | undefined): vo
  * its invalidation tag stay keyed by slug, which mutations know.
  */
 export async function loadPublicViewerData(accessToken: unknown): Promise<PublicViewerData | null> {
-  const school = await resolveSchoolFromParam(accessToken);
+  const school = await resolveGanttSchoolFromParam(accessToken);
   if (!school) return null;
   return unstable_cache(
     () => loadPublicViewerDataForSchool(school),
@@ -77,7 +77,7 @@ async function loadPublicViewerDataForSchool(school: PublicSchoolRecord): Promis
 }
 
 export async function loadPublicViewerEvents(accessToken: unknown): Promise<PublicViewerEvent[] | null> {
-  const school = await resolveSchoolFromParam(accessToken);
+  const school = await resolveGanttSchoolFromParam(accessToken);
   if (!school) return null;
   return unstable_cache(
     async () => (await getAgendaForSchool(school.id, {})).map(toPublicEventPayload),
@@ -87,7 +87,7 @@ export async function loadPublicViewerEvents(accessToken: unknown): Promise<Publ
 }
 
 export async function loadPublicViewerEventSignature(accessToken: unknown): Promise<string | null> {
-  const school = await resolveSchoolFromParam(accessToken);
+  const school = await resolveGanttSchoolFromParam(accessToken);
   if (!school) return null;
 
   return getAgendaSignatureForSchool(school.id, {});

@@ -5,7 +5,12 @@ import type { NextRequest } from "next/server";
 import * as schema from "@/lib/db/schema";
 import { publishEvent } from "@/lib/events/approval";
 import { createDraft, updateDraft } from "@/lib/events/crud";
-import { resolveSchoolFromParam, resolveSchoolIdFromParam } from "@/lib/db/schools";
+import {
+  resolveGanttSchoolFromParam,
+  resolveSchoolFromParam,
+  resolveSchoolIdFromParam,
+  updateSchoolServices,
+} from "@/lib/db/schools";
 import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
 
 // unstable_cache needs the Next.js runtime; run the loaders uncached here.
@@ -84,6 +89,17 @@ describe.skipIf(skipIfNoTestDb)("school link token isolation", () => {
     expect(await resolveSchoolIdFromParam(tokenA)).toBe(testSchoolA);
     expect(await resolveSchoolIdFromParam(tokenB)).toBe(testSchoolB);
     expect((await resolveSchoolFromParam(tokenA))?.accessToken).toBe(tokenA);
+  });
+
+  it("hides a timetable-only school from the public Gantt but keeps its sign-up link", async () => {
+    try {
+      await updateSchoolServices(testSchoolA, ["timetable"]);
+      expect(await resolveGanttSchoolFromParam(tokenA)).toBeNull();
+      expect(await resolveSchoolIdFromParam(tokenA)).toBe(testSchoolA);
+    } finally {
+      await updateSchoolServices(testSchoolA, ["gantt"]);
+    }
+    expect((await resolveGanttSchoolFromParam(tokenA))?.id).toBe(testSchoolA);
   });
 
   it.each([["test-a"], ["test-b"], ["0".repeat(64)], [`${"a".repeat(63)}G`], [undefined], [null], [42]])(

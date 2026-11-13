@@ -3,7 +3,7 @@ import { cache } from "react";
 import { asc, eq, isNull, type SQL } from "drizzle-orm";
 import { db, rethrowWithDatabaseHint } from "@/lib/db/client";
 import { schools } from "@/lib/db/schema";
-import type { Service } from "@/lib/services";
+import { hasService, type Service } from "@/lib/services";
 import { SchoolAccessTokenSchema } from "@/lib/validations/school";
 
 export interface PublicSchoolRecord {
@@ -63,6 +63,12 @@ export async function resolveSchoolFromParam(raw: unknown): Promise<PublicSchool
   const parsed = SchoolAccessTokenSchema.safeParse(raw);
   if (!parsed.success) return null;
   return findSchool(eq(schools.accessToken, parsed.data));
+}
+
+/** `resolveSchoolFromParam` for the public Gantt surfaces: a school without `gantt` is "no school". */
+export async function resolveGanttSchoolFromParam(raw: unknown): Promise<PublicSchoolRecord | null> {
+  const school = await resolveSchoolFromParam(raw);
+  return school && hasService(school, "gantt") ? school : null;
 }
 
 /**

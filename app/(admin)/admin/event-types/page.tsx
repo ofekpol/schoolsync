@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { requireService } from "@/lib/auth/service-guard";
 import { listEventTypes } from "@/lib/admin/event-types";
 import { EventTypeManager } from "@/components/admin/event-types/EventTypeManager";
 import { GradeColorSettings } from "@/components/admin/GradeColorSettings";
@@ -15,6 +16,7 @@ import { getGradeColors } from "@/lib/db/grade-colors";
 export default async function AdminEventTypesPage() {
   const user = await getStaffUser();
   if (!user || !user.schoolId) redirect("/");
+  await requireService(user, "gantt");
   if (user.role === "viewer") redirect("/dashboard");
 
   const isAdmin = user.role === "admin";

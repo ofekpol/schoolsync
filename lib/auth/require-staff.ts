@@ -7,7 +7,7 @@ import { signedOutPath } from "@/lib/auth/demo-guard";
  * Signed out → login; pending → /auth/pending; deactivated → /auth/deactivated;
  * must change password → /auth/change-password.
  */
-export async function requireActiveStaff(): Promise<StaffUserRecord> {
+export async function requireActiveStaffPage(): Promise<StaffUserRecord> {
   const user = await getStaffUser();
   if (!user) redirect(await signedOutPath());
   if (user.status === "pending") redirect("/auth/pending");

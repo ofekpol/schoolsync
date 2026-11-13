@@ -1,4 +1,4 @@
-import { requireActiveStaff } from "@/lib/auth/require-staff";
+import { requireActiveStaffPage } from "@/lib/auth/require-staff";
 import { StaffEntryLoading } from "@/components/staff/StaffEntryLoading";
 import { StaffShell } from "@/components/staff/StaffShell";
 import { Suspense, type ReactNode } from "react";
@@ -18,7 +18,7 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
 }
 
 async function StaffLayoutContent({ children }: { children: ReactNode }) {
-  const user = await requireActiveStaff();
+  const user = await requireActiveStaffPage();
   return (
     <StaffShell user={user} withChat>
       {children}

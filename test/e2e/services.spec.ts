@@ -20,7 +20,7 @@ test.describe("signed in as the demo admin", () => {
 
   test("SERVICES: a gantt-only school gets not-found on /timetable and no timeTable link", async ({ page }) => {
     await page.goto("/timetable");
-    await expect(page.getByText(/could not be found/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "הדף לא נמצא" })).toBeVisible();
 
     await page.goto("/dashboard");
     await expect(page.getByRole("link", { name: "לוח שנה" }).first()).toBeVisible();

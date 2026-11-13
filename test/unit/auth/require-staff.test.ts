@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { redirect } from "next/navigation";
 import { getStaffUser } from "@/lib/auth/session";
-import { requireActiveStaff } from "@/lib/auth/require-staff";
+import { requireActiveStaffPage } from "@/lib/auth/require-staff";
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((path: string) => {
@@ -17,14 +17,14 @@ function mockUser(user: Record<string, unknown> | null): void {
   vi.mocked(getStaffUser).mockResolvedValue(user as Awaited<ReturnType<typeof getStaffUser>>);
 }
 
-describe("requireActiveStaff", () => {
+describe("requireActiveStaffPage", () => {
   beforeEach(() => {
     vi.mocked(redirect).mockClear();
   });
 
   it("returns an active user without redirecting", async () => {
     mockUser(activeUser);
-    await expect(requireActiveStaff()).resolves.toBe(activeUser);
+    await expect(requireActiveStaffPage()).resolves.toBe(activeUser);
     expect(redirect).not.toHaveBeenCalled();
   });
 
@@ -35,6 +35,6 @@ describe("requireActiveStaff", () => {
     [{ ...activeUser, mustChangePassword: true }, "/auth/change-password"],
   ])("redirects %o to %s", async (user, path) => {
     mockUser(user);
-    await expect(requireActiveStaff()).rejects.toThrow(`REDIRECT:${path}`);
+    await expect(requireActiveStaffPage()).rejects.toThrow(`REDIRECT:${path}`);
   });
 });

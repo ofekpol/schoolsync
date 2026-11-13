@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { requireActiveStaff } from "@/lib/auth/require-staff";
+import { requireActiveStaffPage } from "@/lib/auth/require-staff";
 import { isDemoUser } from "@/lib/auth/demo-guard";
 import { getSchoolById } from "@/lib/db/schools";
 import { hasService } from "@/lib/services";
@@ -20,7 +20,7 @@ export default function TimetableLayout({ children }: { children: ReactNode }) {
 }
 
 async function TimetableLayoutContent({ children }: { children: ReactNode }) {
-  const user = await requireActiveStaff();
+  const user = await requireActiveStaffPage();
   const school = user.schoolId ? await getSchoolById(user.schoolId) : null;
   if (!school || !hasService(school, "timetable") || isDemoUser(user)) notFound();
   return (

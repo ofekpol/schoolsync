@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireActiveStaff } from "@/lib/auth/require-staff";
+import { requireActiveStaffPage } from "@/lib/auth/require-staff";
 import { StaffShell } from "@/components/staff/StaffShell";
 import type { ReactNode } from "react";
 
@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * admin-only access for staff/year; event-types also allows editors.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const user = await requireActiveStaff();
+  const user = await requireActiveStaffPage();
   if (user.role === "viewer") redirect("/dashboard");
   return (
     <div className="min-h-screen">

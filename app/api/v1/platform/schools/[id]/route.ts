@@ -8,19 +8,21 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 const PatchBody = z.object({ services: ServicesSchema });
 
-async function denyUnlessPlatformAdmin(): Promise<NextResponse | null> {
+/** The platform admin's auth user id, or the 401/403 to return. */
+async function platformAdminOrDeny(): Promise<{ actorId: string } | { denied: NextResponse }> {
   try {
-    await requirePlatformAdmin();
-    return null;
+    return { actorId: (await requirePlatformAdmin()).id };
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
+    if (e instanceof Response) {
+      return { denied: NextResponse.json({ error: "Forbidden" }, { status: e.status }) };
+    }
     throw e;
   }
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteContext): Promise<NextResponse> {
-  const denied = await denyUnlessPlatformAdmin();
-  if (denied) return denied;
+  const admin = await platformAdminOrDeny();
+  if ("denied" in admin) return admin.denied;
 
   const id = z.string().uuid().safeParse((await params).id);
   const parsed = PatchBody.safeParse(await request.json().catch(() => null));
@@ -29,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext): Pro
   }
 
   const { services } = parsed.data;
-  if (!(await updateSchoolServices(id.data, services))) {
+  if (!(await updateSchoolServices(id.data, services, admin.actorId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   return NextResponse.json({ services }, { status: 200 });

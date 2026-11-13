@@ -21,7 +21,10 @@
     "yes": "Yes",
     "no": "No",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "notFound": "Page not found",
+    "notFoundHint": "The link may be wrong, or you may not have access to this page.",
+    "backHome": "Back to the home page"
   },
   "publicViewerLoading": {
     "title": "Preparing your school calendar",

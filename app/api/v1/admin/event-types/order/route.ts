@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin } from "@/lib/auth/admin";
 import { reorderEventTypes } from "@/lib/admin/event-types";
 import { EventTypeOrderSchema } from "@/lib/validations/admin";
@@ -13,6 +14,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const body = await request.json().catch(() => null);
   const parsed = EventTypeOrderSchema.safeParse(body);
   if (!parsed.success) {

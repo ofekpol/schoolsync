@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { createPersonalCalendarSubscription, listSubscriptionsForStaff } from "@/lib/ical/subscriptions";
 import { isDemoUser, withDemoLimits } from "@/lib/auth/demo-guard";
 
@@ -12,6 +13,8 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
   if (user.status !== "active" || user.mustChangePassword) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
 
   // Demo schools reuse a live feed so repeated clicks don't hit the 10-subscription cap.
   const live = isDemoUser(user)

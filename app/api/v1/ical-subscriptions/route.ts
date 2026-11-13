@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import {
   createSubscription,
   listSubscriptionsForStaff,
@@ -11,6 +12,8 @@ export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (user.status !== "active") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const rows = await listSubscriptionsForStaff(user.schoolId!, user.id);
   return NextResponse.json({ subscriptions: rows }, { status: 200 });
 }
@@ -21,6 +24,8 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
   if (user.status !== "active" || user.mustChangePassword) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
 
   const body = await request.json().catch(() => null);
   const parsed = ICalSubscriptionSchema.safeParse(body ?? {});

@@ -54,6 +54,6 @@ describe("PATCH /api/v1/platform/schools/[id]", () => {
     const res = await call({ services: ["gantt", "timetable"] });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ services: ["gantt", "timetable"] });
-    expect(updateSchoolServicesMock).toHaveBeenCalledWith(SCHOOL_ID, ["gantt", "timetable"]);
+    expect(updateSchoolServicesMock).toHaveBeenCalledWith(SCHOOL_ID, ["gantt", "timetable"], "platform-admin");
   });
 });

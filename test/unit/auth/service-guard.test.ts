@@ -16,7 +16,7 @@ vi.mock("@/lib/db/schools", () => ({
   getSchoolById: (...args: unknown[]) => getSchoolByIdMock(...args),
 }));
 
-import { requireService } from "@/lib/auth/service-guard";
+import { requireService, serviceDisabledResponse } from "@/lib/auth/service-guard";
 
 const user = { id: "u1", schoolId: "s1" } as StaffUserRecord;
 
@@ -48,5 +48,31 @@ describe("requireService", () => {
     await expect(requireService({ ...user, schoolId: null } as StaffUserRecord, "gantt")).rejects.toThrow("NOT_FOUND");
     getSchoolByIdMock.mockResolvedValue(null);
     await expect(requireService(user, "gantt")).rejects.toThrow("NOT_FOUND");
+  });
+});
+
+describe("serviceDisabledResponse", () => {
+  beforeEach(() => getSchoolByIdMock.mockReset());
+
+  it("allows a school that has the service", async () => {
+    getSchoolByIdMock.mockResolvedValue({ services: ["gantt", "timetable"] });
+    expect(await serviceDisabledResponse("s1", "gantt")).toBeNull();
+  });
+
+  it("returns 403 service_disabled when the school lacks the service", async () => {
+    getSchoolByIdMock.mockResolvedValue({ services: ["timetable"] });
+    const res = await serviceDisabledResponse("s1", "gantt");
+    expect(res?.status).toBe(403);
+    expect(await res?.json()).toEqual({ error: "service_disabled" });
+  });
+
+  it("returns 403 when the school row is missing", async () => {
+    getSchoolByIdMock.mockResolvedValue(null);
+    expect((await serviceDisabledResponse("s1", "gantt"))?.status).toBe(403);
+  });
+
+  it("leaves a request without a school to the route's own auth check", async () => {
+    expect(await serviceDisabledResponse(null, "gantt")).toBeNull();
+    expect(getSchoolByIdMock).not.toHaveBeenCalled();
   });
 });

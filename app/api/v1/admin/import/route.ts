@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin } from "@/lib/auth/admin";
 import { listEventTypes } from "@/lib/admin/event-types";
 import { createPublishedEvents } from "@/lib/events/crud";
@@ -28,6 +29,8 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
     if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
     throw e;
   }
+  const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
+  if (ganttOff) return ganttOff;
   const parsed = ImportRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 422 });
 

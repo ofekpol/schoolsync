@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { schools } from "@/lib/db/schema";
+import { getSchoolById } from "@/lib/db/schools";
+import { hasService } from "@/lib/services";
 import { getSubscriptionByToken } from "@/lib/ical/subscriptions";
 import { listEventTypes } from "@/lib/events/queries";
 import { getAgendaForSchool } from "@/lib/views/agenda";
@@ -30,12 +29,11 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const [schoolRow] = await db
-    .select({ slug: schools.slug, name: schools.name })
-    .from(schools)
-    .where(eq(schools.id, subscription.schoolId))
-    .limit(1);
-  if (!schoolRow) return new NextResponse("Not found", { status: 404 });
+  // A school without the Gantt service stops serving its staff's feeds.
+  const schoolRow = await getSchoolById(subscription.schoolId);
+  if (!schoolRow || !hasService(schoolRow, "gantt")) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   // Subscription stores event-type *ids*, but getAgendaForSchool filters on
   // event-type *keys* (so labels can change without invalidating filters).

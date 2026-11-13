@@ -126,13 +126,13 @@ export function listStaffLabels(schoolId: string): Promise<Record<string, string
   });
 }
 
-/** True when the staff user exists in this school (RLS hides every other school's). */
-export function isStaffOfSchool(schoolId: string, staffUserId: string): Promise<boolean> {
+/** True when the staff user is active in this school (RLS hides every other school's). */
+export function isActiveStaffOfSchool(schoolId: string, staffUserId: string): Promise<boolean> {
   return withSchool(schoolId, async (tx) => {
     const rows = await tx
       .select({ id: staffUsers.id })
       .from(staffUsers)
-      .where(eq(staffUsers.id, staffUserId))
+      .where(and(eq(staffUsers.id, staffUserId), eq(staffUsers.status, "active")))
       .limit(1);
     return rows.length > 0;
   });

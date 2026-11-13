@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requirePlatformAdmin } from "@/lib/auth/platform-admin";
 import { listAllSchools } from "@/lib/db/schools";
 import { ProvisionSchoolForm } from "@/components/platform/ProvisionSchoolForm";
+import { SchoolServicesForm } from "@/components/platform/SchoolServicesForm";
 import { SchoolLinks } from "@/components/admin/SchoolLinks";
 import { ExternalLink } from "lucide-react";
 
@@ -56,6 +57,7 @@ export default async function PlatformSchoolsPage() {
               </a>
             </div>
             <SchoolLinks accessToken={school.accessToken} origin={origin} />
+            <SchoolServicesForm schoolId={school.id} services={school.services} />
           </article>
         ))}
       </section>

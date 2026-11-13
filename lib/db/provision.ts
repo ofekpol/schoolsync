@@ -2,7 +2,9 @@
 // via tsx outside the Next.js server runtime. It is also safe to call from server-only
 // Next.js code (Server Components / route handlers); never import from a Client Component.
 import { eq } from "drizzle-orm";
+import type { z } from "zod";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { Service } from "@/lib/services";
 import { ProvisionSchoolInput } from "@/lib/validations/school";
 import { db, supabaseAdmin, withSchool } from "./client";
 import * as schema from "./schema";
@@ -44,6 +46,8 @@ export interface SchoolRowInput {
   name: string;
   locale: string;
   timezone: string;
+  /** Defaults to gantt only (demo schools, CLI). */
+  services?: Service[];
   /** Only for public demo schools (lib/db/demo.ts). */
   demoExpiresAt?: Date;
 }
@@ -57,6 +61,7 @@ export async function insertSchool(input: SchoolRowInput): Promise<{ id: string;
       name: input.name,
       locale: input.locale,
       timezone: input.timezone,
+      services: input.services ?? ["gantt"],
       demoExpiresAt: input.demoExpiresAt ?? null,
     })
     .onConflictDoNothing({ target: schema.schools.slug })
@@ -159,7 +164,7 @@ async function generateAdminMagicLink(
  * (unset on Vercel Preview, where the route passes the request origin).
  */
 export async function provisionSchool(
-  rawInput: ProvisionSchoolInput,
+  rawInput: z.input<typeof ProvisionSchoolInput>,
   appUrl: string | undefined = process.env.NEXT_PUBLIC_APP_URL,
 ): Promise<ProvisionSchoolResult> {
   const input = ProvisionSchoolInput.parse(rawInput);

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getStaffUser } from "@/lib/auth/session";
+import { requireService } from "@/lib/auth/service-guard";
 import {
   getEditorAllowedGrades,
   getEventForEditor,
@@ -20,6 +21,7 @@ interface PageProps {
 export default async function NewEventPage({ searchParams }: PageProps) {
   const user = await getStaffUser();
   if (!user || !user.schoolId) redirect("/");
+  await requireService(user, "gantt");
   if (user.role === "viewer") redirect("/dashboard");
 
   const { resumeId, date } = await searchParams;

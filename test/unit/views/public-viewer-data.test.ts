@@ -8,7 +8,7 @@ vi.mock("next/cache", () => ({
 
 const resolveSchoolMock = vi.fn();
 vi.mock("@/lib/db/schools", () => ({
-  resolveSchoolFromParam: (...args: unknown[]) => resolveSchoolMock(...args),
+  resolveGanttSchoolFromParam: (...args: unknown[]) => resolveSchoolMock(...args),
 }));
 
 const listEventTypesMock = vi.fn();

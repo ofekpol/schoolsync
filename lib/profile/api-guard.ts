@@ -5,6 +5,7 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { CategoryError } from "@/lib/profile/categories";
+import { ProfileValidationError, setStaffOptions } from "@/lib/profile/staff-labels";
 
 type Guarded<U> = { user: U; response?: undefined } | { user?: undefined; response: NextResponse };
 type SchoolUser = StaffUserRecord & { schoolId: string };
@@ -44,4 +45,21 @@ export function categoryErrorResponse(error: unknown): NextResponse | null {
 
 export function invalidInput(details?: unknown): NextResponse {
   return NextResponse.json({ error: "Invalid input", details }, { status: 400 });
+}
+
+/** Saves a selection: 204, or 400 with the ProfileValidationError code. */
+export async function saveStaffOptions(
+  schoolId: string,
+  staffUserId: string,
+  optionIds: string[],
+): Promise<NextResponse> {
+  try {
+    await setStaffOptions(schoolId, staffUserId, optionIds);
+    return new NextResponse(null, { status: 204 });
+  } catch (e) {
+    if (e instanceof ProfileValidationError) {
+      return NextResponse.json({ error: e.code }, { status: 400 });
+    }
+    throw e;
+  }
 }

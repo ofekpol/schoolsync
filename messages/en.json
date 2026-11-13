@@ -630,7 +630,11 @@
       "services": {
         "title": "Services",
         "gantt": "Event calendar (Gantt)",
-        "timetable": "Timetable (timeTable)"
+        "timetable": "Timetable (timeTable)",
+        "saved": "Saved",
+        "error": "Save failed",
+        "hideWarning": "The service will be hidden. Its data is kept.",
+        "save": "Save"
       }
     }
   },

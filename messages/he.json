@@ -630,7 +630,11 @@
       "services": {
         "title": "שירותים",
         "gantt": "לוח אירועים (Gantt)",
-        "timetable": "מערכת שעות (timeTable)"
+        "timetable": "מערכת שעות (timeTable)",
+        "saved": "נשמר",
+        "error": "השמירה נכשלה",
+        "hideWarning": "השירות יוסתר. הנתונים נשמרים.",
+        "save": "שמור"
       }
     }
   },

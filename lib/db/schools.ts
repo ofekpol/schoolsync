@@ -109,3 +109,13 @@ export async function listAllSchools(): Promise<PublicSchoolRecord[]> {
     rethrowWithDatabaseHint(error, "Failed to list schools");
   }
 }
+
+/** Platform admins only. Returns false when no school has this id. */
+export async function updateSchoolServices(schoolId: string, services: Service[]): Promise<boolean> {
+  try {
+    const rows = await db.update(schools).set({ services }).where(eq(schools.id, schoolId)).returning({ id: schools.id });
+    return rows.length > 0;
+  } catch (error) {
+    rethrowWithDatabaseHint(error, "Failed to update school services");
+  }
+}

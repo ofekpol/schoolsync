@@ -4,9 +4,9 @@ import { getStaffUser } from "@/lib/auth/session";
 import { isDemoUser, signedOutPath } from "@/lib/auth/demo-guard";
 import { listCategories } from "@/lib/profile/categories";
 import { getStaffOptionIds } from "@/lib/profile/staff-labels";
+import { getSchoolById } from "@/lib/db/schools";
+import { homePathFor } from "@/lib/services";
 import { ProfileForm } from "@/components/profile/ProfileForm";
-
-const HOME = "/dashboard";
 
 /**
  * A staff member's own profile labels. Lives outside the (staff) group, like
@@ -18,14 +18,17 @@ export default async function ProfilePage() {
   if (user.status === "pending") redirect("/auth/pending");
   if (user.status === "deactivated") redirect("/auth/deactivated");
   if (user.mustChangePassword) redirect("/auth/change-password");
-  if (!user.schoolId || isDemoUser(user)) redirect(HOME);
+  if (!user.schoolId) redirect("/dashboard");
+  const school = await getSchoolById(user.schoolId);
+  const home = homePathFor(school?.services ?? ["gantt"]);
+  if (isDemoUser(user)) redirect(home);
 
   const [categories, selected, t] = await Promise.all([
     listCategories(user.schoolId),
     getStaffOptionIds(user.schoolId, user.id),
     getTranslations("profile"),
   ]);
-  if (categories.length === 0) redirect(HOME);
+  if (categories.length === 0) redirect(home);
 
   return (
     <main className="flex min-h-screen items-start justify-center bg-background px-4 py-10">
@@ -35,7 +38,7 @@ export default async function ProfilePage() {
           <p className="text-sm text-muted-foreground">{t("intro")}</p>
         </div>
         <ProfileForm categories={categories} selected={selected} submitUrl="/api/v1/profile"
-          savedHref={HOME} />
+          savedHref={home} />
       </div>
     </main>
   );

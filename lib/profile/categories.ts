@@ -19,6 +19,23 @@ export class CategoryError extends Error {
   }
 }
 
+const NAME_INDEX = "profile_categories_school_name_active_key";
+
+/** True for Postgres' unique violation on the active-name index (drizzle may wrap it in `cause`). */
+export function isNameClash(error: unknown): boolean {
+  for (let current = error; current instanceof Object; current = (current as { cause?: unknown }).cause) {
+    const pg = current as { code?: unknown; constraint?: unknown };
+    if (pg.code === "23505" && pg.constraint === NAME_INDEX) return true;
+  }
+  return false;
+}
+
+/** Turns a concurrent save that slipped past assertNameFree into the same 409. */
+function nameClashAsCategoryError(error: unknown): never {
+  if (isNameClash(error)) throw new CategoryError("duplicate_name");
+  throw error;
+}
+
 const activeCategory = isNull(profileCategories.archivedAt);
 const activeOption = isNull(profileCategoryOptions.archivedAt);
 
@@ -117,7 +134,7 @@ export function createCategory(schoolId: string, input: CategoryInput): Promise<
       );
     }
     return (await loadCategories(tx, row.id))[0];
-  });
+  }).catch(nameClashAsCategoryError);
 }
 
 /**
@@ -185,7 +202,7 @@ export function replaceCategory(
       .where(eq(profileCategories.id, id));
     await syncOptions(tx, schoolId, id, input.options);
     return (await loadCategories(tx, id))[0];
-  });
+  }).catch(nameClashAsCategoryError);
 }
 
 /** Archives a category (never deletes). False when it is not this school's active category. */

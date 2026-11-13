@@ -92,6 +92,17 @@ describe.skipIf(skipIfNoTestDb)("profile categories", () => {
     expect(second.id).not.toBe(first.id);
   });
 
+  it("answers duplicate_name, not a database error, when two creates race", async () => {
+    const results = await Promise.allSettled([
+      createCategory(testSchoolA, subject),
+      createCategory(testSchoolA, subject),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const rejected = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(rejected.reason).toBeInstanceOf(CategoryError);
+    expect(rejected.reason).toMatchObject({ code: "duplicate_name" });
+  });
+
   it("rejects renaming a category onto another active name", async () => {
     await createCategory(testSchoolA, subject);
     const other = await createCategory(testSchoolA, { ...subject, name: "שכבה" });

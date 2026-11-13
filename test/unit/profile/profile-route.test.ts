@@ -16,7 +16,7 @@ vi.mock("@/lib/profile/categories", () => ({
 const labels = {
   getStaffOptionIds: vi.fn(),
   setStaffOptions: vi.fn(),
-  isStaffOfSchool: vi.fn(),
+  isActiveStaffOfSchool: vi.fn(),
 };
 vi.mock("@/lib/profile/staff-labels", () => {
   class ProfileValidationError extends Error {
@@ -28,7 +28,7 @@ vi.mock("@/lib/profile/staff-labels", () => {
     ProfileValidationError,
     getStaffOptionIds: (...a: unknown[]) => labels.getStaffOptionIds(...a),
     setStaffOptions: (...a: unknown[]) => labels.setStaffOptions(...a),
-    isStaffOfSchool: (...a: unknown[]) => labels.isStaffOfSchool(...a),
+    isActiveStaffOfSchool: (...a: unknown[]) => labels.isActiveStaffOfSchool(...a),
   };
 });
 
@@ -130,16 +130,16 @@ describe("PUT /api/v1/admin/staff/[id]/labels", () => {
     expect(labels.setStaffOptions).not.toHaveBeenCalled();
   });
 
-  it("404 when the staff user is not in the admin's school", async () => {
+  it("404 when the staff user is not active in the admin's school", async () => {
     getStaffUserMock.mockResolvedValue(ADMIN);
-    labels.isStaffOfSchool.mockResolvedValue(false);
+    labels.isActiveStaffOfSchool.mockResolvedValue(false);
     expect((await PUT_ADMIN(put({ optionIds: [] }, adminPath), ctx)).status).toBe(404);
     expect(labels.setStaffOptions).not.toHaveBeenCalled();
   });
 
   it("204 for an admin, and 400 with the validation code", async () => {
     getStaffUserMock.mockResolvedValue(ADMIN);
-    labels.isStaffOfSchool.mockResolvedValue(true);
+    labels.isActiveStaffOfSchool.mockResolvedValue(true);
     expect((await PUT_ADMIN(put({ optionIds: [OPTION] }, adminPath), ctx)).status).toBe(204);
     expect(labels.setStaffOptions).toHaveBeenCalledWith(SCHOOL, OTHER, [OPTION]);
     labels.setStaffOptions.mockRejectedValue(new ProfileValidationError("required_missing"));

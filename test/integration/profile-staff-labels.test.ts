@@ -6,7 +6,7 @@ import { profileCategories, staffProfileOptions } from "@/lib/db/schema-profile"
 import { archiveCategory, createCategory, replaceCategory } from "@/lib/profile/categories";
 import {
   getStaffOptionIds,
-  isStaffOfSchool,
+  isActiveStaffOfSchool,
   listStaffLabels,
   setStaffOptions,
 } from "@/lib/profile/staff-labels";
@@ -145,8 +145,9 @@ describe.skipIf(skipIfNoTestDb)("staff profile labels", () => {
     expect(await listStaffLabels(testSchoolB)).toEqual({});
   });
 
-  it("knows which staff belong to the school", async () => {
-    expect(await isStaffOfSchool(testSchoolA, staff)).toBe(true);
-    expect(await isStaffOfSchool(testSchoolB, staff)).toBe(false);
+  it("knows which active staff belong to the school", async () => {
+    expect(await isActiveStaffOfSchool(testSchoolA, staff)).toBe(true);
+    expect(await isActiveStaffOfSchool(testSchoolB, staff)).toBe(false);
+    expect(await isActiveStaffOfSchool(testSchoolA, await createStaff(testSchoolA, "deactivated"))).toBe(false);
   });
 });

@@ -626,7 +626,12 @@
       "magicLink": "Give the admin this sign-in link (valid for 1 hour):",
       "duplicateSlug": "That slug is already taken.",
       "invalid": "Check the fields.",
-      "error": "Setup failed. Try again."
+      "error": "Setup failed. Try again.",
+      "services": {
+        "title": "Services",
+        "gantt": "Event calendar (Gantt)",
+        "timetable": "Timetable (timeTable)"
+      }
     }
   },
   "legal": {

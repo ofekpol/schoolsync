@@ -73,6 +73,20 @@ describe("/api/v1/platform/schools", () => {
     expect(provisionSchoolMock).not.toHaveBeenCalled();
   });
 
+  it("rejects an unknown service with 400", async () => {
+    expect((await POST(makeRequest({ ...VALID_BODY, services: ["rooms"] }))).status).toBe(400);
+    expect(provisionSchoolMock).not.toHaveBeenCalled();
+  });
+
+  it("passes the chosen services to provisionSchool", async () => {
+    provisionSchoolMock.mockResolvedValue(PROVISIONED);
+    await POST(makeRequest({ ...VALID_BODY, services: ["timetable"] }));
+    expect(provisionSchoolMock).toHaveBeenCalledWith(
+      expect.objectContaining({ services: ["timetable"] }),
+      expect.anything(),
+    );
+  });
+
   it("returns 409 when the slug is taken", async () => {
     provisionSchoolMock.mockRejectedValue(
       new Error('school with slug "new-school" already exists — refusing to clobber'),

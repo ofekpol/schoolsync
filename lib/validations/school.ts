@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ServicesSchema } from "@/lib/services";
 
 /** URL slug of a school (tenant): an internal, guessable name — never an access key. */
 export const SchoolSlugSchema = z
@@ -21,6 +22,7 @@ export const ProvisionSchoolInput = z.object({
   timezone: z.string().default("Asia/Jerusalem"),
   adminEmail: z.string().email().max(255),
   adminName: z.string().min(1).max(200),
+  services: ServicesSchema.default(["gantt"]),
 });
 
 export type ProvisionSchoolInput = z.infer<typeof ProvisionSchoolInput>;

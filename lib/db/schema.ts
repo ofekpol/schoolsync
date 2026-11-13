@@ -32,7 +32,7 @@ export const scopeKindEnum = pgEnum("scope_kind", ["grade", "event_type"]);
 
 // ─── RLS helper ───────────────────────────────────────────────────────────────
 
-const schoolIsolation = pgPolicy("school_isolation", {
+export const schoolIsolation = pgPolicy("school_isolation", {
   as: "permissive",
   for: "all",
   using: sql`school_id = NULLIF(current_setting('app.school_id', TRUE), '')::uuid`,
@@ -100,6 +100,7 @@ export const staffUsers = pgTable(
     mustChangePassword: boolean("must_change_password").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+    profileCompletedAt: timestamp("profile_completed_at", { withTimezone: true }),
   },
   () => [schoolIsolation],
 );

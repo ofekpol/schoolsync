@@ -1,8 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { asc, eq, isNull, type SQL } from "drizzle-orm";
-import { db, rethrowWithDatabaseHint } from "@/lib/db/client";
-import { schools } from "@/lib/db/schema";
+import { db, rethrowWithDatabaseHint, withSchool } from "@/lib/db/client";
+import { auditLog, schools } from "@/lib/db/schema";
 import { hasService, type Service } from "@/lib/services";
 import { SchoolAccessTokenSchema } from "@/lib/validations/school";
 
@@ -116,11 +116,34 @@ export async function listAllSchools(): Promise<PublicSchoolRecord[]> {
   }
 }
 
-/** Platform admins only. Returns false when no school has this id. */
-export async function updateSchoolServices(schoolId: string, services: Service[]): Promise<boolean> {
+/**
+ * Platform admins only. Writes an audit_log row with the before/after lists.
+ * The actor is an auth user id (a platform admin may have no staff row here).
+ * Returns false when no school has this id.
+ */
+export async function updateSchoolServices(
+  schoolId: string,
+  services: Service[],
+  actorAuthId: string,
+): Promise<boolean> {
   try {
-    const rows = await db.update(schools).set({ services }).where(eq(schools.id, schoolId)).returning({ id: schools.id });
-    return rows.length > 0;
+    const [before] = await db
+      .select({ services: schools.services })
+      .from(schools)
+      .where(eq(schools.id, schoolId))
+      .limit(1);
+    if (!before) return false;
+    await db.update(schools).set({ services }).where(eq(schools.id, schoolId));
+    await withSchool(schoolId, (tx) =>
+      tx.insert(auditLog).values({
+        schoolId,
+        action: "school_services_updated",
+        targetTable: "schools",
+        targetId: schoolId,
+        payload: { from: before.services, to: services, actorAuthId },
+      }),
+    );
+    return true;
   } catch (error) {
     rethrowWithDatabaseHint(error, "Failed to update school services");
   }

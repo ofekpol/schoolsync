@@ -3,9 +3,14 @@ import { sql } from "drizzle-orm";
 import { getSchoolById, updateSchoolServices } from "@/lib/db/schools";
 import { skipIfNoTestDb, testDb, testSchoolA } from "./setup";
 
+const ACTOR = "00000000-0000-0000-0000-0000000000ad";
+
 describe.skipIf(skipIfNoTestDb)("schools.services", () => {
   afterAll(async () => {
     await testDb?.execute(sql`UPDATE schools SET services = '{gantt}' WHERE id = ${testSchoolA}`);
+    await testDb?.execute(
+      sql`DELETE FROM audit_log WHERE school_id = ${testSchoolA} AND action = 'school_services_updated'`,
+    );
   });
 
   it("defaults an existing school to gantt only", async () => {
@@ -21,8 +26,15 @@ describe.skipIf(skipIfNoTestDb)("schools.services", () => {
   });
 
   it("updates a school's services and reports unknown schools", async () => {
-    expect(await updateSchoolServices(testSchoolA, ["gantt", "timetable"])).toBe(true);
+    expect(await updateSchoolServices(testSchoolA, ["gantt", "timetable"], ACTOR)).toBe(true);
     expect((await getSchoolById(testSchoolA))?.services).toEqual(["gantt", "timetable"]);
-    expect(await updateSchoolServices("00000000-0000-0000-0000-00000000dead", ["gantt"])).toBe(false);
+    expect(await updateSchoolServices("00000000-0000-0000-0000-00000000dead", ["gantt"], ACTOR)).toBe(false);
+  });
+
+  it("records the change in the school's audit log", async () => {
+    const result = await testDb!.execute(
+      sql`SELECT payload FROM audit_log WHERE school_id = ${testSchoolA} AND action = 'school_services_updated' AND payload->>'actorAuthId' = ${ACTOR} ORDER BY at DESC LIMIT 1`,
+    );
+    expect(result.rows[0]?.payload).toEqual({ from: ["gantt"], to: ["gantt", "timetable"], actorAuthId: ACTOR });
   });
 });

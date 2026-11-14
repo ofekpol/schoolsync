@@ -88,8 +88,8 @@ the solver contract in it), then start the detailed plan for plan 6.
 
 - Branch from `staging`: `feature/profile-gate`, `feature/timetable-setup-ui`,
   `feature/timetable-collect`.
-- **Your migration number: 0024 (plan 6).** Ofek has 0023 (plan 5a) and 0025 (plan 7). 0022 is
-  used; Task 5 and plan 5b need no migration.
+- **Your migration number: 0025 (plan 6).** 0024 is used (`timetable_deferred_fks`); Ofek has 0026 (plan 7). 0023 and
+  0022 are used; Task 5 and plan 5b need no migration.
 - Your files: `lib/profile/`, `components/profile/`, `lib/timetable/constraints/`,
   `lib/timetable/api-guard.ts`, `components/timetable/setup/`, `components/timetable/constraints/`,
   and the routes under `app/api/v1/timetable/` except `boards/[board]/runs/**`.

@@ -64,7 +64,7 @@ test.afterAll(async ({ browser }) => {
 test("admin creates a category with two options", async ({ browser }) => {
   const admin = await adminContext(browser);
   const page = await admin.newPage();
-  await page.goto("/admin/categories");
+  await page.goto("/admin/staff?tab=categories");
 
   await page.getByRole("button", { name: "הוסף קטגוריה" }).click();
   const form = page.getByRole("form", { name: "הוסף קטגוריה" });

@@ -46,8 +46,7 @@
     "agenda": "סדר יום",
     "calendar": "לוח שנה",
     "platform": "בתי ספר",
-    "timetable": "מערכת שעות",
-    "categories": "קטגוריות פרופיל"
+    "timetable": "מערכת שעות"
   },
   "grades": {
     "label_7": "ז",
@@ -196,7 +195,8 @@
       "tabs": {
         "staff": "צוות",
         "requests": "בקשות הצטרפות",
-        "invites": "קישורי הזמנה"
+        "invites": "קישורי הזמנה",
+        "categories": "קטגוריות פרופיל"
       },
       "createdOn": "נוצר ב־{date}",
       "labels": {

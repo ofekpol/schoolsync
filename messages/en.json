@@ -46,8 +46,7 @@
     "agenda": "Agenda",
     "calendar": "Calendar",
     "platform": "Schools",
-    "timetable": "Timetable",
-    "categories": "Profile categories"
+    "timetable": "Timetable"
   },
   "grades": {
     "label_7": "ז",
@@ -196,7 +195,8 @@
       "tabs": {
         "staff": "Staff",
         "requests": "Join requests",
-        "invites": "Invite links"
+        "invites": "Invite links",
+        "categories": "Profile categories"
       },
       "createdOn": "Created {date}",
       "labels": {

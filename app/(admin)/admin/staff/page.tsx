@@ -16,10 +16,12 @@ import { AddStaffDialog } from "@/components/admin/AddStaffDialog";
 import { InviteTable } from "@/components/admin/InviteTable";
 import { SchoolLinks } from "@/components/admin/SchoolLinks";
 import { StaffTabs, type StaffTab } from "@/components/admin/StaffTabs";
+import { CategoryManager } from "@/components/profile/CategoryManager";
 
 /**
  * Admin staff management page — Server Component.
- * Tabs: staff list / pending sign-ups / invite links / school links, with one
+ * Tabs: staff list / pending sign-ups / invite links / profile categories /
+ * school links, with one
  * "Add staff" dialog (create account or invite link). ADMIN-01 entry point.
  */
 export default async function AdminStaffPage({
@@ -47,6 +49,7 @@ export default async function AdminStaffPage({
 
   const t = await getTranslations("admin.staff");
   const tDemo = await getTranslations("demo");
+  const tCategories = await getTranslations("admin.categories");
   const demo = isDemoUser(user);
   const activeCount = staff.filter((member) => !member.deactivatedAt).length;
   const openInviteCount = invites.filter((invite) => !invite.usedAt && !invite.revokedAt).length;
@@ -94,6 +97,24 @@ export default async function AdminStaffPage({
       },
     );
   }
+  tabs.push({
+    id: "categories",
+    label: t("tabs.categories"),
+    count: categories.length,
+    panel: (
+      <div className="space-y-4">
+        <p className="max-w-xl text-sm text-neutral-600">{tCategories("description")}</p>
+        {demo && (
+          <p role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+            {tCategories("demoNote")}
+          </p>
+        )}
+        <div className="max-w-2xl">
+          <CategoryManager initial={categories} readOnly={demo} />
+        </div>
+      </div>
+    ),
+  });
   if (school) {
     tabs.push({
       id: "links",

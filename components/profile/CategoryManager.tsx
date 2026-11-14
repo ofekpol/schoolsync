@@ -74,7 +74,9 @@ export function CategoryManager({ initial, readOnly }: Props) {
     if (!res.ok) {
       setRows(previous);
       setRowError({ id: rows[index].id, key: res.error });
+      return;
     }
+    router.refresh();
   }
 
   return (

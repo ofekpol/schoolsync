@@ -262,7 +262,7 @@ Never commit these. Never ask for or paste secret values in chat — have the us
 - Branch naming: `feature/<desc>`, `fix/<desc>`, `phase/<n>-<desc>`
 - For every new feature: create a new branch (`git checkout -b feature/<desc>`) from `staging`, work on it, then merge into `staging` and verify on the staging deployment; promote with `staging` → `main` (see OPERATIONS.md §7 "Environments")
 - Hotfixes merged straight into `main` must be merged back into `staging`
-- Merge PRs with a merge commit, only after **all** checks on that PR are green (including the PR's own "Lint, Typecheck, Test, E2E" run). Auto-merge is disabled on the repo.
+- Merge PRs with a merge commit, only after **all** checks on that PR are green (including the PR's own CI jobs: "Lint, Typecheck", "Unit + integration tests", "Build, E2E"). Auto-merge is disabled on the repo.
 - Verify `pnpm build` passes before merging
 - Keep commits atomic per logical change
 - Never spawn agents with `isolation: "worktree"`.

@@ -207,6 +207,14 @@
         "edit": "Labels",
         "editFor": "Edit labels of {name}",
         "editTitle": "Edit labels"
+      },
+      "details": {
+        "toggle": "Details for {name}",
+        "permissions": "Permissions",
+        "noScopes": "No permissions",
+        "scopeCount": "{count, plural, one {1 permission} other {# permissions}}",
+        "labelCount": "{count, plural, one {1 label} other {# labels}}",
+        "noLabels": "No labels"
       }
     },
     "eventTypes": {

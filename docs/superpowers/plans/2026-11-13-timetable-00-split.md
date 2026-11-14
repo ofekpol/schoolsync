@@ -15,9 +15,9 @@ Two people, two tracks. Each plan is its own branch from `staging` and its own P
 |---|------|-------|--------|-------------|-------|
 | 1 | Service selection | A | `feature/service-selection` | - | **merged into `staging`** |
 | 2 | Profile categories, Tasks 1-4 | B | `feature/profile-categories` | - | **merged into `staging`** |
-| 2 | Profile categories, Task 5 (gate, nav link, labels in the staff table) | B | `feature/profile-gate` | now | detailed: `2026-11-13-timetable-02-profile-categories.md` |
+| 2 | Profile categories, Task 5 (gate, nav link, labels in the staff table) | B | `feature/profile-gate` | now | **merged into `staging`** (PR #99); detailed: `2026-11-13-timetable-02-profile-categories.md` |
 | 3 | Solver spike | - | - | - | **retired**; its measurements moved into plan 4 |
-| 5a | Setup data: tables, domain, solver contract, export, demo seed | A | `feature/timetable-setup` | now | detailed: `2026-11-14-timetable-05-setup-data.md`, Tasks 1-5 |
+| 5a | Setup data: tables, domain, solver contract, export, demo seed | A | `feature/timetable-setup` | now | **merged into `staging`**; detailed: `2026-11-14-timetable-05-setup-data.md`, Tasks 1-5 |
 | 5b | Setup data: API routes and setup tabs | B | `feature/timetable-setup-ui` | plan 2 Task 5 merged and plan 5a merged | detailed: same file, Tasks 6-8 |
 | 4 | Solver service (Python, CP-SAT), benchmark, hosting | A | `feature/timetable-solver` | plan 5a merged (it holds the contract) | outline below |
 | 7 | Generate, compare three options, read-only timetable grid | A | `feature/timetable-generate` | plan 4 merged | outline below |
@@ -45,9 +45,9 @@ is met.
 
 ## Rules that keep the two tracks from colliding
 
-1. **Migration numbers are reserved.** 0021 = plan 1 (used). 0022 = plan 2 (used). 0023 = plan 5a.
-   0024 = plan 6. 0025 = plan 7. Never renumber; a plan that needs a second migration takes the
-   next free number after 0025 and says so in the PR.
+1. **Migration numbers are reserved.** 0021 = plan 1 (used). 0022 = plan 2 (used). 0023 = plan 5a
+   (used). 0024 = `timetable_deferred_fks` (used). Plan 6 takes 0025, plan 7 takes 0026, and later plans
+   the next free number. Never renumber; say the number in the PR.
 2. **Schema.** Track A owns `lib/db/schema-timetable.ts`. Plan 6 (track B) adds `tt_constraints`
    at the end of that file; plan 7 adds the run and solution tables after it. Append only.
 3. **The solver contract lives in plan 5a** (`lib/timetable/solver-contract.ts`, Task 4). Maor
@@ -92,7 +92,7 @@ is met.
   the same violations the solver would; the seeded Kfar Galim board solves on the chosen host.
 
 ### Plan 7: generate, compare, view (track A)
-- Migration 0025: `tt_runs`, `tt_solutions`, `tt_placements`, `tt_boards.published_solution_id`.
+- Migration 0026: `tt_runs`, `tt_solutions`, `tt_placements`, `tt_boards.published_solution_id`.
 - `lib/timetable/solver-client.ts`, run lifecycle, polling. Three weight profiles per run.
 - Generate screen; three options side by side with score and broken constraints.
 - A read-only grid of one option, by class and by teacher (moved here from plan 8 so the first
@@ -100,7 +100,7 @@ is met.
 - Done when: a run on the staging demo board stores three options and each opens as a grid.
 
 ### Plan 6: constraints (track B, encoders by track A)
-- Migration 0024: `tt_constraints`. Type registry in `lib/timetable/constraints/`.
+- Migration 0025: `tt_constraints`. Type registry in `lib/timetable/constraints/`.
 - Management constraints aimed at a teacher, a class, a grade, a subject or a profile label;
   the form shows how many teachers a label reaches and lists unlinked ones.
 - Board status `collecting`, deadline, who answered, fill in for a teacher.

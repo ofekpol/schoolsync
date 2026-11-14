@@ -16,9 +16,12 @@ test.skip(
 
 const EVENT_TITLE = `אירוע הדגמה ${Date.now()}`;
 
-/** Tomorrow on the calendar (the agenda lists upcoming events). */
-function tomorrow(): string {
-  return new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+/**
+ * Today in Jerusalem. The agenda opens on the current week, so "tomorrow" fails
+ * on Saturdays (it falls in next week's page).
+ */
+function todayInJerusalem(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date());
 }
 
 /** Only a throwaway local/CI database may have its shared abuse ledger wiped. */
@@ -47,7 +50,7 @@ test("DEMO: a visitor tries the product in a private school", async ({ page, con
   await page.goto("/events/new");
   const main = page.getByRole("main");
   await main.getByLabel("שם האירוע").fill(EVENT_TITLE);
-  await main.locator('input[type="date"]').first().fill(tomorrow());
+  await main.locator('input[type="date"]').first().fill(todayInJerusalem());
   await main.getByRole("radio").first().click();
   await main.getByRole("button", { name: "י", exact: true }).click();
   await main.getByRole("button", { name: "פרסם אירוע" }).click();

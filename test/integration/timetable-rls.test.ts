@@ -14,6 +14,7 @@ import {
   ttTeachers,
 } from "@/lib/db/schema-timetable";
 import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
+import { DEFAULT_WEEK } from "@/lib/timetable/week";
 
 /**
  * RLS for the seven timetable tables: a school reads its own rows, never sees
@@ -33,7 +34,7 @@ describe.skipIf(skipIfNoTestDb)("timetable tables RLS", () => {
   function rowsFor(): Array<{ table: PgTable; row: Record<string, unknown> }> {
     const schoolId = testSchoolA;
     return [
-      { table: ttBoards, row: { id: randomUUID(), schoolId, academicYearId: ids.year, name: `x-${randomUUID()}`, week: {} } },
+      { table: ttBoards, row: { id: randomUUID(), schoolId, academicYearId: ids.year, name: `x-${randomUUID()}`, week: DEFAULT_WEEK } },
       { table: ttClasses, row: { schoolId, boardId: ids.board, grade: 9, number: 1 } },
       { table: ttSubjects, row: { schoolId, boardId: ids.board, name: "x" } },
       { table: ttTeachers, row: { schoolId, boardId: ids.board, fullName: "x" } },
@@ -66,7 +67,7 @@ describe.skipIf(skipIfNoTestDb)("timetable tables RLS", () => {
       startDate: "2026-09-01",
       endDate: "2027-06-30",
     });
-    await db.insert(ttBoards).values({ id: ids.board, schoolId, academicYearId: ids.year, name: "rls", week: {} });
+    await db.insert(ttBoards).values({ id: ids.board, schoolId, academicYearId: ids.year, name: "rls", week: DEFAULT_WEEK });
     await db.insert(ttClasses).values({ id: ids.klass, schoolId, boardId: ids.board, grade: 7, number: 1 });
     await db.insert(ttSubjects).values({ id: ids.subject, schoolId, boardId: ids.board, name: "מתמטיקה" });
     await db.insert(ttTeachers).values({ id: ids.teacher, schoolId, boardId: ids.board, fullName: "מורה" });

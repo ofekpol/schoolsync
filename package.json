@@ -22,6 +22,7 @@
     "seed": "tsx db/seed.ts",
     "seed:perf": "tsx db/seed-perf.ts",
     "seed:demo-events": "tsx scripts/seed-demo-events.ts",
+    "seed:timetable-demo": "tsx --conditions=react-server scripts/seed-timetable-demo.ts",
     "provision:school": "tsx scripts/provision-school.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",

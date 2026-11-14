@@ -6,7 +6,7 @@ config({ override: false });
 
 export default defineConfig({
   out: "./db/migrations",
-  schema: ["./lib/db/schema.ts", "./lib/db/schema-profile.ts"],
+  schema: ["./lib/db/schema.ts", "./lib/db/schema-profile.ts", "./lib/db/schema-timetable.ts"],
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,

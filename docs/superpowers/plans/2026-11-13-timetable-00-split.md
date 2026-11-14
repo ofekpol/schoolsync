@@ -66,8 +66,9 @@ is met.
 7. **Demo data.** The seed writes only into a board named `הדגמה` of the school it is pointed
    at, and only on a local or staging database. Staging is a copy of production
    (`scripts/refresh-staging-db.sh`): a refresh removes the demo board, the `timetable` service
-   flag and any labels entered on staging. Re-enable the service on `/platform/schools` and
-   re-run the seed after a refresh.
+   flag and any labels entered on staging. **Decision: no staging refresh until the demo is
+   done.** If one happens anyway, re-enable the service on `/platform/schools` and re-run the
+   seed.
 8. Project rules apply everywhere: no direct commits to `main`, merge commits only after all
    checks are green, `pnpm build` passes, no worktrees, production data is never read.
 
@@ -80,7 +81,7 @@ is met.
   current documentation for Python functions on our plan (duration, memory, bundle size) and
   try the solver as a Python function. It stays there if the Kfar Galim-size solve fits with
   2x headroom; otherwise the same code goes into a small container, and the cost is written
-  down. Result: a short section added to the spec, not a separate document.
+  down. A paid container is acceptable but not preferred (Ofek, 2026-11-14). Result: a short section added to the spec, not a separate document.
 - `solver/`: CP-SAT model, one encoder per constraint type in `solver/constraints/<type>.py`,
   pytest with one test per type, `solver/fixtures/tiny.json` (from plan 5a) as a golden test.
 - Always enforced: a teacher or a class is never in two places at once; a block with

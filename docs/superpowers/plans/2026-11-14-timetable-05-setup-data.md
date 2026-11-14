@@ -340,7 +340,7 @@ Add the matching `teacher_overbooked` test in the same style.
 // lib/timetable/demo/curriculum.ts
 DEMO_BOARD_NAME = "הדגמה"
 DEMO_SUBJECT_CATEGORY = "מקצוע"
-DEMO_CLASS_COUNTS: Record<number, number> = { 7: 4, 8: 4, 9: 4, 10: 4, 11: 4, 12: 4 }   // placeholder until Ofek supplies Kfar Galim's
+DEMO_CLASS_COUNTS: Record<number, number> = { 7: 10, 8: 10, 9: 10, 10: 10, 11: 10, 12: 10 }   // placeholder until Ofek supplies Kfar Galim's
 MAX_TEACHER_LOAD = 22
 DEMO_CURRICULUM: Array<{ name: string; weeklyPeriods: number; plata: boolean }>
 

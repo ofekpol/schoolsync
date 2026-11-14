@@ -272,9 +272,20 @@ read. Facts found on staging on 2026-11-14:
 - Staging is a copy of production, so the staff names are real. The seed uses them by default
   and has `--anonymize` (names become "מורה 1", "מורה 2") for showing to other schools.
 - 34 active staff, no active profile category yet, no class list anywhere. The class count per
-  grade is a constant in the seed (4 per grade until Ofek supplies the real numbers), and the
-  seed adds placeholder teachers without a login when the staff cannot cover the week.
-- A staging refresh removes the board; the seed is re-runnable.
+  grade is a constant in the seed (10 per grade, a placeholder until Ofek supplies the real
+  numbers), and the seed adds placeholder teachers without a login when the staff cannot cover
+  the week (at 60 classes, most teachers in the demo are placeholders).
+- The staff's subject labels come from a list the school will give Ofek; until then the seed
+  gives each unlabelled staff member one subject.
+- A staging refresh would remove the board. The seed is re-runnable, but see the next point.
+
+**Decisions of 2026-11-14 (Ofek, and Claude where Ofek delegated)**
+- **No staging refresh from production until the demo is done** (delegated to Claude). A
+  refresh would wipe the demo board, the `timetable` service flag and the labels entered by
+  hand. Staging data drifting from production for a few weeks costs less than that.
+- **The demo curriculum** (the same 31 weekly periods for every grade) is realistic enough.
+- **Hosting:** a paid container is acceptable but not preferred. Plan 4 tries a Vercel Python
+  function first and moves to a container only if the measured solve does not fit.
 
 **Solver ownership.** Ofek and Claude build the solver in track A. Maor builds the data entry
 screens.

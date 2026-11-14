@@ -28,3 +28,10 @@ test/e2e/.auth/
 ruvector.db
 agentdb*
 .vercel
+
+# Python solver
+solver/.venv/
+solver/bench/*.json
+solver/bench/*.jsonl
+__pycache__/
+.pytest_cache/

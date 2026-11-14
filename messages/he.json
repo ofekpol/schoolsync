@@ -207,6 +207,14 @@
         "edit": "תיוגים",
         "editFor": "עריכת התיוגים של {name}",
         "editTitle": "עריכת תיוגים"
+      },
+      "details": {
+        "toggle": "פרטים של {name}",
+        "permissions": "הרשאות",
+        "noScopes": "ללא הרשאות",
+        "scopeCount": "{count, plural, one {הרשאה אחת} other {# הרשאות}}",
+        "labelCount": "{count, plural, one {תיוג אחד} other {# תיוגים}}",
+        "noLabels": "אין תיוגים"
       }
     },
     "eventTypes": {

@@ -217,6 +217,7 @@ export function StaffTable({
               readOnly={readOnly}
               labels={labelNames(categories, labels[s.id] ?? [])}
               missingLabel={!s.deactivatedAt && missesRequired(categories, labels[s.id] ?? [])}
+              showLabels={categories.length > 0}
               onEditLabels={categories.length > 0 ? setLabelsEditingId : undefined}
               onEdit={(id) => {
                 setError(null);

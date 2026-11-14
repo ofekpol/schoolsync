@@ -147,6 +147,17 @@ describe("admin staff role permissions", () => {
     expect(within(list).getByText("Editor User")).toBeInTheDocument();
     expect(within(list).getByText("editor@test")).toBeInTheDocument();
     expect(within(list).getByText("roleEditor")).toBeInTheDocument();
+    // Collapsed: a summary only; scopes and actions wait behind the details toggle.
+    expect(within(list).getByText("details.scopeCount")).toBeInTheDocument();
+    expect(within(list).queryByText("טיול")).toBeNull();
+    expect(within(list).queryByRole("button", { name: "deactivate Editor User" })).toBeNull();
+
+    const toggle = within(list).getByRole("button", { name: "details.toggle" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(within(list).getByText("details.permissions")).toBeInTheDocument();
+    expect(within(list).getByText("טיול")).toBeInTheDocument();
     expect(within(list).getByRole("button", { name: "deactivate Editor User" })).toBeInTheDocument();
 
     await user.click(within(list).getByRole("button", { name: "edit Editor User" }));
@@ -174,6 +185,7 @@ describe("admin staff role permissions", () => {
       />,
     );
 
+    await user.click(screen.getByRole("button", { name: "details.toggle" }));
     await user.click(screen.getByRole("button", { name: /^edit / }));
 
     expect(screen.queryByText("gradeScopes")).not.toBeInTheDocument();
@@ -238,6 +250,7 @@ describe("admin staff role permissions", () => {
       />,
     );
 
+    await user.click(screen.getByRole("button", { name: "details.toggle" }));
     await user.click(screen.getByRole("button", { name: /^edit / }));
 
     const grade7 = screen.getByRole("checkbox", { name: "ז" });

@@ -1,4 +1,5 @@
-/** The demo board's fixed inputs. Same curriculum for every grade: 31 of 45 slots. */
+/** The demo board's fixed inputs. Same curriculum for every grade: 33 of 45 slots.
+ * Subject names match the staging "מקצוע" category options, so labelled staff teach their own subject. */
 export const DEMO_BOARD_NAME = "הדגמה";
 export const DEMO_SUBJECT_CATEGORY = "מקצוע";
 
@@ -16,14 +17,16 @@ export interface CurriculumSubject {
 export const DEMO_CURRICULUM: CurriculumSubject[] = [
   { name: "מתמטיקה", weeklyPeriods: 5, plata: true },
   { name: "אנגלית", weeklyPeriods: 4, plata: true },
-  { name: "מדעים", weeklyPeriods: 4, plata: false },
+  { name: "ביולוגיה", weeklyPeriods: 2, plata: false },
+  { name: "כימיה", weeklyPeriods: 2, plata: false },
+  { name: "מדעי המחשב", weeklyPeriods: 2, plata: false },
   { name: "עברית", weeklyPeriods: 3, plata: false },
   { name: "ספרות", weeklyPeriods: 2, plata: false },
   { name: "היסטוריה", weeklyPeriods: 2, plata: false },
   { name: 'תנ"ך', weeklyPeriods: 2, plata: false },
   { name: "אזרחות", weeklyPeriods: 2, plata: false },
   { name: "גאוגרפיה", weeklyPeriods: 2, plata: false },
-  { name: "חינוך גופני", weeklyPeriods: 2, plata: false },
+  { name: "ספורט", weeklyPeriods: 2, plata: false },
   { name: "אמנות", weeklyPeriods: 2, plata: false },
   { name: "חינוך", weeklyPeriods: 1, plata: false },
 ];

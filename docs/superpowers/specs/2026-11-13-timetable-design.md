@@ -255,3 +255,49 @@ solver is packaged for whichever host the spike picks.
 - Vercel Hobby is non-commercial; a paid add-on needs the upgrade in `docs/COST_PLAN.md`.
 - Kfar Galim's data is production data: it must be supplied as a file by the school, never read
   from the production database into a transcript.
+
+## Addendum, 2026-11-14: demo first, no real data file
+
+Where this section disagrees with the text above, this section wins.
+
+**Decision (Ofek).** Kfar Galim's real timetable file will not arrive. Kfar Galim is mid-year
+and wants to redo its timetable next year, and other schools need to see the product. So the
+next goal is a demo of the full principal flow (setup, constraints, three generated options,
+edit by hand, publish) that shows a timetable built from generated constraints.
+
+**Demo data.** The staging database's `kfar-galim` school: its staff users and their profile
+labels. Classes, subjects, lessons, Plata and constraints are produced by a seeded script
+(`pnpm seed:timetable-demo`), written into one board named `הדגמה`. Production is still never
+read. Facts found on staging on 2026-11-14:
+- Staging is a copy of production, so the staff names are real. The seed uses them by default
+  and has `--anonymize` (names become "מורה 1", "מורה 2") for showing to other schools.
+- 34 active staff, no active profile category yet, no class list anywhere. The class count per
+  grade is a constant in the seed (4 per grade until Ofek supplies the real numbers), and the
+  seed adds placeholder teachers without a login when the staff cannot cover the week.
+- A staging refresh removes the board; the seed is re-runnable.
+
+**Solver ownership.** Ofek and Claude build the solver in track A. Maor builds the data entry
+screens.
+
+**What this changes above**
+- "Three projects, in order": project 0 (the spike) is retired. Its two questions (does 250
+  teachers solve in minutes; where does the solver run) are answered by the first task of the
+  solver plan, on synthetic data, and recorded here.
+- "Solver", spike paragraph: no longer "on Kfar Galim's real data", and no longer "on the paid
+  plan" as a given. The host is decided by measurement in plan 4.
+- "Constraints", MVP types: `meeting` is added (a label or a list of teachers shares N weekly
+  periods, optionally consecutive). It is not a solver rule: the export turns it into a lesson
+  block with no classes. `label_common_free_periods` waits.
+- "Data model": a lesson block may have no classes (a meeting) and has a `consecutive` flag in
+  the solver contract. `tt_school_settings` is deferred; a board's week starts from a default
+  in code.
+- "Build order inside the MVP": setup data, solver, generate and view, constraints, edit and
+  publish. The teacher page comes last.
+- "Non-goals": "the public demo" still stands. This demo is a board inside a staging school,
+  not the public `/demo` sandbox.
+- "Risks": "Solve time at 250 teachers is unproven until run on real data" stays true after
+  the demo. Synthetic data shows the solver's speed, not that a real school's rules fit the
+  lesson-block shape.
+
+Order, owners and what is showable at each stage:
+`docs/superpowers/plans/2026-11-13-timetable-00-split.md`.

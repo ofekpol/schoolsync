@@ -200,15 +200,15 @@ export function QuickEventDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-event-title"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/20 px-3 py-20"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/20 px-3 py-3 sm:py-20"
       onClick={onClose}
       dir="rtl"
     >
       <div
-        className="sg-card w-full max-w-xl overflow-hidden rounded-2xl"
+        className="sg-card flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl sm:max-h-[calc(100dvh-10rem)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-[var(--sg-hairline)] px-5 py-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-[var(--sg-hairline)] px-5 py-4">
           <h2 id="quick-event-title" className="text-xl font-semibold text-[var(--sg-ink)]">
             {td("newEvent")}
           </h2>
@@ -222,7 +222,7 @@ export function QuickEventDialog({
           </button>
         </header>
 
-        <div className="space-y-4 px-5 py-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4">
           <Field label={t4("title")}>
             <input
               type="text"
@@ -248,7 +248,7 @@ export function QuickEventDialog({
 
           <div className="grid gap-3">
             <Field label={t1("title")}>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <input
                   type="date"
                   value={data.date}
@@ -260,7 +260,7 @@ export function QuickEventDialog({
                     });
                   }}
                   aria-label={t1("title")}
-                  className="h-10 w-full rounded-xl border border-[var(--sg-hairline)] bg-[var(--sg-surface-2)] px-3 text-sm outline-none focus:border-sky-400"
+                  className="h-10 w-full min-w-0 appearance-none rounded-xl border border-[var(--sg-hairline)] bg-[var(--sg-surface-2)] px-3 text-sm outline-none focus:border-sky-400"
                 />
                 {data.multiDay && (
                   <input
@@ -269,7 +269,7 @@ export function QuickEventDialog({
                     min={data.date}
                     onChange={(e) => patch({ endDate: e.target.value })}
                     aria-label={t5("endDate")}
-                    className="h-10 w-full rounded-xl border border-[var(--sg-hairline)] bg-[var(--sg-surface-2)] px-3 text-sm outline-none focus:border-sky-400"
+                    className="h-10 w-full min-w-0 appearance-none rounded-xl border border-[var(--sg-hairline)] bg-[var(--sg-surface-2)] px-3 text-sm outline-none focus:border-sky-400"
                   />
                 )}
               </div>
@@ -402,7 +402,7 @@ export function QuickEventDialog({
           )}
         </div>
 
-        <footer className="flex items-center justify-end gap-2 border-t border-[var(--sg-hairline)] px-5 py-4">
+        <footer className="flex shrink-0 items-center justify-end gap-2 border-t border-[var(--sg-hairline)] px-5 py-4">
           <button
             type="button"
             onClick={onClose}

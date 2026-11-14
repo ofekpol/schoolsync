@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_TEACHER_LOAD } from "@/lib/timetable/demo/curriculum";
+import { DEMO_CURRICULUM, MAX_TEACHER_LOAD } from "@/lib/timetable/demo/curriculum";
 import { generateDemoPlan, type DemoPlan, type DemoStaff } from "@/lib/timetable/demo/generate";
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -10,6 +10,7 @@ const staff: DemoStaff[] = Array.from({ length: 10 }, (_, i) => ({
   subjects: labels[i] ? [labels[i]] : [],
 }));
 const classCounts = { 7: 3, 8: 2 };
+const CURRICULUM_PERIODS = DEMO_CURRICULUM.reduce((sum, s) => sum + s.weeklyPeriods, 0);
 const plan = (overrides: Partial<Parameters<typeof generateDemoPlan>[0]> = {}): DemoPlan =>
   generateDemoPlan({ staff, classCounts, seed: 1, anonymize: false, ...overrides });
 
@@ -37,14 +38,14 @@ describe("generateDemoPlan", () => {
     expect(math(8).map((b) => b.classes.map((c) => c.number))).toEqual([[1], [2]]);
   });
 
-  it("stays within the teacher load, staffs every block and gives every class 31 periods", () => {
+  it("stays within the teacher load, staffs every block and gives every class the full curriculum", () => {
     const p = plan();
     expect(Math.max(...loads(p).values())).toBeLessThanOrEqual(MAX_TEACHER_LOAD);
     expect(p.blocks.every((b) => b.teacherKeys.length >= 1)).toBe(true);
     const perClass = new Map<string, number>();
     for (const b of p.blocks) for (const c of b.classes) perClass.set(`${c.grade}:${c.number}`, (perClass.get(`${c.grade}:${c.number}`) ?? 0) + b.weeklyPeriods);
     expect(perClass.size).toBe(5);
-    expect([...perClass.values()].every((total) => total === 31)).toBe(true);
+    expect([...perClass.values()].every((total) => total === CURRICULUM_PERIODS)).toBe(true);
   });
 
   it("anonymizes names but keeps the staff links", () => {

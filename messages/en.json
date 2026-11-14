@@ -46,7 +46,8 @@
     "agenda": "Agenda",
     "calendar": "Calendar",
     "platform": "Schools",
-    "timetable": "Timetable"
+    "timetable": "Timetable",
+    "categories": "Profile categories"
   },
   "grades": {
     "label_7": "ז",
@@ -197,7 +198,16 @@
         "requests": "Join requests",
         "invites": "Invite links"
       },
-      "createdOn": "Created {date}"
+      "createdOn": "Created {date}",
+      "labels": {
+        "column": "Labels",
+        "filter": "Filter by label",
+        "all": "All labels",
+        "missingRequired": "Missing a required label",
+        "edit": "Labels",
+        "editFor": "Edit labels of {name}",
+        "editTitle": "Edit labels"
+      }
     },
     "eventTypes": {
       "title": "Event Types",

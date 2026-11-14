@@ -16,6 +16,8 @@ export interface StaffUserRecord {
   mustChangePassword: boolean;
   /** Set only for public demo schools; non-null means every outbound action is disabled. */
   demoExpiresAt?: Date | null;
+  /** When the staff member first saved their profile labels; null = never (lib/profile/gate.ts). */
+  profileCompletedAt?: Date | null;
 }
 
 /**
@@ -41,6 +43,7 @@ export async function getStaffUserByAuthId(authId: string): Promise<StaffUserRec
       fullName: staffUsers.fullName,
       mustChangePassword: staffUsers.mustChangePassword,
       demoExpiresAt: schools.demoExpiresAt,
+      profileCompletedAt: staffUsers.profileCompletedAt,
     })
     .from(staffUsers)
     .leftJoin(schools, eq(staffUsers.schoolId, schools.id))

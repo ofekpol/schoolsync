@@ -9,6 +9,9 @@ import { useRouteProgress } from "@/components/RouteProgress";
 import { ALL_GRADES, EditStaffForm } from "@/components/admin/StaffEditForm";
 import { StaffRowItem, type StaffRow } from "@/components/admin/StaffRowItem";
 import { StaffDialog } from "@/components/admin/staff-ui";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { labelNames, matchesLabelFilter, missesRequired, type LabelFilter } from "@/lib/profile/labels";
+import type { ProfileCategory } from "@/lib/validations/profile";
 
 interface EventTypeRow {
   id: string;
@@ -21,12 +24,25 @@ interface Props {
   eventTypes: EventTypeRow[];
   /** Demo schools: list only, no edit/deactivate controls. */
   readOnly?: boolean;
+  /** The school's profile categories; empty = no label column, filter or button. */
+  categories?: ProfileCategory[];
+  /** staffUserId -> option ids held (active staff only). */
+  labels?: Record<string, string[]>;
 }
+
+const NO_CATEGORIES: ProfileCategory[] = [];
+const NO_LABELS: Record<string, string[]> = {};
 
 const filterClass =
   "h-10 rounded-lg border border-neutral-300 bg-white px-3 text-sm outline-none transition focus:border-violet-500 focus:ring-3 focus:ring-violet-100";
 
-export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props) {
+export function StaffTable({
+  initialStaff,
+  eventTypes,
+  readOnly = false,
+  categories = NO_CATEGORIES,
+  labels = NO_LABELS,
+}: Props) {
   const t = useTranslations("admin.staff");
   const router = useRouter();
   const startRouteProgress = useRouteProgress();
@@ -36,6 +52,8 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<StaffRow["role"] | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "deactivated">("active");
+  const [labelFilter, setLabelFilter] = useState<LabelFilter>("all");
+  const [labelsEditingId, setLabelsEditingId] = useState<string | null>(null);
 
   const filteredStaff = initialStaff.filter((staff) => {
     const haystack =
@@ -45,9 +63,16 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
     const matchesQuery = haystack.includes(query.trim().toLocaleLowerCase("he-IL"));
     const matchesRole = roleFilter === "all" || staff.role === roleFilter;
     const status = staff.deactivatedAt ? "deactivated" : "active";
-    return matchesQuery && matchesRole && (statusFilter === "all" || statusFilter === status);
+    // Deactivated staff hold no listed labels, so any label filter leaves them out.
+    const matchesLabel =
+      labelFilter === "all" ||
+      (status === "active" && matchesLabelFilter(labelFilter, categories, labels[staff.id] ?? []));
+    return (
+      matchesQuery && matchesRole && matchesLabel && (statusFilter === "all" || statusFilter === status)
+    );
   });
   const editingRow = initialStaff.find((staff) => staff.id === editingId) ?? null;
+  const labelsRow = initialStaff.find((staff) => staff.id === labelsEditingId) ?? null;
 
   async function handleDeactivate(id: string, deactivated: boolean) {
     setBusyId(id);
@@ -150,6 +175,26 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
             <option value="deactivated">{t("deactivatedOnly")}</option>
             <option value="all">{t("allStatuses")}</option>
           </select>
+          {categories.length > 0 && (
+            <select
+              value={labelFilter}
+              onChange={(event) => setLabelFilter(event.target.value)}
+              aria-label={t("labels.filter")}
+              className={`${filterClass} col-span-2`}
+            >
+              <option value="all">{t("labels.all")}</option>
+              <option value="missing">{t("labels.missingRequired")}</option>
+              {categories.map((category) => (
+                <optgroup key={category.id} label={category.name}>
+                  {category.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -170,6 +215,9 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
               eventTypes={eventTypes}
               busyId={busyId}
               readOnly={readOnly}
+              labels={labelNames(categories, labels[s.id] ?? [])}
+              missingLabel={!s.deactivatedAt && missesRequired(categories, labels[s.id] ?? [])}
+              onEditLabels={categories.length > 0 ? setLabelsEditingId : undefined}
               onEdit={(id) => {
                 setError(null);
                 setEditingId(id);
@@ -195,6 +243,27 @@ export function StaffTable({ initialStaff, eventTypes, readOnly = false }: Props
             error={error}
             onCancel={() => setEditingId(null)}
             onSave={handleSave}
+          />
+        </StaffDialog>
+      )}
+
+      {labelsRow && (
+        <StaffDialog
+          titleId="edit-labels-title"
+          title={t("labels.editTitle")}
+          subtitle={labelsRow.fullName}
+          closeLabel={t("cancel")}
+          onClose={() => setLabelsEditingId(null)}
+        >
+          <ProfileForm
+            categories={categories}
+            selected={labels[labelsRow.id] ?? []}
+            submitUrl={`/api/v1/admin/staff/${labelsRow.id}/labels`}
+            onSaved={() => {
+              setLabelsEditingId(null);
+              startRouteProgress(2500);
+              router.refresh();
+            }}
           />
         </StaffDialog>
       )}

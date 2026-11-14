@@ -46,7 +46,8 @@
     "agenda": "סדר יום",
     "calendar": "לוח שנה",
     "platform": "בתי ספר",
-    "timetable": "מערכת שעות"
+    "timetable": "מערכת שעות",
+    "categories": "קטגוריות פרופיל"
   },
   "grades": {
     "label_7": "ז",
@@ -197,7 +198,16 @@
         "requests": "בקשות הצטרפות",
         "invites": "קישורי הזמנה"
       },
-      "createdOn": "נוצר ב־{date}"
+      "createdOn": "נוצר ב־{date}",
+      "labels": {
+        "column": "תיוגים",
+        "filter": "סינון לפי תיוג",
+        "all": "כל התיוגים",
+        "missingRequired": "חסר תיוג חובה",
+        "edit": "תיוגים",
+        "editFor": "עריכת התיוגים של {name}",
+        "editTitle": "עריכת תיוגים"
+      }
     },
     "eventTypes": {
       "title": "סוגי אירועים",

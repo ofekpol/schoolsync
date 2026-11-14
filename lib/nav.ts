@@ -15,7 +15,7 @@ export async function getCurrentPath(): Promise<string> {
 
 /**
  * Builds the in-header nav for a staff or admin user. Admins also see
- * the admin-only sections (Staff, Event Types, Year); platform admins also
+ * the admin-only sections (Staff, Categories, Event Types, Year); platform admins also
  * get a link to /platform/schools. Gantt links show only when the school has
  * `gantt`; the timeTable link only when it has `timetable`.
  */
@@ -30,6 +30,7 @@ export async function buildNavLinks(
   const links: AppHeaderNavLink[] = [gantt ? { href: "/dashboard", label: t("dashboard") } : timetableLink];
   if (role === "admin") {
     links.push({ href: "/admin/staff", label: t("staff") });
+    links.push({ href: "/admin/categories", label: t("categories") });
   }
   if (gantt && (role === "admin" || role === "editor")) {
     links.push({ href: "/admin/event-types", label: t("eventTypes") });

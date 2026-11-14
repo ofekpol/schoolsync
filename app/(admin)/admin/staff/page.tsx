@@ -8,6 +8,8 @@ import { getSchoolById } from "@/lib/db/schools";
 import { listInvitesForSchool } from "@/lib/db/invites";
 import { listPendingRegistrations } from "@/lib/db/pending";
 import { listEventTypes } from "@/lib/admin/event-types";
+import { listCategories } from "@/lib/profile/categories";
+import { listStaffLabels } from "@/lib/profile/staff-labels";
 import { StaffTable } from "@/components/admin/StaffTable";
 import { PendingRequestsTable } from "@/components/admin/PendingRequestsTable";
 import { AddStaffDialog } from "@/components/admin/AddStaffDialog";
@@ -29,7 +31,7 @@ export default async function AdminStaffPage({
   if (!user?.schoolId) redirect("/auth/login");
   if (user.role !== "admin") redirect("/dashboard");
 
-  const [staff, eventTypes, pendingRegs, invites, school, requestHeaders, params] =
+  const [staff, eventTypes, pendingRegs, invites, school, requestHeaders, params, categories, labels] =
     await Promise.all([
       listStaffUsers(user.schoolId),
       listEventTypes(user.schoolId),
@@ -38,6 +40,8 @@ export default async function AdminStaffPage({
       getSchoolById(user.schoolId),
       headers(),
       searchParams,
+      listCategories(user.schoolId),
+      listStaffLabels(user.schoolId),
     ]);
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? `${requestHeaders.get("x-forwarded-proto") ?? "https"}://${requestHeaders.get("host")}`;
 
@@ -54,7 +58,8 @@ export default async function AdminStaffPage({
           {tDemo("staffDisabled")}
         </p>
       )}
-      <StaffTable initialStaff={staff} eventTypes={eventTypes} readOnly={demo} />
+      <StaffTable initialStaff={staff} eventTypes={eventTypes} readOnly={demo}
+        categories={categories} labels={labels} />
     </div>
   );
 

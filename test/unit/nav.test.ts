@@ -14,24 +14,24 @@ async function hrefs(...args: Parameters<typeof buildNavLinks>): Promise<string[
 
 describe("buildNavLinks", () => {
   it("keeps today's admin links for a gantt-only school", async () => {
-    expect(await hrefs("admin", false, ["gantt"])).toEqual(["/dashboard", "/admin/staff", "/admin/event-types"]);
-    expect(await hrefs("admin")).toEqual(["/dashboard", "/admin/staff", "/admin/event-types"]);
+    expect(await hrefs("admin", false, ["gantt"])).toEqual(["/dashboard", "/admin/staff", "/admin/categories", "/admin/event-types"]);
+    expect(await hrefs("admin")).toEqual(["/dashboard", "/admin/staff", "/admin/categories", "/admin/event-types"]);
   });
 
   it("keeps today's editor and viewer links and the platform link last", async () => {
     expect(await hrefs("editor")).toEqual(["/dashboard", "/admin/event-types"]);
     expect(await hrefs("viewer")).toEqual(["/dashboard"]);
     expect(await hrefs("admin", true)).toEqual([
-      "/dashboard", "/admin/staff", "/admin/event-types", "/platform/schools",
+      "/dashboard", "/admin/staff", "/admin/categories", "/admin/event-types", "/platform/schools",
     ]);
   });
 
   it("adds the timeTable link for a school with both services", async () => {
     expect(await hrefs("admin", false, ["gantt", "timetable"])).toEqual([
-      "/dashboard", "/admin/staff", "/admin/event-types", "/timetable",
+      "/dashboard", "/admin/staff", "/admin/categories", "/admin/event-types", "/timetable",
     ]);
     expect(await hrefs("admin", true, ["gantt", "timetable"])).toEqual([
-      "/dashboard", "/admin/staff", "/admin/event-types", "/timetable", "/platform/schools",
+      "/dashboard", "/admin/staff", "/admin/categories", "/admin/event-types", "/timetable", "/platform/schools",
     ]);
   });
 
@@ -40,6 +40,12 @@ describe("buildNavLinks", () => {
   });
 
   it("shows the timeTable and staff to an admin of a timetable-only school", async () => {
-    expect(await hrefs("admin", false, ["timetable"])).toEqual(["/timetable", "/admin/staff"]);
+    expect(await hrefs("admin", false, ["timetable"])).toEqual(["/timetable", "/admin/staff", "/admin/categories"]);
+  });
+
+  it("gives the categories link to admins only", async () => {
+    expect(await hrefs("admin")).toContain("/admin/categories");
+    expect(await hrefs("editor")).not.toContain("/admin/categories");
+    expect(await hrefs("viewer")).not.toContain("/admin/categories");
   });
 });

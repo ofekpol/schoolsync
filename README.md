@@ -98,13 +98,10 @@ See [OPERATIONS.md](./OPERATIONS.md) for Supabase setup, migrations, seeding, de
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`, one job "Lint, Typecheck, Test, E2E") runs on every PR and on pushes to `staging` and `main`:
+GitHub Actions (`.github/workflows/ci.yml`) runs on every PR (not on docs-only changes, and not again after the merge), as three parallel jobs:
 
-1. `pnpm install --frozen-lockfile`
-2. `pnpm lint`
-3. `pnpm tsc`
-4. `pnpm test` (unit + integration)
-5. `pnpm build`
-6. `pnpm playwright` (chromium, with axe a11y gates)
+1. "Lint, Typecheck": `pnpm lint`, `pnpm tsc`
+2. "Unit + integration tests": `pnpm test`
+3. "Build, E2E": `pnpm build`, `pnpm playwright` (chromium, with axe a11y gates)
 
 Flow: feature branch → PR into `staging` → verify on staging → PR `staging` → `main`. Never push directly to `main`; merge only when every check is green. Open work: [docs/ROADMAP.md](docs/ROADMAP.md).

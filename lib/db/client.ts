@@ -8,8 +8,9 @@ import { sql } from "drizzle-orm";
 import { Pool } from "pg";
 import * as baseSchema from "./schema";
 import * as profileSchema from "./schema-profile";
+import * as timetableSchema from "./schema-timetable";
 
-const schema = { ...baseSchema, ...profileSchema };
+const schema = { ...baseSchema, ...profileSchema, ...timetableSchema };
 
 /**
  * Lazy singleton DB pool and Drizzle client.

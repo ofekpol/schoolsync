@@ -15,22 +15,18 @@ How to ship a schema change to production without losing data.
 
 ## Authoring a migration
 
-1. Edit Drizzle schema in `lib/db/schema.ts`
-2. Generate migration:
-   ```bash
-   pnpm db:generate
-   ```
-3. Review the generated `.sql` in `db/migrations/` — does it match intent?
-4. **Hand-edit if needed** — Drizzle does not always produce safe DDL (e.g. `DROP COLUMN` with no backfill). Common edits:
+1. Write a new plain `.sql` file in `db/migrations/`, named with the next number (`NNNN_short_description.sql`). `scripts/migrate.ts` applies every `.sql` file there in name order and records it in `app_migrations`; there is no generator.
+2. Update the Drizzle schema in `lib/db/schema.ts` by hand so it matches the SQL.
+3. Review the SQL — is it safe on a table with data (e.g. `DROP COLUMN` with no backfill)? Common precautions:
    - Add `IF NOT EXISTS` / `IF EXISTS` for idempotency
    - Split a destructive change into expand → migrate → contract phases
    - Add explicit `USING` clause for type-narrowing alters
-5. Test locally:
+4. Test locally:
    ```bash
    pnpm db:migrate
    pnpm test
    ```
-6. Update RLS policies if the migration touches a school-scoped table — verify `withSchool` isolation still holds in `test/integration/rls.test.ts`
+5. Update RLS policies if the migration touches a school-scoped table — verify `withSchool` isolation still holds in `test/integration/rls.test.ts`
 
 ---
 

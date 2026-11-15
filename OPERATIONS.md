@@ -38,7 +38,6 @@ Never commit `.env.local`. The `.env.example` file is the canonical list of expe
 Schema lives in `lib/db/schema.ts`. To apply schema changes:
 
 ```bash
-pnpm db:generate        # writes a new .sql file to db/migrations/
 pnpm db:migrate         # applies pending migrations against DATABASE_URL
 ```
 

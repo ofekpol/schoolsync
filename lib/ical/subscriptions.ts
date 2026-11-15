@@ -44,7 +44,7 @@ export function generateToken(): string {
  * Creates an iCal subscription for the calling staff user, capturing the
  * current filter selection (grades + event-type ids). Returns the row id
  * and the freshly-minted token (the only time the token is returned in
- * cleartext — the /profile page surfaces it then).
+ * cleartext — the UI shows it once, right after creation).
  */
 export async function createSubscription(
   schoolId: string,
@@ -126,8 +126,8 @@ export async function createPersonalCalendarSubscription(
 
 /**
  * Lists the calling staff user's subscriptions, newest-first. Both active
- * and revoked rows are returned so the UI can show history; the /profile
- * page can filter to active locally.
+ * and revoked rows are returned so the UI can show history and filter to
+ * active locally.
  */
 export async function listSubscriptionsForStaff(
   schoolId: string,

@@ -1,5 +1,4 @@
 {
-  "_placeholder": "English strings — populated as features are built",
   "a11y": {
     "skipToContent": "Skip to content",
     "closeDialog": "Close dialog",
@@ -18,8 +17,6 @@
     "tryAgain": "Try again",
     "unnamed": "(untitled)",
     "more": "+{count} more",
-    "yes": "Yes",
-    "no": "No",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "notFound": "Page not found",
@@ -245,25 +242,6 @@
       "customColor": "Custom color",
       "empty": "No event types yet."
     },
-    "queue": {
-      "title": "Approval Queue",
-      "empty": "No events are waiting for approval.",
-      "submittedAt": "Submitted",
-      "submittedBy": "Submitter",
-      "eventType": "Event Type",
-      "grades": "Grades",
-      "startAt": "Date",
-      "approve": "Approve",
-      "reject": "Reject",
-      "rejectTitle": "Reject event",
-      "rejectReasonLabel": "Rejection reason (required)",
-      "rejectReasonPlaceholder": "Explain why this event is rejected — the editor will see this",
-      "rejectConfirm": "Confirm rejection",
-      "cancel": "Cancel",
-      "errorRequired": "Please enter a rejection reason",
-      "errorGeneric": "Something went wrong",
-      "isRevision": "Revision of an approved event"
-    },
     "gradeColors": {
       "title": "Grade colors",
       "description": "Every calendar event is colored by its grade. Multi-grade events show color dots; whole-school events use a dark fill.",
@@ -383,8 +361,6 @@
     "viewMonthly": "Monthly",
     "gradeFilterLabel": "My grades",
     "gradeFilterOption": "Highlight grade {grade}",
-    "confirmNewEventTitle": "New event",
-    "confirmNewEvent": "Create a new event on {date}?",
     "myDrafts": "My events",
     "status": {
       "draft": "Draft",
@@ -471,12 +447,6 @@
       "month": "Month"
     }
   },
-  "home": {
-    "title": "SchoolSync",
-    "subtitle": "Choose a school to view its event calendar.",
-    "viewGantt": "Gantt",
-    "viewAgenda": "Agenda"
-  },
   "calendar": {
     "subtitle": "Printable yearly calendar",
     "previousMonth": "Previous month",
@@ -513,21 +483,11 @@
   },
   "profile": {
     "title": "My profile",
-    "icalTitle": "iCal subscriptions",
-    "icalIntro": "Create a URL to sync events to Google Calendar, Apple Calendar, etc. Optional grade / event-type filters.",
     "create": "New subscription",
     "cancel": "Cancel",
-    "done": "Done",
-    "revoke": "Revoke",
     "grades": "Grades",
     "types": "Event types",
     "empty": "No active subscriptions.",
-    "createdAt": "Created",
-    "emptyMeansAll": "Leaving unselected means \"all grades / all types\".",
-    "filterNone": "All events",
-    "filterSummary": "Grades: {grades} · {types} types",
-    "freshTokenTitle": "Subscription created",
-    "freshTokenHint": "Copy the URL and paste it into Google Calendar (\"From URL\"). It's only visible now.",
     "errorGeneric": "Something went wrong",
     "intro": "Tick what describes you. Management uses these labels to find staff; they do not change permissions.",
     "required": "Required",
@@ -575,9 +535,7 @@
     },
     "step6": {
       "title": "Responsible",
-      "errorRequired": "Please enter a responsible person",
-      "requirementsTitle": "Requirements",
-      "requirementsPlaceholder": "Notes, room, equipment…"
+      "errorRequired": "Please enter a responsible person"
     },
     "step7": {
       "title": "Review & publish",

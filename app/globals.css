@@ -63,8 +63,7 @@
 /* ---- shadcn/ui RTL patches (D-01) ---- */
 /* shadcn v4 uses @base-ui/react (Base UI) which is direction-aware by design.
    Base UI reads dir="rtl" from the DOM and mirrors positioning automatically.
-   Overrides here target the remaining LTR-hardcoded bits in react-day-picker
-   and the sub-trigger chevron icon in the dropdown menu. */
+   Only the popover slide animations need an override. */
 
 /* Base UI Popover/Dropdown: animation direction overrides.
    Base UI uses logical sides (inline-start/inline-end) in data-side attrs,
@@ -85,20 +84,6 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* react-day-picker (Calendar) — nav button positioning in RTL contexts */
-[dir="rtl"] .rdp-nav_button_previous {
-  left: auto;
-  right: 0.25rem;
-}
-[dir="rtl"] .rdp-nav_button_next {
-  right: auto;
-  left: 0.25rem;
-}
-
-/* DropdownMenu sub-trigger chevron — flip ChevronRight icon for RTL */
-[dir="rtl"] [data-slot="dropdown-menu-sub-trigger"] > svg:last-child {
-  transform: scaleX(-1);
-}
 /* ---- end shadcn/ui RTL patches ---- */
 
 /* ============================================================

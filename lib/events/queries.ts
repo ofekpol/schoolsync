@@ -201,7 +201,7 @@ export interface EventTypeListItem {
 
 /**
  * Returns the school's event-type palette ordered by sortOrder.
- * Used by the wizard entry page so Step 3 can render the full chip list.
+ * Used by the event form page to render the full event-type chip list.
  */
 export async function listEventTypes(
   schoolId: string,

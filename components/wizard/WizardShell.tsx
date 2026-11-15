@@ -37,16 +37,9 @@ export interface WizardData {
   requirementsText?: string;
 }
 
-export interface StepProps {
-  data: WizardData;
-  saving: boolean;
-  onNext: (d: WizardData) => Promise<void>;
-  onBack: () => void;
-}
-
 /**
- * Maps wizard state to the EventDraftSchema PATCH body. The wizard tracks the
- * Step-6 fields as responsibleText/requirementsText, but they persist to the
+ * Maps wizard state to the EventDraftSchema PATCH body. The form tracks the
+ * responsible/requirements fields as responsibleText/requirementsText, but they persist to the
  * `location`/`description` columns — without this mapping Zod silently drops
  * the unknown keys and the data is lost on save. `date` is a wizard-only field
  * (the canonical timestamp is startAt/endAt) and is intentionally omitted.

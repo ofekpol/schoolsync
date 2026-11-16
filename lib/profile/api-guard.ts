@@ -6,6 +6,7 @@ import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { CategoryError } from "@/lib/profile/categories";
 import { ProfileValidationError, setStaffOptions } from "@/lib/profile/staff-labels";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 type Guarded<U> = { user: U; response?: undefined } | { user?: undefined; response: NextResponse };
 type SchoolUser = StaffUserRecord & { schoolId: string };
@@ -16,10 +17,7 @@ export async function requireCategoryAdmin(write: boolean): Promise<Guarded<Scho
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) {
-      return { response: NextResponse.json({ error: "Forbidden" }, { status: e.status }) };
-    }
-    throw e;
+    return { response: guardFailureResponse(e) };
   }
   if (write && isDemoUser(user)) return { response: demoDisabledResponse() };
   return { user };

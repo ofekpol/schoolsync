@@ -3,14 +3,14 @@ import { requirePlatformAdmin } from "@/lib/auth/platform-admin";
 import { listAllSchools } from "@/lib/db/schools";
 import { provisionSchool, type ProvisionSchoolResult } from "@/lib/db/provision";
 import { ProvisionSchoolInput } from "@/lib/validations/school";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 async function denyUnlessPlatformAdmin(): Promise<NextResponse | null> {
   try {
     await requirePlatformAdmin();
     return null;
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
 }
 

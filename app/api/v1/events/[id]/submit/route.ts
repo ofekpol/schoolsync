@@ -12,6 +12,7 @@ import {
 } from "@/lib/events/queries";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { thrownResponseToJson } from "@/lib/auth/thrown-response";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -89,13 +90,7 @@ async function handlePOST(
     invalidatePublicViewerCache(user.schoolSlug);
     return NextResponse.json({ ok: true, status: "approved" }, { status: 200 });
   } catch (e) {
-    if (e instanceof Response) {
-      return NextResponse.json(
-        { error: e.statusText || "Error" },
-        { status: e.status },
-      );
-    }
-    throw e;
+    return thrownResponseToJson(e);
   }
 }
 

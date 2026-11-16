@@ -11,6 +11,7 @@ import {
   isEventTypeAllowed,
 } from "@/lib/events/queries";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { thrownResponseToJson } from "@/lib/auth/thrown-response";
 
 const CreateBodySchema = EventDraftSchema.extend({
   eventTypeId: z.string().uuid(),
@@ -89,13 +90,7 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
     try {
       await publishEvent(user.schoolId!, draft.id, user.id);
     } catch (e) {
-      if (e instanceof Response) {
-        return NextResponse.json(
-          { error: e.statusText || "Error" },
-          { status: e.status },
-        );
-      }
-      throw e;
+      return thrownResponseToJson(e);
     }
     return NextResponse.json({ id: draft.id, status: "approved" }, { status: 201 });
   }

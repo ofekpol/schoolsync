@@ -5,14 +5,14 @@ import { assertAdmin, assertCanCreateEventType } from "@/lib/auth/admin";
 import { createEventType, listEventTypes } from "@/lib/admin/event-types";
 import { EventTypeSchema } from "@/lib/validations/admin";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;
@@ -25,8 +25,7 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
   try {
     assertCanCreateEventType(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;

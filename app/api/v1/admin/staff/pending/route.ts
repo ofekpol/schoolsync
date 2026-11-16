@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/pending";
 import { ApprovePendingSchema } from "@/lib/validations/admin";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
@@ -15,8 +16,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
 
   const pending = await listPendingRegistrations(user.schoolId);
@@ -29,8 +29,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
 
   const parsed = ApprovePendingSchema.safeParse(await request.json().catch(() => null));

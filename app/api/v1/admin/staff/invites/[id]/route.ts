@@ -3,6 +3,7 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { getStaffUser } from "@/lib/auth/session";
 import { revokeInvite } from "@/lib/db/invites";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 export async function DELETE(
   _request: NextRequest,
@@ -13,8 +14,7 @@ export async function DELETE(
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
 
   const { id } = await params;

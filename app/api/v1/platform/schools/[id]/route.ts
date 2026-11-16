@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requirePlatformAdmin } from "@/lib/auth/platform-admin";
 import { updateSchoolServices } from "@/lib/db/schools";
 import { ServicesSchema } from "@/lib/services";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -13,10 +14,7 @@ async function platformAdminOrDeny(): Promise<{ actorId: string } | { denied: Ne
   try {
     return { actorId: (await requirePlatformAdmin()).id };
   } catch (e) {
-    if (e instanceof Response) {
-      return { denied: NextResponse.json({ error: "Forbidden" }, { status: e.status }) };
-    }
-    throw e;
+    return { denied: guardFailureResponse(e) };
   }
 }
 

@@ -4,7 +4,8 @@ export type ConstraintErrorCode =
   | "duplicate_free_day"
   | "limit_reached"
   | "deadline_past"
-  | "wrong_status";
+  | "wrong_status"
+  | "type_changed";
 
 /** A constraint or collection write the caller can explain to the user. */
 export class ConstraintError extends Error {

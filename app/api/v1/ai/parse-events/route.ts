@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { canEditEvents } from "@/lib/events/scope";
 import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { isAiEnabled } from "@/lib/ai/model";
 import { consumeAiQuota } from "@/lib/ai/quota";
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return error("unauthorized", 401);
-  if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+  if (!canEditEvents(user)) {
     return error("forbidden", 403);
   }
   const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");

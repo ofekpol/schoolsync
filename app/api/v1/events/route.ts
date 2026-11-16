@@ -5,8 +5,8 @@ import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { createDraft, updateDraft } from "@/lib/events/crud";
 import { publishEvent } from "@/lib/events/approval";
 import { EventDraftSchema } from "@/lib/validations/events";
+import { canEditEvents, findDisallowedGrades } from "@/lib/events/scope";
 import {
-  getEditorAllowedGrades,
   getEditorDashboardEvents,
   isEventTypeAllowed,
 } from "@/lib/events/queries";
@@ -35,7 +35,7 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+  if (!canEditEvents(user)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
@@ -63,16 +63,12 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(draft, { status: 201 });
   }
 
-  if (draftFields.grades && draftFields.grades.length > 0 && user.role !== "admin") {
-    const allowed = await getEditorAllowedGrades(user.schoolId!, user.id);
-    const allowedSet = new Set(allowed);
-    const violators = draftFields.grades.filter((g) => !allowedSet.has(g));
-    if (violators.length > 0) {
-      return NextResponse.json(
-        { error: "scope_violation", grades: violators },
-        { status: 403 },
-      );
-    }
+  const disallowedGrades = await findDisallowedGrades(user, draftFields.grades);
+  if (disallowedGrades.length > 0) {
+    return NextResponse.json(
+      { error: "scope_violation", grades: disallowedGrades },
+      { status: 403 },
+    );
   }
 
   if (hasDraftFields) {

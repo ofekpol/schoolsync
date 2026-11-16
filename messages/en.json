@@ -848,6 +848,129 @@
     "shell": {
       "title": "Timetable",
       "empty": "Coming soon"
+    },
+    "boards": {
+      "title": "Timetables",
+      "subtitle": "Each board is one timetable for the school year. Open a board to enter classes, subjects, teachers and lessons.",
+      "listLabel": "Boards",
+      "empty": "No boards yet.",
+      "newBoard": "New board",
+      "name": "Board name",
+      "status": {
+        "setup": "Setting up",
+        "collecting": "Collecting constraints",
+        "review": "Choosing",
+        "published": "Published"
+      }
+    },
+    "setup": {
+      "title": "Set up {name}",
+      "back": "All boards",
+      "tabsLabel": "Setup sections",
+      "tabs": {
+        "classes": "Classes",
+        "subjects": "Subjects",
+        "teachers": "Teachers",
+        "lessons": "Lessons",
+        "plata": "Plata"
+      },
+      "close": "Close",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete?",
+      "deleteNamed": "Delete {name}",
+      "paste": {
+        "open": "Paste a list",
+        "hint": "One name per line. Blank lines, repeats and names already here are skipped.",
+        "add": "Add",
+        "count": "{count, plural, one {# name} other {# names}}",
+        "tooLong": "A name is longer than {max} characters"
+      },
+      "classes": {
+        "hint": "How many classes each grade has. Classes are numbered from 1.",
+        "grade": "Grade {grade}",
+        "count": "Number of classes in grade {grade}",
+        "none": "No classes",
+        "inUse": "This class has lessons"
+      },
+      "subjects": {
+        "count": "{count, plural, one {# subject} other {# subjects}}",
+        "empty": "No subjects yet. Paste a list to start.",
+        "rename": "Subject name {name}"
+      },
+      "teachers": {
+        "count": "{count, plural, one {# teacher} other {# teachers}}",
+        "empty": "No teachers yet.",
+        "name": "Name",
+        "staffUser": "User",
+        "freeDay": "Free day",
+        "freeDayFor": "{name} is entitled to a free day",
+        "rename": "Teacher name {name}",
+        "linked": "Linked"
+      },
+      "fromStaff": {
+        "open": "Add from staff",
+        "title": "Add teachers from staff",
+        "hint": "Active staff not yet on the board.",
+        "close": "Close",
+        "filter": "Filter by label",
+        "all": "All staff",
+        "selectShown": "Select all shown ({count})",
+        "empty": "No staff to add.",
+        "add": "{count, plural, =0 {Add} one {Add # teacher} other {Add # teachers}}"
+      },
+      "lessons": {
+        "grade": "Grade",
+        "gradeOption": "Grade {grade}",
+        "noClasses": "This grade has no classes. Add them in the Classes tab.",
+        "noSubjects": "No subjects yet.",
+        "subject": "Subject",
+        "periods": "Periods",
+        "teacher": "Teacher",
+        "noTeacher": "No teacher",
+        "inPlata": "In a Plata",
+        "total": "Total periods",
+        "totalOf": "{total} of {slots}",
+        "cellLabel": "{subject}, {class}",
+        "save": "Save",
+        "saved": "Saved",
+        "unknownTeacher": "Pick a teacher from the list"
+      },
+      "plata": {
+        "hint": "A Plata: several classes of one grade learn the same subject at the same periods.",
+        "empty": "No Plata yet.",
+        "new": "New Plata",
+        "edit": "Edit",
+        "grade": "Grade",
+        "subject": "Subject",
+        "periods": "Weekly periods",
+        "classes": "Classes in the Plata",
+        "teachers": "Teachers",
+        "save": "Save",
+        "needTwoClasses": "Choose at least two classes.",
+        "summary": "{periods} periods · {classes}",
+        "filterTeachers": "Find a teacher"
+      },
+      "readiness": {
+        "title": "Ready to generate",
+        "ready": "Ready to generate a timetable",
+        "block_without_teacher": "{subject} in {classes} has no teacher",
+        "class_overbooked": "Class {class} has {periods} periods, more than the week's {slots}",
+        "teacher_overbooked": "{teacher} has {periods} periods, more than the week's {slots}",
+        "fix": "Fix"
+      },
+      "errors": {
+        "duplicateName": "That name already exists",
+        "inUse": "Lessons use this, so it can't be deleted",
+        "limit": "You've reached the limit",
+        "noActiveYear": "The school has no active school year",
+        "unknownId": "Something you chose no longer exists. Refresh the page",
+        "mixedGrades": "All classes in a Plata must be in the same grade",
+        "duplicateLesson": "One of the classes already has a lesson in this subject",
+        "alreadyLinked": "This staff member is already linked to another teacher on the board",
+        "demo": "Not available in the demo",
+        "save": "Saving failed, try again"
+      }
     }
   }
 }

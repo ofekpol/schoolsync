@@ -848,6 +848,129 @@
     "shell": {
       "title": "מערכת שעות",
       "empty": "בקרוב"
+    },
+    "boards": {
+      "title": "מערכות שעות",
+      "subtitle": "כל לוח הוא מערכת שעות אחת לשנת הלימודים. פתחו לוח כדי להזין כיתות, מקצועות, מורים ושיעורים.",
+      "listLabel": "לוחות",
+      "empty": "אין לוחות עדיין.",
+      "newBoard": "לוח חדש",
+      "name": "שם הלוח",
+      "status": {
+        "setup": "בהקמה",
+        "collecting": "איסוף אילוצים",
+        "review": "בבחירה",
+        "published": "פורסם"
+      }
+    },
+    "setup": {
+      "title": "הקמת {name}",
+      "back": "כל הלוחות",
+      "tabsLabel": "חלקי ההקמה",
+      "tabs": {
+        "classes": "כיתות",
+        "subjects": "מקצועות",
+        "teachers": "מורים",
+        "lessons": "שיעורים",
+        "plata": "הקבצות"
+      },
+      "close": "סגירה",
+      "delete": "מחיקה",
+      "cancel": "ביטול",
+      "confirmDelete": "למחוק?",
+      "deleteNamed": "מחיקת {name}",
+      "paste": {
+        "open": "הדבקת רשימה",
+        "hint": "שם אחד בכל שורה. שורות ריקות, כפילויות ושמות שכבר קיימים לא יתווספו.",
+        "add": "הוספה",
+        "count": "{count, plural, one {שם אחד} other {# שמות}}",
+        "tooLong": "יש שם ארוך מ־{max} תווים"
+      },
+      "classes": {
+        "hint": "כמה כיתות יש בכל שכבה. הכיתות ממוספרות מ־1.",
+        "grade": "שכבה {grade}",
+        "count": "מספר הכיתות בשכבה {grade}",
+        "none": "אין כיתות",
+        "inUse": "יש שיעורים לכיתה הזו"
+      },
+      "subjects": {
+        "count": "{count, plural, one {מקצוע אחד} other {# מקצועות}}",
+        "empty": "אין מקצועות עדיין. הדביקו רשימה כדי להתחיל.",
+        "rename": "שם המקצוע {name}"
+      },
+      "teachers": {
+        "count": "{count, plural, one {מורה אחד} other {# מורים}}",
+        "empty": "אין מורים עדיין.",
+        "name": "שם",
+        "staffUser": "משתמש במערכת",
+        "freeDay": "זכאי ליום חופשי",
+        "freeDayFor": "{name} זכאי ליום חופשי",
+        "rename": "שם המורה {name}",
+        "linked": "מקושר"
+      },
+      "fromStaff": {
+        "open": "הוספה מהצוות",
+        "title": "הוספת מורים מהצוות",
+        "hint": "אנשי צוות פעילים שעדיין אינם בלוח.",
+        "close": "סגירה",
+        "filter": "סינון לפי תיוג",
+        "all": "כל הצוות",
+        "selectShown": "בחירת כל המוצגים ({count})",
+        "empty": "אין אנשי צוות להוספה.",
+        "add": "{count, plural, =0 {הוספה} one {הוספת מורה אחד} other {הוספת # מורים}}"
+      },
+      "lessons": {
+        "grade": "שכבה",
+        "gradeOption": "שכבה {grade}",
+        "noClasses": "אין כיתות בשכבה הזו. הוסיפו כיתות בלשונית כיתות.",
+        "noSubjects": "אין מקצועות עדיין.",
+        "subject": "מקצוע",
+        "periods": "שעות",
+        "teacher": "מורה",
+        "noTeacher": "ללא מורה",
+        "inPlata": "בהקבצה",
+        "total": "סה״כ שעות",
+        "totalOf": "{total} מתוך {slots}",
+        "cellLabel": "{subject}, {class}",
+        "save": "שמירה",
+        "saved": "נשמר",
+        "unknownTeacher": "בחרו מורה מהרשימה"
+      },
+      "plata": {
+        "hint": "הקבצה: כמה כיתות מאותה שכבה לומדות אותו מקצוע באותן שעות.",
+        "empty": "אין הקבצות עדיין.",
+        "new": "הקבצה חדשה",
+        "edit": "עריכה",
+        "grade": "שכבה",
+        "subject": "מקצוע",
+        "periods": "שעות שבועיות",
+        "classes": "כיתות בהקבצה",
+        "teachers": "מורים",
+        "save": "שמירה",
+        "needTwoClasses": "בחרו לפחות שתי כיתות.",
+        "summary": "{periods} ש״ש · {classes}",
+        "filterTeachers": "חיפוש מורה"
+      },
+      "readiness": {
+        "title": "מוכנות ליצירת מערכת",
+        "ready": "מוכן ליצירת מערכת",
+        "block_without_teacher": "לשיעור {subject} ב{classes} אין מורה",
+        "class_overbooked": "לכיתה {class} יש {periods} שעות, יותר מ־{slots} השעות בשבוע",
+        "teacher_overbooked": "למורה {teacher} יש {periods} שעות, יותר מ־{slots} השעות בשבוע",
+        "fix": "לתיקון"
+      },
+      "errors": {
+        "duplicateName": "השם הזה כבר קיים",
+        "inUse": "יש שיעורים שמשתמשים בזה, אי אפשר למחוק",
+        "limit": "הגעתם למגבלה",
+        "noActiveYear": "אין לבית הספר שנת לימודים פעילה",
+        "unknownId": "משהו מהבחירה כבר לא קיים. רעננו את הדף",
+        "mixedGrades": "כל הכיתות בהקבצה צריכות להיות מאותה שכבה",
+        "duplicateLesson": "לאחת הכיתות כבר יש שיעור במקצוע הזה",
+        "alreadyLinked": "איש הצוות כבר מקושר למורה אחר בלוח",
+        "demo": "לא זמין בהדגמה",
+        "save": "השמירה נכשלה, נסו שוב"
+      }
     }
   }
 }

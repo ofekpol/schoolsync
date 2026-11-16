@@ -872,7 +872,8 @@
         "subjects": "מקצועות",
         "teachers": "מורים",
         "lessons": "שיעורים",
-        "plata": "הקבצות"
+        "plata": "הקבצות",
+        "constraints": "אילוצים"
       },
       "close": "סגירה",
       "delete": "מחיקה",
@@ -971,6 +972,127 @@
         "demo": "לא זמין בהדגמה",
         "save": "השמירה נכשלה, נסו שוב"
       }
+    },
+    "constraints": {
+      "hint": "אילוצים שההנהלה מזינה, מכוונים למורים או לתיוג פרופיל. אילוץ קשיח נשבר רק אם אין ברירה; רך נשבר לפי המשקל שלו.",
+      "chooseType": "סוג אילוץ",
+      "add": "הוספת אילוץ",
+      "empty": "אין אילוצים עדיין.",
+      "types": {
+        "teacher_free_day": "יום חופשי",
+        "teacher_unavailable": "מורה לא זמין",
+        "meeting": "פגישה",
+        "subject_max_per_day": "מקסימום שעות למקצוע ביום",
+        "class_no_gaps": "בלי חלונות לכיתות",
+        "teacher_few_gaps": "מעט חלונות למורים"
+      },
+      "removedTeacher": "מורה שהוסר",
+      "removedLabel": "תיוג שהוסר",
+      "days": {
+        "0": "ראשון",
+        "1": "שני",
+        "2": "שלישי",
+        "3": "רביעי",
+        "4": "חמישי",
+        "5": "שישי",
+        "6": "שבת"
+      },
+      "hard": "קשיח",
+      "soft": "רך",
+      "softWeight": "רך, משקל {weight}",
+      "fromTeacher": "מהמורה",
+      "edit": "עריכה",
+      "delete": "מחיקה",
+      "cancel": "ביטול",
+      "save": "שמירה",
+      "skipped": {
+        "reaches_no_one": "לא נשלח לפותר: מגיע ל־0 מורים",
+        "not_entitled": "לא נשלח לפותר: המורה אינו זכאי ליום חופשי"
+      },
+      "errors": {
+        "unknownId": "משהו מהבחירה כבר לא קיים. רעננו את הדף",
+        "notEntitled": "המורה אינו זכאי ליום חופשי",
+        "duplicateFreeDay": "למורה כבר יש יום חופשי",
+        "limit": "הגעתם למגבלת האילוצים בלוח",
+        "typeChanged": "אי אפשר לשנות את סוג האילוץ. מחקו והוסיפו חדש",
+        "deadlinePast": "המועד כבר עבר",
+        "wrongStatus": "אי אפשר לפתוח איסוף בלוח הזה במצבו הנוכחי",
+        "invalid": "חסרים פרטים באילוץ",
+        "demo": "לא זמין בהדגמה",
+        "save": "השמירה נכשלה, נסו שוב"
+      },
+      "fields": {
+        "teacher": "מורה",
+        "day": "יום",
+        "periods": "שעות",
+        "allDay": "כל היום",
+        "weeklyPeriods": "שעות שבועיות",
+        "consecutive": "ברצף, באותו יום",
+        "max": "מקסימום",
+        "weight": "משקל"
+      },
+      "target": {
+        "title": "למי",
+        "teachers": "מורים",
+        "label": "תיוג",
+        "search": "חיפוש מורה",
+        "chosen": "{count, plural, =0 {לא נבחרו מורים} one {נבחר מורה אחד} other {נבחרו # מורים}}",
+        "reach": "{count, plural, =0 {מגיע ל־0 מורים} one {מגיע למורה אחד} other {מגיע ל־# מורים}}",
+        "unlinked": "{count, plural, one {מורה אחד בלוח בלי משתמש לא יקבל את האילוץ} other {# מורים בלוח בלי משתמש לא יקבלו את האילוץ}}"
+      },
+      "describe": {
+        "whoLabel": "מורים עם התיוג {label}",
+        "more": "ועוד {count}",
+        "teacher_free_day": "{who}: יום חופשי ב{day}",
+        "teacher_unavailable": "{who}: לא זמינים ביום {day}, {when}",
+        "periods": "שעות {list}",
+        "allDay": "כל היום",
+        "meeting": "פגישה של {who}, {count, plural, one {שעה אחת} other {# שעות}} בשבוע",
+        "consecutive": "ברצף",
+        "subject_max_per_day": "כל מקצוע לכל היותר {max} שעות ביום בכל כיתה",
+        "class_no_gaps": "בלי חלונות במערכת של הכיתות",
+        "teacher_few_gaps": "כמה שפחות חלונות למורים"
+      }
+    },
+    "collect": {
+      "link": {
+        "open": "איסוף אילוצים"
+      },
+      "back": "חזרה להקמת הלוח",
+      "title": "איסוף אילוצים: {name}",
+      "subtitle": "קבעו מועד אחרון, ראו מי מהמורים ענה ומלאו במקום מי שלא ענה. אחרי המועד, מורים שלא ענו נחשבים בלי אילוצים.",
+      "deadlineTitle": "מועד אחרון",
+      "deadlineDate": "תאריך",
+      "deadlineTime": "שעה",
+      "deadlineIs": "מועד אחרון: {when}",
+      "open": "פתיחת איסוף",
+      "update": "עדכון מועד",
+      "status": {
+        "setup": "האיסוף עוד לא נפתח",
+        "collecting": "האיסוף פתוח",
+        "review": "האיסוף נסגר",
+        "published": "המערכת פורסמה"
+      },
+      "afterDeadline": "המועד עבר. מורים שלא ענו נחשבים בלי אילוצים.",
+      "count": "{answered} מתוך {total} ענו",
+      "filter": "סינון",
+      "filterAll": "כל המורים",
+      "filterAnswered": "ענו",
+      "filterMissing": "לא ענו",
+      "teacher": "מורה",
+      "answered": "ענה",
+      "freeDay": "יום חופשי",
+      "notAnswered": "לא ענה",
+      "byManagement": "מולא ע״י ההנהלה",
+      "notEntitledShort": "לא זכאי",
+      "fillIn": "מילוי במקום המורה",
+      "fillInFor": "מילוי במקום {name}",
+      "fillInTitle": "מילוי במקום {name}",
+      "day": "יום חופשי",
+      "noRequest": "אין בקשה",
+      "notEntitled": "המורה אינו זכאי ליום חופשי. אפשר לסמן שענה בלי בקשה.",
+      "save": "שמירה",
+      "close": "סגירה"
     }
   }
 }

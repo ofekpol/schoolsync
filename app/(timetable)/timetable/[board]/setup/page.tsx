@@ -20,6 +20,9 @@ import { TeachersTab } from "@/components/timetable/setup/TeachersTab";
 import { LessonsTab } from "@/components/timetable/setup/LessonsTab";
 import { PlataTab } from "@/components/timetable/setup/PlataTab";
 import { ReadinessPanel } from "@/components/timetable/setup/ReadinessPanel";
+import { ConstraintsTab } from "@/components/timetable/constraints/ConstraintsTab";
+import { listConstraints } from "@/lib/timetable/constraints/crud";
+import { exportConstraints } from "@/lib/timetable/constraints/export";
 import { parseSetupTab, SetupTabs, type SetupTab } from "@/components/timetable/setup/SetupTabs";
 
 type Params = { params: Promise<{ board: string }>; searchParams: Promise<{ tab?: string }> };
@@ -34,8 +37,9 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
   if (!board) notFound();
   const tab = parseSetupTab(tabParam);
   const schoolId = user.schoolId;
-  const [t, data, exported] = await Promise.all([
+  const [t, tCollect, data, exported] = await Promise.all([
     getTranslations("timetable.setup"),
+    getTranslations("timetable.collect.link"),
     loadBoardData(schoolId, board.id),
     buildSolverInput(schoolId, board.id),
   ]);
@@ -44,7 +48,13 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
     <main className="mx-auto w-full max-w-6xl space-y-5 p-4 text-neutral-950 md:p-8">
       <div>
         <Link href="/timetable" className="text-sm text-violet-700 hover:underline">{t("back")}</Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
+          <Link href={`/timetable/${board.id}/collect`}
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50">
+            {tCollect("open")}
+          </Link>
+        </div>
       </div>
       <ReadinessPanel boardId={board.id} problems={exported?.problems ?? []} {...data} />
       <SetupTabs boardId={board.id} active={tab} />
@@ -75,6 +85,8 @@ async function renderPanel(schoolId: string, board: Board, tab: SetupTab, data: 
       return <LessonsTab boardId={board.id} slots={slotCount(board.week)} {...data} />;
     case "plata":
       return <PlataTab boardId={board.id} {...data} />;
+    case "constraints":
+      return loadConstraints(schoolId, board, data.teachers);
     default:
       return <ClassesTab boardId={board.id} classes={data.classes} />;
   }
@@ -90,4 +102,17 @@ async function loadTeachers(schoolId: string, boardId: string, teachers: TtTeach
     .filter((member) => member.status === "active")
     .map(({ id, fullName, email }) => ({ id, fullName, email }));
   return <TeachersTab boardId={boardId} teachers={teachers} staff={active} categories={categories} labels={labels} />;
+}
+
+async function loadConstraints(schoolId: string, board: Board, teachers: TtTeacher[]): Promise<ReactNode> {
+  const [constraints, categories, labels, exported] = await Promise.all([
+    listConstraints(schoolId, board.id),
+    listCategories(schoolId),
+    listStaffLabels(schoolId),
+    exportConstraints(schoolId, board.id, teachers),
+  ]);
+  return (
+    <ConstraintsTab boardId={board.id} constraints={constraints} skipped={exported.skipped} teachers={teachers}
+      categories={categories} labels={labels} week={board.week} />
+  );
 }

@@ -151,3 +151,52 @@ export const ttBlockTeachers = pgTable(
     schoolIsolation,
   ],
 );
+
+/**
+ * Constraints (migration 0025, plan 6). `params` is stored as entered (a target
+ * may be a profile label); the export resolves it to teacher ids. `type` is
+ * checked by the app, so adding a type needs no migration.
+ */
+export const ttConstraints = pgTable(
+  "tt_constraints",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    schoolId: schoolId(),
+    boardId: boardId(),
+    type: text().notNull(),
+    hardness: text({ enum: ["hard", "soft"] }).notNull(),
+    weight: integer().notNull(),
+    params: jsonb().notNull(),
+    source: text({ enum: ["teacher", "management"] }).notNull(),
+    teacherId: uuid("teacher_id").references(() => ttTeachers.id, { onDelete: "cascade" }),
+    createdBy: uuid("created_by").references(() => staffUsers.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("tt_constraints_board_idx").on(t.boardId),
+    uniqueIndex("tt_constraints_free_day_key")
+      .on(t.boardId, t.teacherId)
+      .where(sql`${t.type} = 'teacher_free_day'`),
+    check("tt_constraints_hardness_check", sql`${t.hardness} IN ('hard', 'soft')`),
+    check("tt_constraints_source_check", sql`${t.source} IN ('teacher', 'management')`),
+    check("tt_constraints_weight_check", sql`${t.weight} BETWEEN 1 AND 100`),
+    schoolIsolation,
+  ],
+);
+
+/** A teacher who answered the collection round (or was filled in for by management). */
+export const ttTeacherResponses = pgTable(
+  "tt_teacher_responses",
+  {
+    boardId: boardId(),
+    teacherId: uuid("teacher_id")
+      .notNull()
+      .references(() => ttTeachers.id, { onDelete: "cascade" }),
+    schoolId: schoolId(),
+    answeredAt: timestamp("answered_at", { withTimezone: true }).defaultNow().notNull(),
+    byManagement: boolean("by_management").notNull(),
+    answeredBy: uuid("answered_by").references(() => staffUsers.id, { onDelete: "set null" }),
+  },
+  (t) => [primaryKey({ name: "tt_teacher_responses_pk", columns: [t.boardId, t.teacherId] }), schoolIsolation],
+);

@@ -872,7 +872,8 @@
         "subjects": "Subjects",
         "teachers": "Teachers",
         "lessons": "Lessons",
-        "plata": "Plata"
+        "plata": "Plata",
+        "constraints": "Constraints"
       },
       "close": "Close",
       "delete": "Delete",
@@ -971,6 +972,127 @@
         "demo": "Not available in the demo",
         "save": "Saving failed, try again"
       }
+    },
+    "constraints": {
+      "hint": "Constraints management enters, aimed at teachers or a profile label. A hard constraint is broken only when there is no choice; a soft one by its weight.",
+      "chooseType": "Constraint type",
+      "add": "Add constraint",
+      "empty": "No constraints yet.",
+      "types": {
+        "teacher_free_day": "Free day",
+        "teacher_unavailable": "Teacher unavailable",
+        "meeting": "Meeting",
+        "subject_max_per_day": "Max periods of a subject per day",
+        "class_no_gaps": "No gaps for classes",
+        "teacher_few_gaps": "Few gaps for teachers"
+      },
+      "removedTeacher": "Removed teacher",
+      "removedLabel": "Removed label",
+      "days": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "hard": "Hard",
+      "soft": "Soft",
+      "softWeight": "Soft, weight {weight}",
+      "fromTeacher": "From the teacher",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "skipped": {
+        "reaches_no_one": "Not sent to the solver: reaches 0 teachers",
+        "not_entitled": "Not sent to the solver: the teacher is not entitled to a free day"
+      },
+      "errors": {
+        "unknownId": "Something you chose no longer exists. Refresh the page",
+        "notEntitled": "The teacher is not entitled to a free day",
+        "duplicateFreeDay": "The teacher already has a free day",
+        "limit": "The board has reached its constraint limit",
+        "typeChanged": "A constraint's type can't change. Delete it and add a new one",
+        "deadlinePast": "That time has already passed",
+        "wrongStatus": "Collection can't be opened for this board in its current state",
+        "invalid": "The constraint is missing details",
+        "demo": "Not available in the demo",
+        "save": "Saving failed, try again"
+      },
+      "fields": {
+        "teacher": "Teacher",
+        "day": "Day",
+        "periods": "Periods",
+        "allDay": "All day",
+        "weeklyPeriods": "Weekly periods",
+        "consecutive": "In a row, on one day",
+        "max": "Maximum",
+        "weight": "Weight"
+      },
+      "target": {
+        "title": "Who",
+        "teachers": "Teachers",
+        "label": "Label",
+        "search": "Find a teacher",
+        "chosen": "{count, plural, =0 {No teachers chosen} one {# teacher chosen} other {# teachers chosen}}",
+        "reach": "{count, plural, =0 {Reaches 0 teachers} one {Reaches # teacher} other {Reaches # teachers}}",
+        "unlinked": "{count, plural, one {# teacher on the board has no user and won't get this} other {# teachers on the board have no user and won't get this}}"
+      },
+      "describe": {
+        "whoLabel": "teachers labelled {label}",
+        "more": "and {count} more",
+        "teacher_free_day": "{who}: free day on {day}",
+        "teacher_unavailable": "{who}: unavailable on {day}, {when}",
+        "periods": "periods {list}",
+        "allDay": "all day",
+        "meeting": "Meeting of {who}, {count, plural, one {# period} other {# periods}} a week",
+        "consecutive": "in a row",
+        "subject_max_per_day": "Each subject at most {max} periods a day per class",
+        "class_no_gaps": "No gaps in class timetables",
+        "teacher_few_gaps": "As few gaps as possible for teachers"
+      }
+    },
+    "collect": {
+      "link": {
+        "open": "Collect constraints"
+      },
+      "back": "Back to board setup",
+      "title": "Collect constraints: {name}",
+      "subtitle": "Set a deadline, see which teachers answered and fill in for those who didn't. After the deadline, teachers who didn't answer count as having no constraints.",
+      "deadlineTitle": "Deadline",
+      "deadlineDate": "Date",
+      "deadlineTime": "Time",
+      "deadlineIs": "Deadline: {when}",
+      "open": "Open collection",
+      "update": "Update deadline",
+      "status": {
+        "setup": "Collection not open yet",
+        "collecting": "Collection open",
+        "review": "Collection closed",
+        "published": "Timetable published"
+      },
+      "afterDeadline": "The deadline has passed. Teachers who didn't answer count as having no constraints.",
+      "count": "{answered} of {total} answered",
+      "filter": "Filter",
+      "filterAll": "All teachers",
+      "filterAnswered": "Answered",
+      "filterMissing": "Not answered",
+      "teacher": "Teacher",
+      "answered": "Answered",
+      "freeDay": "Free day",
+      "notAnswered": "Not answered",
+      "byManagement": "filled in by management",
+      "notEntitledShort": "Not entitled",
+      "fillIn": "Fill in",
+      "fillInFor": "Fill in for {name}",
+      "fillInTitle": "Fill in for {name}",
+      "day": "Free day",
+      "noRequest": "No request",
+      "notEntitled": "This teacher is not entitled to a free day. You can mark them answered with no request.",
+      "save": "Save",
+      "close": "Close"
     }
   }
 }

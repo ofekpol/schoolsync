@@ -176,6 +176,13 @@
       "when": 1791677400000,
       "tag": "0024_timetable_deferred_fks",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791850200000,
+      "tag": "0025_timetable_constraints",
+      "breakpoints": true
     }
   ]
 }

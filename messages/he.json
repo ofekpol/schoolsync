@@ -1053,6 +1053,46 @@
         "class_no_gaps": "בלי חלונות במערכת של הכיתות",
         "teacher_few_gaps": "כמה שפחות חלונות למורים"
       }
+    },
+    "collect": {
+      "link": {
+        "open": "איסוף אילוצים"
+      },
+      "back": "חזרה להקמת הלוח",
+      "title": "איסוף אילוצים: {name}",
+      "subtitle": "קבעו מועד אחרון, ראו מי מהמורים ענה ומלאו במקום מי שלא ענה. אחרי המועד, מורים שלא ענו נחשבים בלי אילוצים.",
+      "deadlineTitle": "מועד אחרון",
+      "deadlineDate": "תאריך",
+      "deadlineTime": "שעה",
+      "deadlineIs": "מועד אחרון: {when}",
+      "open": "פתיחת איסוף",
+      "update": "עדכון מועד",
+      "status": {
+        "setup": "האיסוף עוד לא נפתח",
+        "collecting": "האיסוף פתוח",
+        "review": "האיסוף נסגר",
+        "published": "המערכת פורסמה"
+      },
+      "afterDeadline": "המועד עבר. מורים שלא ענו נחשבים בלי אילוצים.",
+      "count": "{answered} מתוך {total} ענו",
+      "filter": "סינון",
+      "filterAll": "כל המורים",
+      "filterAnswered": "ענו",
+      "filterMissing": "לא ענו",
+      "teacher": "מורה",
+      "answered": "ענה",
+      "freeDay": "יום חופשי",
+      "notAnswered": "לא ענה",
+      "byManagement": "מולא ע״י ההנהלה",
+      "notEntitledShort": "לא זכאי",
+      "fillIn": "מילוי במקום המורה",
+      "fillInFor": "מילוי במקום {name}",
+      "fillInTitle": "מילוי במקום {name}",
+      "day": "יום חופשי",
+      "noRequest": "אין בקשה",
+      "notEntitled": "המורה אינו זכאי ליום חופשי. אפשר לסמן שענה בלי בקשה.",
+      "save": "שמירה",
+      "close": "סגירה"
     }
   }
 }

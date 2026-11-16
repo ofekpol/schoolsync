@@ -37,8 +37,9 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
   if (!board) notFound();
   const tab = parseSetupTab(tabParam);
   const schoolId = user.schoolId;
-  const [t, data, exported] = await Promise.all([
+  const [t, tCollect, data, exported] = await Promise.all([
     getTranslations("timetable.setup"),
+    getTranslations("timetable.collect.link"),
     loadBoardData(schoolId, board.id),
     buildSolverInput(schoolId, board.id),
   ]);
@@ -47,7 +48,13 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
     <main className="mx-auto w-full max-w-6xl space-y-5 p-4 text-neutral-950 md:p-8">
       <div>
         <Link href="/timetable" className="text-sm text-violet-700 hover:underline">{t("back")}</Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
+          <Link href={`/timetable/${board.id}/collect`}
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50">
+            {tCollect("open")}
+          </Link>
+        </div>
       </div>
       <ReadinessPanel boardId={board.id} problems={exported?.problems ?? []} {...data} />
       <SetupTabs boardId={board.id} active={tab} />

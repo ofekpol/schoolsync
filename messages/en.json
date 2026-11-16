@@ -1053,6 +1053,46 @@
         "class_no_gaps": "No gaps in class timetables",
         "teacher_few_gaps": "As few gaps as possible for teachers"
       }
+    },
+    "collect": {
+      "link": {
+        "open": "Collect constraints"
+      },
+      "back": "Back to board setup",
+      "title": "Collect constraints: {name}",
+      "subtitle": "Set a deadline, see which teachers answered and fill in for those who didn't. After the deadline, teachers who didn't answer count as having no constraints.",
+      "deadlineTitle": "Deadline",
+      "deadlineDate": "Date",
+      "deadlineTime": "Time",
+      "deadlineIs": "Deadline: {when}",
+      "open": "Open collection",
+      "update": "Update deadline",
+      "status": {
+        "setup": "Collection not open yet",
+        "collecting": "Collection open",
+        "review": "Collection closed",
+        "published": "Timetable published"
+      },
+      "afterDeadline": "The deadline has passed. Teachers who didn't answer count as having no constraints.",
+      "count": "{answered} of {total} answered",
+      "filter": "Filter",
+      "filterAll": "All teachers",
+      "filterAnswered": "Answered",
+      "filterMissing": "Not answered",
+      "teacher": "Teacher",
+      "answered": "Answered",
+      "freeDay": "Free day",
+      "notAnswered": "Not answered",
+      "byManagement": "filled in by management",
+      "notEntitledShort": "Not entitled",
+      "fillIn": "Fill in",
+      "fillInFor": "Fill in for {name}",
+      "fillInTitle": "Fill in for {name}",
+      "day": "Free day",
+      "noRequest": "No request",
+      "notEntitled": "This teacher is not entitled to a free day. You can mark them answered with no request.",
+      "save": "Save",
+      "close": "Close"
     }
   }
 }

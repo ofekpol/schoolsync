@@ -5,6 +5,7 @@ import { listClasses } from "./classes";
 import { findInputProblems, type InputProblem } from "./input-problems";
 import { SolverInputSchema, type SolverInput, type WeightProfile } from "./solver-contract";
 import { listTeachers } from "./teachers";
+import { exportConstraints } from "./constraints/export";
 
 export interface ExportOptions {
   mode?: "solve" | "evaluate";
@@ -30,6 +31,7 @@ export async function buildSolverInput(
     listTeachers(schoolId, boardId),
     listBlocks(schoolId, boardId),
   ]);
+  const extra = await exportConstraints(schoolId, boardId, teachers); // plan 6
   const input = SolverInputSchema.parse({
     version: 1,
     mode: opts.mode ?? "solve",
@@ -38,8 +40,8 @@ export async function buildSolverInput(
     week: board.week,
     classIds: classes.map((c) => c.id),
     teacherIds: teachers.map((t) => t.id),
-    blocks: blocks.map((block) => ({ ...block, consecutive: false })),
-    constraints: [], // plan 6
+    blocks: [...blocks.map((block) => ({ ...block, consecutive: false })), ...extra.meetingBlocks],
+    constraints: extra.constraints,
     placements: [], // plan 7
   });
   return { input, problems: findInputProblems(input) };

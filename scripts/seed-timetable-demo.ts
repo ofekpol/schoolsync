@@ -16,6 +16,7 @@ import { hasService } from "@/lib/services";
 import { DEMO_CLASS_COUNTS, DEMO_SUBJECT_CATEGORY } from "@/lib/timetable/demo/curriculum";
 import { generateDemoPlan, type DemoPlan } from "@/lib/timetable/demo/generate";
 import { loadDemoStaff, writeDemoBoard } from "@/lib/timetable/demo/write";
+import { writeDemoConstraints } from "@/lib/timetable/constraints/demo";
 import { buildSolverInput } from "@/lib/timetable/export";
 
 interface SeedArgs {
@@ -57,6 +58,7 @@ async function main(args: SeedArgs): Promise<void> {
   const staff = await loadDemoStaff(school.id, args.subjectCategory);
   const plan = generateDemoPlan({ staff, classCounts: DEMO_CLASS_COUNTS, seed: args.seed, anonymize: args.anonymize });
   const { boardId } = await writeDemoBoard(school.id, plan);
+  const demoConstraints = await writeDemoConstraints(school.id, boardId, args.seed); // plan 6
   const exported = await buildSolverInput(school.id, boardId);
   const { linked, placeholder } = teacherCounts(plan);
 
@@ -64,6 +66,7 @@ async function main(args: SeedArgs): Promise<void> {
   console.log(`subjects: ${plan.subjects.length}`);
   console.log(`teachers: ${plan.teachers.length} (linked ${linked}, placeholder ${placeholder}, linked without a subject label ${staff.filter((s) => s.subjects.length === 0).length})`);
   console.log(`blocks:   ${plan.blocks.length}`);
+  console.log(`constraints: ${demoConstraints.written} (skipped ${demoConstraints.skipped})`);
   console.log(`problems: ${exported?.problems.length ?? "board not found"}`);
   if (!hasService(school, "timetable")) {
     console.warn(`warning: "${args.slug}" does not have the timetable service; turn it on at /platform/schools`);

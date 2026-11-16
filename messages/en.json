@@ -933,7 +933,8 @@
         "totalOf": "{total} of {slots}",
         "cellLabel": "{subject}, {class}",
         "save": "Save",
-        "saved": "Saved"
+        "saved": "Saved",
+        "unknownTeacher": "Pick a teacher from the list"
       },
       "plata": {
         "hint": "A Plata: several classes of one grade learn the same subject at the same periods.",
@@ -947,7 +948,8 @@
         "teachers": "Teachers",
         "save": "Save",
         "needTwoClasses": "Choose at least two classes.",
-        "summary": "{periods} periods · {classes}"
+        "summary": "{periods} periods · {classes}",
+        "filterTeachers": "Find a teacher"
       },
       "readiness": {
         "title": "Ready to generate",

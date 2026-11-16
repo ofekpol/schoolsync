@@ -933,7 +933,8 @@
         "totalOf": "{total} מתוך {slots}",
         "cellLabel": "{subject}, {class}",
         "save": "שמירה",
-        "saved": "נשמר"
+        "saved": "נשמר",
+        "unknownTeacher": "בחרו מורה מהרשימה"
       },
       "plata": {
         "hint": "הקבצה: כמה כיתות מאותה שכבה לומדות אותו מקצוע באותן שעות.",
@@ -947,7 +948,8 @@
         "teachers": "מורים",
         "save": "שמירה",
         "needTwoClasses": "בחרו לפחות שתי כיתות.",
-        "summary": "{periods} ש״ש · {classes}"
+        "summary": "{periods} ש״ש · {classes}",
+        "filterTeachers": "חיפוש מורה"
       },
       "readiness": {
         "title": "מוכנות ליצירת מערכת",

@@ -10,10 +10,16 @@ import { listStaffLabels } from "@/lib/profile/staff-labels";
 import { getBoard, type Board } from "@/lib/timetable/boards";
 import { listClasses } from "@/lib/timetable/classes";
 import { listSubjects } from "@/lib/timetable/subjects";
-import { listTeachers } from "@/lib/timetable/teachers";
+import { listTeachers, type TtTeacher } from "@/lib/timetable/teachers";
+import { listBlocks } from "@/lib/timetable/blocks";
+import { buildSolverInput } from "@/lib/timetable/export";
+import { slotCount } from "@/lib/timetable/week";
 import { ClassesTab } from "@/components/timetable/setup/ClassesTab";
 import { SubjectsTab } from "@/components/timetable/setup/SubjectsTab";
 import { TeachersTab } from "@/components/timetable/setup/TeachersTab";
+import { LessonsTab } from "@/components/timetable/setup/LessonsTab";
+import { PlataTab } from "@/components/timetable/setup/PlataTab";
+import { ReadinessPanel } from "@/components/timetable/setup/ReadinessPanel";
 import { parseSetupTab, SetupTabs, type SetupTab } from "@/components/timetable/setup/SetupTabs";
 
 type Params = { params: Promise<{ board: string }>; searchParams: Promise<{ tab?: string }> };
@@ -27,9 +33,11 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
   const board = boardId.success ? await getBoard(user.schoolId, boardId.data) : null;
   if (!board) notFound();
   const tab = parseSetupTab(tabParam);
-  const [t, panel] = await Promise.all([
+  const schoolId = user.schoolId;
+  const [t, data, exported] = await Promise.all([
     getTranslations("timetable.setup"),
-    loadPanel(user.schoolId, board, tab),
+    loadBoardData(schoolId, board.id),
+    buildSolverInput(schoolId, board.id),
   ]);
 
   return (
@@ -38,26 +46,42 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
         <Link href="/timetable" className="text-sm text-violet-700 hover:underline">{t("back")}</Link>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
       </div>
+      <ReadinessPanel boardId={board.id} problems={exported?.problems ?? []} {...data} />
       <SetupTabs boardId={board.id} active={tab} />
-      {panel}
+      {await renderPanel(schoolId, board, tab, data)}
     </main>
   );
 }
 
-async function loadPanel(schoolId: string, board: Board, tab: SetupTab): Promise<ReactNode> {
+type BoardData = Awaited<ReturnType<typeof loadBoardData>>;
+
+async function loadBoardData(schoolId: string, boardId: string) {
+  const [classes, subjects, teachers, blocks] = await Promise.all([
+    listClasses(schoolId, boardId),
+    listSubjects(schoolId, boardId),
+    listTeachers(schoolId, boardId),
+    listBlocks(schoolId, boardId),
+  ]);
+  return { classes, subjects, teachers, blocks };
+}
+
+async function renderPanel(schoolId: string, board: Board, tab: SetupTab, data: BoardData): Promise<ReactNode> {
   switch (tab) {
     case "subjects":
-      return <SubjectsTab boardId={board.id} subjects={await listSubjects(schoolId, board.id)} />;
+      return <SubjectsTab boardId={board.id} subjects={data.subjects} />;
     case "teachers":
-      return loadTeachers(schoolId, board.id);
+      return loadTeachers(schoolId, board.id, data.teachers);
+    case "lessons":
+      return <LessonsTab boardId={board.id} slots={slotCount(board.week)} {...data} />;
+    case "plata":
+      return <PlataTab boardId={board.id} {...data} />;
     default:
-      return <ClassesTab boardId={board.id} classes={await listClasses(schoolId, board.id)} />;
+      return <ClassesTab boardId={board.id} classes={data.classes} />;
   }
 }
 
-async function loadTeachers(schoolId: string, boardId: string): Promise<ReactNode> {
-  const [teachers, staff, categories, labels] = await Promise.all([
-    listTeachers(schoolId, boardId),
+async function loadTeachers(schoolId: string, boardId: string, teachers: TtTeacher[]): Promise<ReactNode> {
+  const [staff, categories, labels] = await Promise.all([
     listStaffUsers(schoolId),
     listCategories(schoolId),
     listStaffLabels(schoolId),

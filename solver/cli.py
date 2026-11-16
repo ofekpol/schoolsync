@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from solver.model import _failed, solve
+from solver.model import failed_output, solve
 
 
 def main(argv: list[str]) -> int:
@@ -18,8 +18,8 @@ def main(argv: list[str]) -> int:
     try:
         data = json.loads(Path(args.src).read_text(encoding="utf-8"))
         out = solve(data, args.workers)
-    except (json.JSONDecodeError, KeyError, OSError) as exc:
-        Path(args.dst).write_text(json.dumps(_failed(f"{type(exc).__name__}: {exc}")), encoding="utf-8")
+    except (ValueError, KeyError, TypeError, AttributeError, IndexError, OSError) as exc:  # JSONDecodeError is a ValueError
+        Path(args.dst).write_text(json.dumps(failed_output(f"{type(exc).__name__}: {exc}")), encoding="utf-8")
         return 1
     Path(args.dst).write_text(json.dumps(out), encoding="utf-8")
     return 0

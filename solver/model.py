@@ -17,7 +17,7 @@ def _slots(week: dict[str, Any]) -> list[Slot]:
     return [(d["day"], p["period"]) for d in week["days"] for p in d["periods"]]
 
 
-def _failed(error: str) -> dict[str, Any]:
+def failed_output(error: str) -> dict[str, Any]:
     return {"version": 1, "status": "failed", "error": error, "score": 0, "placements": [], "violations": []}
 
 
@@ -42,9 +42,9 @@ def _build(data: dict[str, Any], slots: list[Slot]) -> tuple[cp_model.CpModel, d
         short = model.new_int_var(0, block["weeklyPeriods"], f"u{b}")
         model.add(sum(x[b, s] for s in slots) + short == block["weeklyPeriods"])
         unplaced.append(short)
-        for t in block["teacherIds"]:
+        for t in set(block["teacherIds"]):  # a repeated id would force the block unplaced
             by_teacher[t].append(b)
-        for c in block["classIds"]:
+        for c in set(block["classIds"]):
             by_class[c].append(b)
     _add_at_most_one(model, x, by_teacher, slots)
     _add_at_most_one(model, x, by_class, slots)
@@ -62,7 +62,7 @@ def solve(data: dict[str, Any], workers: int | None = None) -> dict[str, Any]:
         solver.parameters.num_workers = workers
     status = solver.solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        return _failed(solver.status_name(status))
+        return failed_output(solver.status_name(status))
     blocks = data["blocks"]
     placements = [
         {"blockId": blocks[b]["id"], "day": s[0], "period": s[1]}

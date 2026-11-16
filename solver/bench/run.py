@@ -20,13 +20,13 @@ POLL_SECONDS = 0.2
 
 
 def peak_rss_mb(proc: subprocess.Popen[bytes]) -> float:
-    ps = psutil.Process(proc.pid)
     peak = 0
     while proc.poll() is None:
         try:
+            ps = psutil.Process(proc.pid)
             peak = max(peak, ps.memory_info().rss + sum(c.memory_info().rss for c in ps.children(recursive=True)))
-        except psutil.NoSuchProcess:
-            break
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass  # child exiting; the caller waits on it
         time.sleep(POLL_SECONDS)
     return peak / 1024 / 1024
 
@@ -43,7 +43,10 @@ def run(src: Path, limit: int, workers: int | None) -> dict[str, object]:
         start = time.perf_counter()
         proc = subprocess.Popen(cmd, cwd=ROOT)
         peak = peak_rss_mb(proc)
+        proc.wait()
         wall = time.perf_counter() - start
+        if proc.returncode != 0 and not out_path.exists():
+            raise RuntimeError(f"solver exited {proc.returncode} without output")
         out = json.loads(out_path.read_text(encoding="utf-8"))
     unplaced = sum(v["count"] for v in out["violations"] if v["type"] == "unplaced")
     return {

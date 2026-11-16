@@ -806,6 +806,251 @@
     "shell": {
       "title": "מערכת שעות",
       "empty": "בקרוב"
+    },
+    "boards": {
+      "title": "מערכות שעות",
+      "subtitle": "כל לוח הוא מערכת שעות אחת לשנת הלימודים. פתחו לוח כדי להזין כיתות, מקצועות, מורים ושיעורים.",
+      "listLabel": "לוחות",
+      "empty": "אין לוחות עדיין.",
+      "newBoard": "לוח חדש",
+      "name": "שם הלוח",
+      "status": {
+        "setup": "בהקמה",
+        "collecting": "איסוף אילוצים",
+        "review": "בבחירה",
+        "published": "פורסם"
+      }
+    },
+    "setup": {
+      "title": "הקמת {name}",
+      "back": "כל הלוחות",
+      "tabsLabel": "חלקי ההקמה",
+      "tabs": {
+        "classes": "כיתות",
+        "subjects": "מקצועות",
+        "teachers": "מורים",
+        "lessons": "שיעורים",
+        "plata": "הקבצות",
+        "constraints": "אילוצים"
+      },
+      "close": "סגירה",
+      "delete": "מחיקה",
+      "cancel": "ביטול",
+      "confirmDelete": "למחוק?",
+      "deleteNamed": "מחיקת {name}",
+      "paste": {
+        "open": "הדבקת רשימה",
+        "hint": "שם אחד בכל שורה. שורות ריקות, כפילויות ושמות שכבר קיימים לא יתווספו.",
+        "add": "הוספה",
+        "count": "{count, plural, one {שם אחד} other {# שמות}}",
+        "tooLong": "יש שם ארוך מ־{max} תווים"
+      },
+      "classes": {
+        "hint": "כמה כיתות יש בכל שכבה. הכיתות ממוספרות מ־1.",
+        "grade": "שכבה {grade}",
+        "count": "מספר הכיתות בשכבה {grade}",
+        "none": "אין כיתות",
+        "inUse": "יש שיעורים לכיתה הזו"
+      },
+      "subjects": {
+        "count": "{count, plural, one {מקצוע אחד} other {# מקצועות}}",
+        "empty": "אין מקצועות עדיין. הדביקו רשימה כדי להתחיל.",
+        "rename": "שם המקצוע {name}"
+      },
+      "teachers": {
+        "count": "{count, plural, one {מורה אחד} other {# מורים}}",
+        "empty": "אין מורים עדיין.",
+        "name": "שם",
+        "staffUser": "משתמש במערכת",
+        "freeDay": "זכאי ליום חופשי",
+        "freeDayFor": "{name} זכאי ליום חופשי",
+        "rename": "שם המורה {name}",
+        "linked": "מקושר"
+      },
+      "fromStaff": {
+        "open": "הוספה מהצוות",
+        "title": "הוספת מורים מהצוות",
+        "hint": "אנשי צוות פעילים שעדיין אינם בלוח.",
+        "close": "סגירה",
+        "filter": "סינון לפי תיוג",
+        "all": "כל הצוות",
+        "selectShown": "בחירת כל המוצגים ({count})",
+        "empty": "אין אנשי צוות להוספה.",
+        "add": "{count, plural, =0 {הוספה} one {הוספת מורה אחד} other {הוספת # מורים}}"
+      },
+      "lessons": {
+        "grade": "שכבה",
+        "gradeOption": "שכבה {grade}",
+        "noClasses": "אין כיתות בשכבה הזו. הוסיפו כיתות בלשונית כיתות.",
+        "noSubjects": "אין מקצועות עדיין.",
+        "subject": "מקצוע",
+        "periods": "שעות",
+        "teacher": "מורה",
+        "noTeacher": "ללא מורה",
+        "inPlata": "בהקבצה",
+        "total": "סה״כ שעות",
+        "totalOf": "{total} מתוך {slots}",
+        "cellLabel": "{subject}, {class}",
+        "save": "שמירה",
+        "saved": "נשמר",
+        "unknownTeacher": "בחרו מורה מהרשימה"
+      },
+      "plata": {
+        "hint": "הקבצה: כמה כיתות מאותה שכבה לומדות אותו מקצוע באותן שעות.",
+        "empty": "אין הקבצות עדיין.",
+        "new": "הקבצה חדשה",
+        "edit": "עריכה",
+        "grade": "שכבה",
+        "subject": "מקצוע",
+        "periods": "שעות שבועיות",
+        "classes": "כיתות בהקבצה",
+        "teachers": "מורים",
+        "save": "שמירה",
+        "needTwoClasses": "בחרו לפחות שתי כיתות.",
+        "summary": "{periods} ש״ש · {classes}",
+        "filterTeachers": "חיפוש מורה"
+      },
+      "readiness": {
+        "title": "מוכנות ליצירת מערכת",
+        "ready": "מוכן ליצירת מערכת",
+        "block_without_teacher": "לשיעור {subject} ב{classes} אין מורה",
+        "class_overbooked": "לכיתה {class} יש {periods} שעות, יותר מ־{slots} השעות בשבוע",
+        "teacher_overbooked": "למורה {teacher} יש {periods} שעות, יותר מ־{slots} השעות בשבוע",
+        "fix": "לתיקון"
+      },
+      "errors": {
+        "duplicateName": "השם הזה כבר קיים",
+        "inUse": "יש שיעורים שמשתמשים בזה, אי אפשר למחוק",
+        "limit": "הגעתם למגבלה",
+        "noActiveYear": "אין לבית הספר שנת לימודים פעילה",
+        "unknownId": "משהו מהבחירה כבר לא קיים. רעננו את הדף",
+        "mixedGrades": "כל הכיתות בהקבצה צריכות להיות מאותה שכבה",
+        "duplicateLesson": "לאחת הכיתות כבר יש שיעור במקצוע הזה",
+        "alreadyLinked": "איש הצוות כבר מקושר למורה אחר בלוח",
+        "demo": "לא זמין בהדגמה",
+        "save": "השמירה נכשלה, נסו שוב"
+      }
+    },
+    "constraints": {
+      "hint": "אילוצים שההנהלה מזינה, מכוונים למורים או לתיוג פרופיל. אילוץ קשיח נשבר רק אם אין ברירה; רך נשבר לפי המשקל שלו.",
+      "chooseType": "סוג אילוץ",
+      "add": "הוספת אילוץ",
+      "empty": "אין אילוצים עדיין.",
+      "types": {
+        "teacher_free_day": "יום חופשי",
+        "teacher_unavailable": "מורה לא זמין",
+        "meeting": "פגישה",
+        "subject_max_per_day": "מקסימום שעות למקצוע ביום",
+        "class_no_gaps": "בלי חלונות לכיתות",
+        "teacher_few_gaps": "מעט חלונות למורים"
+      },
+      "removedTeacher": "מורה שהוסר",
+      "removedLabel": "תיוג שהוסר",
+      "days": {
+        "0": "ראשון",
+        "1": "שני",
+        "2": "שלישי",
+        "3": "רביעי",
+        "4": "חמישי",
+        "5": "שישי",
+        "6": "שבת"
+      },
+      "hard": "קשיח",
+      "soft": "רך",
+      "softWeight": "רך, משקל {weight}",
+      "fromTeacher": "מהמורה",
+      "edit": "עריכה",
+      "delete": "מחיקה",
+      "cancel": "ביטול",
+      "save": "שמירה",
+      "skipped": {
+        "reaches_no_one": "לא נשלח לפותר: מגיע ל־0 מורים",
+        "not_entitled": "לא נשלח לפותר: המורה אינו זכאי ליום חופשי"
+      },
+      "errors": {
+        "unknownId": "משהו מהבחירה כבר לא קיים. רעננו את הדף",
+        "notEntitled": "המורה אינו זכאי ליום חופשי",
+        "duplicateFreeDay": "למורה כבר יש יום חופשי",
+        "limit": "הגעתם למגבלת האילוצים בלוח",
+        "typeChanged": "אי אפשר לשנות את סוג האילוץ. מחקו והוסיפו חדש",
+        "deadlinePast": "המועד כבר עבר",
+        "wrongStatus": "אי אפשר לפתוח איסוף בלוח הזה במצבו הנוכחי",
+        "invalid": "חסרים פרטים באילוץ",
+        "demo": "לא זמין בהדגמה",
+        "save": "השמירה נכשלה, נסו שוב"
+      },
+      "fields": {
+        "teacher": "מורה",
+        "day": "יום",
+        "periods": "שעות",
+        "allDay": "כל היום",
+        "weeklyPeriods": "שעות שבועיות",
+        "consecutive": "ברצף, באותו יום",
+        "max": "מקסימום",
+        "weight": "משקל"
+      },
+      "target": {
+        "title": "למי",
+        "teachers": "מורים",
+        "label": "תיוג",
+        "search": "חיפוש מורה",
+        "chosen": "{count, plural, =0 {לא נבחרו מורים} one {נבחר מורה אחד} other {נבחרו # מורים}}",
+        "reach": "{count, plural, =0 {מגיע ל־0 מורים} one {מגיע למורה אחד} other {מגיע ל־# מורים}}",
+        "unlinked": "{count, plural, one {מורה אחד בלוח בלי משתמש לא יקבל את האילוץ} other {# מורים בלוח בלי משתמש לא יקבלו את האילוץ}}"
+      },
+      "describe": {
+        "whoLabel": "מורים עם התיוג {label}",
+        "more": "ועוד {count}",
+        "teacher_free_day": "{who}: יום חופשי ב{day}",
+        "teacher_unavailable": "{who}: לא זמינים ביום {day}, {when}",
+        "periods": "שעות {list}",
+        "allDay": "כל היום",
+        "meeting": "פגישה של {who}, {count, plural, one {שעה אחת} other {# שעות}} בשבוע",
+        "consecutive": "ברצף",
+        "subject_max_per_day": "כל מקצוע לכל היותר {max} שעות ביום בכל כיתה",
+        "class_no_gaps": "בלי חלונות במערכת של הכיתות",
+        "teacher_few_gaps": "כמה שפחות חלונות למורים"
+      }
+    },
+    "collect": {
+      "link": {
+        "open": "איסוף אילוצים"
+      },
+      "back": "חזרה להקמת הלוח",
+      "title": "איסוף אילוצים: {name}",
+      "subtitle": "קבעו מועד אחרון, ראו מי מהמורים ענה ומלאו במקום מי שלא ענה. אחרי המועד, מורים שלא ענו נחשבים בלי אילוצים.",
+      "deadlineTitle": "מועד אחרון",
+      "deadlineDate": "תאריך",
+      "deadlineTime": "שעה",
+      "deadlineIs": "מועד אחרון: {when}",
+      "open": "פתיחת איסוף",
+      "update": "עדכון מועד",
+      "status": {
+        "setup": "האיסוף עוד לא נפתח",
+        "collecting": "האיסוף פתוח",
+        "review": "האיסוף נסגר",
+        "published": "המערכת פורסמה"
+      },
+      "afterDeadline": "המועד עבר. מורים שלא ענו נחשבים בלי אילוצים.",
+      "count": "{answered} מתוך {total} ענו",
+      "filter": "סינון",
+      "filterAll": "כל המורים",
+      "filterAnswered": "ענו",
+      "filterMissing": "לא ענו",
+      "teacher": "מורה",
+      "answered": "ענה",
+      "freeDay": "יום חופשי",
+      "notAnswered": "לא ענה",
+      "byManagement": "מולא ע״י ההנהלה",
+      "notEntitledShort": "לא זכאי",
+      "fillIn": "מילוי במקום המורה",
+      "fillInFor": "מילוי במקום {name}",
+      "fillInTitle": "מילוי במקום {name}",
+      "day": "יום חופשי",
+      "noRequest": "אין בקשה",
+      "notEntitled": "המורה אינו זכאי ליום חופשי. אפשר לסמן שענה בלי בקשה.",
+      "save": "שמירה",
+      "close": "סגירה"
     }
   }
 }

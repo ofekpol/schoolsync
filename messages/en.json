@@ -806,6 +806,251 @@
     "shell": {
       "title": "Timetable",
       "empty": "Coming soon"
+    },
+    "boards": {
+      "title": "Timetables",
+      "subtitle": "Each board is one timetable for the school year. Open a board to enter classes, subjects, teachers and lessons.",
+      "listLabel": "Boards",
+      "empty": "No boards yet.",
+      "newBoard": "New board",
+      "name": "Board name",
+      "status": {
+        "setup": "Setting up",
+        "collecting": "Collecting constraints",
+        "review": "Choosing",
+        "published": "Published"
+      }
+    },
+    "setup": {
+      "title": "Set up {name}",
+      "back": "All boards",
+      "tabsLabel": "Setup sections",
+      "tabs": {
+        "classes": "Classes",
+        "subjects": "Subjects",
+        "teachers": "Teachers",
+        "lessons": "Lessons",
+        "plata": "Plata",
+        "constraints": "Constraints"
+      },
+      "close": "Close",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete?",
+      "deleteNamed": "Delete {name}",
+      "paste": {
+        "open": "Paste a list",
+        "hint": "One name per line. Blank lines, repeats and names already here are skipped.",
+        "add": "Add",
+        "count": "{count, plural, one {# name} other {# names}}",
+        "tooLong": "A name is longer than {max} characters"
+      },
+      "classes": {
+        "hint": "How many classes each grade has. Classes are numbered from 1.",
+        "grade": "Grade {grade}",
+        "count": "Number of classes in grade {grade}",
+        "none": "No classes",
+        "inUse": "This class has lessons"
+      },
+      "subjects": {
+        "count": "{count, plural, one {# subject} other {# subjects}}",
+        "empty": "No subjects yet. Paste a list to start.",
+        "rename": "Subject name {name}"
+      },
+      "teachers": {
+        "count": "{count, plural, one {# teacher} other {# teachers}}",
+        "empty": "No teachers yet.",
+        "name": "Name",
+        "staffUser": "User",
+        "freeDay": "Free day",
+        "freeDayFor": "{name} is entitled to a free day",
+        "rename": "Teacher name {name}",
+        "linked": "Linked"
+      },
+      "fromStaff": {
+        "open": "Add from staff",
+        "title": "Add teachers from staff",
+        "hint": "Active staff not yet on the board.",
+        "close": "Close",
+        "filter": "Filter by label",
+        "all": "All staff",
+        "selectShown": "Select all shown ({count})",
+        "empty": "No staff to add.",
+        "add": "{count, plural, =0 {Add} one {Add # teacher} other {Add # teachers}}"
+      },
+      "lessons": {
+        "grade": "Grade",
+        "gradeOption": "Grade {grade}",
+        "noClasses": "This grade has no classes. Add them in the Classes tab.",
+        "noSubjects": "No subjects yet.",
+        "subject": "Subject",
+        "periods": "Periods",
+        "teacher": "Teacher",
+        "noTeacher": "No teacher",
+        "inPlata": "In a Plata",
+        "total": "Total periods",
+        "totalOf": "{total} of {slots}",
+        "cellLabel": "{subject}, {class}",
+        "save": "Save",
+        "saved": "Saved",
+        "unknownTeacher": "Pick a teacher from the list"
+      },
+      "plata": {
+        "hint": "A Plata: several classes of one grade learn the same subject at the same periods.",
+        "empty": "No Plata yet.",
+        "new": "New Plata",
+        "edit": "Edit",
+        "grade": "Grade",
+        "subject": "Subject",
+        "periods": "Weekly periods",
+        "classes": "Classes in the Plata",
+        "teachers": "Teachers",
+        "save": "Save",
+        "needTwoClasses": "Choose at least two classes.",
+        "summary": "{periods} periods · {classes}",
+        "filterTeachers": "Find a teacher"
+      },
+      "readiness": {
+        "title": "Ready to generate",
+        "ready": "Ready to generate a timetable",
+        "block_without_teacher": "{subject} in {classes} has no teacher",
+        "class_overbooked": "Class {class} has {periods} periods, more than the week's {slots}",
+        "teacher_overbooked": "{teacher} has {periods} periods, more than the week's {slots}",
+        "fix": "Fix"
+      },
+      "errors": {
+        "duplicateName": "That name already exists",
+        "inUse": "Lessons use this, so it can't be deleted",
+        "limit": "You've reached the limit",
+        "noActiveYear": "The school has no active school year",
+        "unknownId": "Something you chose no longer exists. Refresh the page",
+        "mixedGrades": "All classes in a Plata must be in the same grade",
+        "duplicateLesson": "One of the classes already has a lesson in this subject",
+        "alreadyLinked": "This staff member is already linked to another teacher on the board",
+        "demo": "Not available in the demo",
+        "save": "Saving failed, try again"
+      }
+    },
+    "constraints": {
+      "hint": "Constraints management enters, aimed at teachers or a profile label. A hard constraint is broken only when there is no choice; a soft one by its weight.",
+      "chooseType": "Constraint type",
+      "add": "Add constraint",
+      "empty": "No constraints yet.",
+      "types": {
+        "teacher_free_day": "Free day",
+        "teacher_unavailable": "Teacher unavailable",
+        "meeting": "Meeting",
+        "subject_max_per_day": "Max periods of a subject per day",
+        "class_no_gaps": "No gaps for classes",
+        "teacher_few_gaps": "Few gaps for teachers"
+      },
+      "removedTeacher": "Removed teacher",
+      "removedLabel": "Removed label",
+      "days": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "hard": "Hard",
+      "soft": "Soft",
+      "softWeight": "Soft, weight {weight}",
+      "fromTeacher": "From the teacher",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "skipped": {
+        "reaches_no_one": "Not sent to the solver: reaches 0 teachers",
+        "not_entitled": "Not sent to the solver: the teacher is not entitled to a free day"
+      },
+      "errors": {
+        "unknownId": "Something you chose no longer exists. Refresh the page",
+        "notEntitled": "The teacher is not entitled to a free day",
+        "duplicateFreeDay": "The teacher already has a free day",
+        "limit": "The board has reached its constraint limit",
+        "typeChanged": "A constraint's type can't change. Delete it and add a new one",
+        "deadlinePast": "That time has already passed",
+        "wrongStatus": "Collection can't be opened for this board in its current state",
+        "invalid": "The constraint is missing details",
+        "demo": "Not available in the demo",
+        "save": "Saving failed, try again"
+      },
+      "fields": {
+        "teacher": "Teacher",
+        "day": "Day",
+        "periods": "Periods",
+        "allDay": "All day",
+        "weeklyPeriods": "Weekly periods",
+        "consecutive": "In a row, on one day",
+        "max": "Maximum",
+        "weight": "Weight"
+      },
+      "target": {
+        "title": "Who",
+        "teachers": "Teachers",
+        "label": "Label",
+        "search": "Find a teacher",
+        "chosen": "{count, plural, =0 {No teachers chosen} one {# teacher chosen} other {# teachers chosen}}",
+        "reach": "{count, plural, =0 {Reaches 0 teachers} one {Reaches # teacher} other {Reaches # teachers}}",
+        "unlinked": "{count, plural, one {# teacher on the board has no user and won't get this} other {# teachers on the board have no user and won't get this}}"
+      },
+      "describe": {
+        "whoLabel": "teachers labelled {label}",
+        "more": "and {count} more",
+        "teacher_free_day": "{who}: free day on {day}",
+        "teacher_unavailable": "{who}: unavailable on {day}, {when}",
+        "periods": "periods {list}",
+        "allDay": "all day",
+        "meeting": "Meeting of {who}, {count, plural, one {# period} other {# periods}} a week",
+        "consecutive": "in a row",
+        "subject_max_per_day": "Each subject at most {max} periods a day per class",
+        "class_no_gaps": "No gaps in class timetables",
+        "teacher_few_gaps": "As few gaps as possible for teachers"
+      }
+    },
+    "collect": {
+      "link": {
+        "open": "Collect constraints"
+      },
+      "back": "Back to board setup",
+      "title": "Collect constraints: {name}",
+      "subtitle": "Set a deadline, see which teachers answered and fill in for those who didn't. After the deadline, teachers who didn't answer count as having no constraints.",
+      "deadlineTitle": "Deadline",
+      "deadlineDate": "Date",
+      "deadlineTime": "Time",
+      "deadlineIs": "Deadline: {when}",
+      "open": "Open collection",
+      "update": "Update deadline",
+      "status": {
+        "setup": "Collection not open yet",
+        "collecting": "Collection open",
+        "review": "Collection closed",
+        "published": "Timetable published"
+      },
+      "afterDeadline": "The deadline has passed. Teachers who didn't answer count as having no constraints.",
+      "count": "{answered} of {total} answered",
+      "filter": "Filter",
+      "filterAll": "All teachers",
+      "filterAnswered": "Answered",
+      "filterMissing": "Not answered",
+      "teacher": "Teacher",
+      "answered": "Answered",
+      "freeDay": "Free day",
+      "notAnswered": "Not answered",
+      "byManagement": "filled in by management",
+      "notEntitledShort": "Not entitled",
+      "fillIn": "Fill in",
+      "fillInFor": "Fill in for {name}",
+      "fillInTitle": "Fill in for {name}",
+      "day": "Free day",
+      "noRequest": "No request",
+      "notEntitled": "This teacher is not entitled to a free day. You can mark them answered with no request.",
+      "save": "Save",
+      "close": "Close"
     }
   }
 }

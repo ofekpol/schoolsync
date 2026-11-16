@@ -7,6 +7,7 @@ import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { getBoard, type Board } from "./boards";
 import { TimetableError, type TimetableErrorCode } from "./errors";
+import { ConstraintError, type ConstraintErrorCode } from "./constraints/errors";
 
 type SchoolUser = StaffUserRecord & { schoolId: string };
 type Guarded<T> = { ok: true; value: T } | { ok: false; response: NextResponse };
@@ -61,10 +62,23 @@ const STATUS: Record<TimetableErrorCode, number> = {
   duplicate_lesson: 400,
 };
 
-/** The response for a TimetableError, `{ error: code }`; null for anything else. */
+const CONSTRAINT_STATUS: Record<ConstraintErrorCode, number> = {
+  unknown_id: 400,
+  not_entitled: 400,
+  type_changed: 400,
+  duplicate_free_day: 409,
+  wrong_status: 409,
+  limit_reached: 422,
+  deadline_past: 422,
+};
+
+/** The response for a TimetableError or ConstraintError, `{ error: code }`; null for anything else. */
 export function timetableErrorResponse(error: unknown): NextResponse | null {
-  if (!(error instanceof TimetableError)) return null;
-  return NextResponse.json({ error: error.code }, { status: STATUS[error.code] });
+  if (error instanceof TimetableError) return NextResponse.json({ error: error.code }, { status: STATUS[error.code] });
+  if (error instanceof ConstraintError) {
+    return NextResponse.json({ error: error.code }, { status: CONSTRAINT_STATUS[error.code] });
+  }
+  return null;
 }
 
 /** Runs a write, turning a TimetableError into its response. */

@@ -76,3 +76,42 @@ export const TeacherPatchInputSchema = z
   })
   .strict();
 export { BlockInputSchema };
+
+// Plan 6: constraints and the collection round.
+const constraintType = z.enum([
+  "teacher_free_day", "teacher_unavailable", "meeting", "subject_max_per_day", "class_no_gaps", "teacher_few_gaps",
+]);
+export const ConstraintSchema = z.object({
+  id,
+  type: constraintType,
+  hard: z.boolean(),
+  weight: z.number().int(),
+  params: z.unknown(),
+  source: z.enum(["teacher", "management"]),
+  teacherId: id.nullable(),
+  updatedAt: z.string(),
+});
+export const SkippedConstraintSchema = z.object({
+  constraintId: id,
+  reason: z.enum(["reaches_no_one", "not_entitled"]),
+});
+export const ConstraintsResponseSchema = z.object({
+  constraints: z.array(ConstraintSchema),
+  skipped: z.array(SkippedConstraintSchema),
+});
+export const ConstraintResponseSchema = z.object({ constraint: ConstraintSchema });
+export const CollectStateSchema = z.object({
+  status: z.enum(["setup", "collecting", "review", "published"]),
+  teacherDeadline: z.string().nullable(),
+});
+export const TeacherAnswerSchema = z.object({
+  teacherId: id,
+  answeredAt: z.string().nullable(),
+  byManagement: z.boolean(),
+  freeDay: z.number().int().nullable(),
+});
+export const CollectResponseSchema = z.object({ state: CollectStateSchema, responses: z.array(TeacherAnswerSchema) });
+export const CollectStateResponseSchema = z.object({ state: CollectStateSchema });
+export const FillInResponseSchema = z.object({ response: TeacherAnswerSchema });
+export const DeadlineInputSchema = z.object({ deadline: z.string().datetime({ offset: true }) });
+export const FillInInputSchema = z.object({ freeDay: z.number().int().min(0).max(6).nullable() }).strict();

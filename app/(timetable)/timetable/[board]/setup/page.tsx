@@ -20,6 +20,9 @@ import { TeachersTab } from "@/components/timetable/setup/TeachersTab";
 import { LessonsTab } from "@/components/timetable/setup/LessonsTab";
 import { PlataTab } from "@/components/timetable/setup/PlataTab";
 import { ReadinessPanel } from "@/components/timetable/setup/ReadinessPanel";
+import { ConstraintsTab } from "@/components/timetable/constraints/ConstraintsTab";
+import { listConstraints } from "@/lib/timetable/constraints/crud";
+import { exportConstraints } from "@/lib/timetable/constraints/export";
 import { parseSetupTab, SetupTabs, type SetupTab } from "@/components/timetable/setup/SetupTabs";
 
 type Params = { params: Promise<{ board: string }>; searchParams: Promise<{ tab?: string }> };
@@ -75,6 +78,8 @@ async function renderPanel(schoolId: string, board: Board, tab: SetupTab, data: 
       return <LessonsTab boardId={board.id} slots={slotCount(board.week)} {...data} />;
     case "plata":
       return <PlataTab boardId={board.id} {...data} />;
+    case "constraints":
+      return loadConstraints(schoolId, board, data.teachers);
     default:
       return <ClassesTab boardId={board.id} classes={data.classes} />;
   }
@@ -90,4 +95,17 @@ async function loadTeachers(schoolId: string, boardId: string, teachers: TtTeach
     .filter((member) => member.status === "active")
     .map(({ id, fullName, email }) => ({ id, fullName, email }));
   return <TeachersTab boardId={boardId} teachers={teachers} staff={active} categories={categories} labels={labels} />;
+}
+
+async function loadConstraints(schoolId: string, board: Board, teachers: TtTeacher[]): Promise<ReactNode> {
+  const [constraints, categories, labels, exported] = await Promise.all([
+    listConstraints(schoolId, board.id),
+    listCategories(schoolId),
+    listStaffLabels(schoolId),
+    exportConstraints(schoolId, board.id, teachers),
+  ]);
+  return (
+    <ConstraintsTab boardId={board.id} constraints={constraints} skipped={exported.skipped} teachers={teachers}
+      categories={categories} labels={labels} week={board.week} />
+  );
 }

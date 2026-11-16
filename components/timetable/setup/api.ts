@@ -27,7 +27,12 @@ const ERRORS: Record<string, SetupErrorKey> = {
   demo_disabled: "demo",
 };
 
-async function send<T>(url: string, method: "POST" | "PATCH" | "PUT" | "DELETE", body?: unknown): Promise<ApiResult<T>> {
+/** A JSON request; on failure, the server's `error` code (or "" when there is none). */
+export async function sendJson<T>(
+  url: string,
+  method: "POST" | "PATCH" | "PUT" | "DELETE",
+  body?: unknown,
+): Promise<{ ok: true; data: T } | { ok: false; code: string }> {
   const res = await fetch(url, {
     method,
     headers: body === undefined ? undefined : { "Content-Type": "application/json" },
@@ -35,7 +40,12 @@ async function send<T>(url: string, method: "POST" | "PATCH" | "PUT" | "DELETE",
   }).catch(() => null);
   if (res?.ok) return { ok: true, data: (await res.json().catch(() => undefined)) as T };
   const payload = (await res?.json().catch(() => null)) as { error?: string } | null;
-  return { ok: false, error: ERRORS[payload?.error ?? ""] ?? "save" };
+  return { ok: false, code: payload?.error ?? "" };
+}
+
+async function send<T>(url: string, method: "POST" | "PATCH" | "PUT" | "DELETE", body?: unknown): Promise<ApiResult<T>> {
+  const res = await sendJson<T>(url, method, body);
+  return res.ok ? res : { ok: false, error: ERRORS[res.code] ?? "save" };
 }
 
 const boardUrl = (board: string) => `/api/v1/timetable/boards/${board}`;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
 
-export const SETUP_TABS = ["classes", "subjects", "teachers", "lessons", "plata"] as const;
+export const SETUP_TABS = ["classes", "subjects", "teachers", "lessons", "plata", "constraints"] as const;
 export type SetupTab = (typeof SETUP_TABS)[number];
 
 export function parseSetupTab(value: string | undefined): SetupTab {

@@ -10,6 +10,7 @@ import { getAgendaForSchool } from "@/lib/views/agenda";
 import type { AgendaItem } from "@/lib/views/agenda-model";
 import { jerusalemDateString, jerusalemTimeString } from "@/lib/datetime";
 import { formatGradeLabel } from "@/lib/grades";
+import { GradeSchema } from "@/lib/validations/grade";
 
 const MAX_RANGE_DAYS = 400;
 const MAX_RESULTS = 50;
@@ -18,7 +19,7 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe("YYYY-MM-DD");
 const RangeSchema = z.object({ fromDate: isoDate, toDate: isoDate });
 
 export const SearchInputSchema = RangeSchema.extend({
-  grades: z.array(z.number().int().min(7).max(12)).optional().describe("7=ז … 12=יב"),
+  grades: z.array(GradeSchema).optional().describe("7=ז … 12=יב"),
   typeKeys: z.array(z.string()).optional().describe("event type keys from listEventTypes"),
   query: z.string().max(100).optional().describe("text to match in the event title"),
 });

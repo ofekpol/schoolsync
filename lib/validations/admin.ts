@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GRADE_COLOR_OPTIONS } from "@/lib/grade-colors";
+import { GradeSchema } from "@/lib/validations/grade";
 
 /**
  * Zod validation schemas for /api/v1/admin/* routes.
@@ -10,7 +11,7 @@ export const StaffUserCreateSchema = z.object({
   email: z.string().email(),
   fullName: z.string().min(1).max(255),
   role: z.enum(["editor", "admin", "viewer"]),
-  gradeScopes: z.array(z.number().int().min(7).max(12)).optional(),
+  gradeScopes: z.array(GradeSchema).optional(),
   eventTypeScopes: z.array(z.string().min(1).max(64)).optional(),
 });
 
@@ -18,13 +19,13 @@ export const StaffUserUpdateSchema = z.object({
   fullName: z.string().min(1).max(255).optional(),
   role: z.enum(["editor", "admin", "viewer"]).optional(),
   deactivated: z.boolean().optional(),
-  gradeScopes: z.array(z.number().int().min(7).max(12)).optional(),
+  gradeScopes: z.array(GradeSchema).optional(),
   eventTypeScopes: z.array(z.string().min(1).max(64)).optional(),
 });
 
 export const StaffInviteCreateSchema = z.object({
   role: z.enum(["editor", "admin", "viewer"]),
-  gradeScopes: z.array(z.number().int().min(7).max(12)).optional(),
+  gradeScopes: z.array(GradeSchema).optional(),
   eventTypeScopes: z.array(z.string().min(1).max(64)).optional(),
   multiUse: z.boolean().optional().default(false),
 });
@@ -35,7 +36,7 @@ export const ApprovePendingSchema = z.discriminatedUnion("action", [
     pendingId: z.string().uuid(),
     role: z.enum(["editor", "admin", "viewer"]),
     fullName: z.string().min(1).max(255),
-    gradeScopes: z.array(z.number().int().min(7).max(12)).optional(),
+    gradeScopes: z.array(GradeSchema).optional(),
     eventTypeScopes: z.array(z.string().min(1).max(64)).optional(),
   }),
   z.object({
@@ -65,7 +66,7 @@ export const EventTypeOrderSchema = z.object({
 });
 
 const GradeColorEntrySchema = z.object({
-  grade: z.number().int().min(7).max(12),
+  grade: GradeSchema,
   colorHex: z.enum(GRADE_COLOR_OPTIONS),
 });
 

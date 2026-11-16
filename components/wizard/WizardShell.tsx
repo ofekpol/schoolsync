@@ -6,14 +6,7 @@ import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { buildEventTimeRange } from "@/lib/events/date-range";
 import { jerusalemWallClockToIso } from "@/lib/datetime";
-
-export interface EventType {
-  id: string;
-  key: string;
-  labelHe: string;
-  colorHex: string;
-  glyph: string;
-}
+import type { EventType } from "@/lib/events/event-type";
 
 export interface WizardShellProps {
   eventTypes: EventType[];

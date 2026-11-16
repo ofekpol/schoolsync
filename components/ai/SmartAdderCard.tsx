@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Pencil, TriangleAlert } from "lucide-react";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import { currentWarnings, isCandidateComplete } from "@/lib/ai/adder/complete";
 import type { AdderWarning, CandidateEvent } from "@/lib/ai/adder/types";
 import { cn } from "@/lib/utils";

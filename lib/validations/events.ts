@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GradeSchema } from "@/lib/validations/grade";
 
 /**
  * All-optional schema for draft create/PATCH/publish requests — partial saves
@@ -12,7 +13,7 @@ export const EventDraftSchema = z.object({
   endAt: z.string().datetime({ offset: true }).optional(),
   allDay: z.boolean().optional(),
   eventTypeId: z.string().uuid().optional(),
-  grades: z.array(z.number().int().min(7).max(12)).optional(),
+  grades: z.array(GradeSchema).optional(),
 });
 
 export type EventDraftInput = z.infer<typeof EventDraftSchema>;
@@ -27,7 +28,7 @@ export const EventQuickPublishSchema = z.object({
   startAt: z.string().datetime({ offset: true }),
   endAt: z.string().datetime({ offset: true }),
   eventTypeId: z.string().uuid(),
-  grades: z.array(z.number().int().min(7).max(12)).min(1),
+  grades: z.array(GradeSchema).min(1),
   description: z.string().optional(),
   location: z.string().max(255).optional(),
   allDay: z.boolean().optional(),
@@ -40,6 +41,6 @@ export type EventQuickPublishInput = z.infer<typeof EventQuickPublishSchema>;
  * Empty arrays mean "no filter on this axis" (i.e. include all).
  */
 export const ICalSubscriptionSchema = z.object({
-  grades: z.array(z.number().int().min(7).max(12)).max(6).optional(),
+  grades: z.array(GradeSchema).max(6).optional(),
   eventTypes: z.array(z.string().uuid()).max(50).optional(),
 });

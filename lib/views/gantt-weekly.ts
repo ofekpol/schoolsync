@@ -13,6 +13,7 @@ import {
   jerusalemDateKey,
   type CalendarDateStatus,
 } from "@/lib/views/date-status";
+import type { EventStatus } from "@/lib/events/queries";
 
 export const WEEK_DAY_START_HOUR = 7;
 export const WEEK_DAY_END_HOUR = 21;
@@ -55,7 +56,7 @@ export interface WeeklyEventBar {
   eventTypeLabelHe: string;
   /** All grades of the underlying event (a bar is repeated per grade row). */
   grades: number[];
-  status: "approved" | "pending" | "draft" | "rejected" | "canceled";
+  status: EventStatus;
   isCanceled?: boolean;
   isUpdated?: boolean;
   /** 0-based day index within the week (0=Sun, 6=Sat) */

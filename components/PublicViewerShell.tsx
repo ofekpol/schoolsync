@@ -7,7 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { ExportToGoogleCalendarButton } from "@/components/ExportToGoogleCalendarButton";
 import { FilterBar } from "@/components/FilterBar";
 import { LoadingPanel } from "@/components/LoadingPanel";
-import type { CalendarMonth, buildCalendarModel } from "@/lib/views/calendar";
+import type { CalendarMonth } from "@/lib/views/calendar";
 import { parseWeekParam } from "@/lib/views/gantt-weekly";
 import {
   filterPublicEvents,
@@ -21,8 +21,10 @@ import {
 import type { PublicViewerEventType, PublicViewerYear } from "@/lib/views/public-viewer-data";
 import { usePublicViewerEvents } from "@/lib/views/use-public-viewer-events";
 import { DEFAULT_GRADE_COLORS, type GradeColorMap } from "@/lib/grade-colors";
+import { SCHOOL_GRADES } from "@/lib/grades";
+import { monthIndexForKey, monthKey } from "@/lib/views/month-key";
 
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 const PublicGanttView = dynamic(() =>
   import("@/components/public/PublicGanttView").then((module) => module.PublicGanttView),
@@ -303,20 +305,8 @@ function viewFromPath(pathname: string, accessToken: string): PublicViewerView {
   return "gantt";
 }
 
-function monthKey(year: number, monthIndex: number): string {
-  return `${year}-${String(monthIndex).padStart(2, "0")}`;
-}
-
 function monthKeyForDate(date: Date): string {
   return monthKey(date.getUTCFullYear(), date.getUTCMonth() + 1);
-}
-
-function monthIndexForKey(
-  months: ReturnType<typeof buildCalendarModel>["months"],
-  key: string,
-): number {
-  const index = months.findIndex((month) => monthKey(month.year, month.monthIndex) === key);
-  return index >= 0 ? index : 0;
 }
 
 function zoomOptionsForView(view: PublicViewerView) {

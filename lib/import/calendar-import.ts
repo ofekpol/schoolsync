@@ -1,9 +1,10 @@
 import { buildEventTimeRange } from "@/lib/events/date-range";
 import { EventQuickPublishSchema, type EventQuickPublishInput } from "@/lib/validations/events";
 import { csvCell, parseCsv } from "./csv";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 export const IMPORT_MAX_ROWS = 500;
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 /** Template header order; the first row of an upload must match it (any column order is not supported). */
 export const IMPORT_HEADERS = [

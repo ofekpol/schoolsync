@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { formatGradeLabel } from "@/lib/grades";
 import { cn } from "@/lib/utils";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
-export const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+export const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 const EMPTY_GRADES: number[] = [];
 const EMPTY_EVENT_TYPES: string[] = [];
 const OPTION_CLASS =

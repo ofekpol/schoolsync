@@ -3,6 +3,7 @@ import { z } from "zod";
 import { resolveGanttSchoolFromParam } from "@/lib/db/schools";
 import { getAgendaForSchool } from "@/lib/views/agenda";
 import { serializeCalendar, type ICalEvent } from "@/lib/ical/serializer";
+import { GradeSchema } from "@/lib/validations/grade";
 
 /**
  * Public, unauthenticated bulk `.ics` export for a school's events, keyed by
@@ -28,7 +29,7 @@ const csvNumbers = z
           .map(Number)
       : [],
   )
-  .pipe(z.array(z.number().int().min(7).max(12)));
+  .pipe(z.array(GradeSchema));
 
 /** "trip,exam" → ["trip", "exam"]; empty/absent → []. */
 const csvStrings = z

@@ -1,5 +1,5 @@
 import { readableTextColor } from "@/lib/colors";
-import { formatGradeLabel } from "@/lib/grades";
+import { formatGradeLabel, SCHOOL_GRADES } from "@/lib/grades";
 
 /**
  * Grade color system for calendar views.
@@ -11,7 +11,7 @@ import { formatGradeLabel } from "@/lib/grades";
  * fill never loses information.
  */
 
-export const SCHOOL_GRADES = [7, 8, 9, 10, 11, 12] as const;
+export { SCHOOL_GRADES };
 
 /**
  * A grade color is a light pastel fill plus two darker tones of the same hue:

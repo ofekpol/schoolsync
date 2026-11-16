@@ -1,4 +1,5 @@
-const VALID_GRADES = new Set([7, 8, 9, 10, 11, 12]);
+const VALID_GRADES = new Set<number>(SCHOOL_GRADES);
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 export interface DashboardGradeSelection {
   selectedGrades: number[];

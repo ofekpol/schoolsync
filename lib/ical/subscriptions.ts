@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db, withSchool } from "@/lib/db/client";
 import { editorScopes, eventTypes, icalSubscriptions } from "@/lib/db/schema";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 export interface SubscriptionRow {
   id: string;
@@ -86,7 +87,7 @@ export async function buildPersonalSubscriptionFilters(
     const grades =
       gradeRows.length > 0
         ? gradeRows.map((row) => Number(row.scopeValue)).sort((a, b) => a - b)
-        : [7, 8, 9, 10, 11, 12];
+        : [...SCHOOL_GRADES];
 
     const typeScopeRows = await tx
       .select({ scopeValue: editorScopes.scopeValue })

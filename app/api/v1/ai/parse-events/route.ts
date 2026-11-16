@@ -14,11 +14,12 @@ import { getEditorAllowedGrades, isEventTypeAllowed, listEventTypes } from "@/li
 import { jerusalemDateString } from "@/lib/datetime";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 const ParseEventsRequestSchema = z.object({ text: z.string().trim().min(1).max(3000) });
 const ParseEventsResponseSchema = z.object({ candidates: z.array(CandidateEventSchema) });
 
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 function error(code: string, status: number, extra: Record<string, unknown> = {}) {
   return NextResponse.json({ error: code, ...extra }, { status });

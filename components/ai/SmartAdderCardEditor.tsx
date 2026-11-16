@@ -2,11 +2,12 @@
 
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import type { CandidateEvent } from "@/lib/ai/adder/types";
 import { formatDayMonth } from "./adder-format";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
-const GRADES = [7, 8, 9, 10, 11, 12];
+const GRADES: number[] = [...SCHOOL_GRADES];
 
 const INPUT =
   "h-10 w-full rounded-xl border border-[var(--sg-hairline)] bg-[var(--sg-surface-2)] px-3 text-sm outline-none focus:border-sky-400 focus:bg-white";

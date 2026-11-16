@@ -6,7 +6,8 @@ import type { AgendaItem } from "@/lib/views/agenda-model";
 import { formatGradeLabel } from "@/lib/grades";
 import { buildGoogleCalendarUrl } from "@/lib/google-calendar-url";
 import { jerusalemWallClockToIso } from "@/lib/datetime";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
+import { TIME_OF_DAY_RE } from "@/lib/datetime";
 
 interface Props {
   event: (AgendaItem & { canEdit?: boolean }) | null;
@@ -52,7 +53,6 @@ const timeFmt = new Intl.DateTimeFormat("he-IL", {
   minute: "2-digit",
 });
 
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function EventDrawer({
   event,
@@ -119,7 +119,7 @@ export function EventDrawer({
     if (!draft.date) return t1("errorRequired");
     if (!draft.eventTypeId) return t3("errorRequired");
     if (draft.grades.length === 0) return t2("errorRequired");
-    if (!draft.allDay && (!TIME_RE.test(draft.startTime) || !TIME_RE.test(draft.endTime))) {
+    if (!draft.allDay && (!TIME_OF_DAY_RE.test(draft.startTime) || !TIME_OF_DAY_RE.test(draft.endTime))) {
       return t5("errorInvalid");
     }
     if (!draft.allDay && draft.startTime >= draft.endTime) return t5("errorInverted");

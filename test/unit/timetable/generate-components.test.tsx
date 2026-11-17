@@ -119,7 +119,7 @@ describe("TimetableGrid", () => {
 
   it("shows a class's lessons in their day and period cells, with clash and removed names", async () => {
     const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
-    render(<TimetableGrid boardId="b" runId="r" grid={grid} view={{ kind: "class", id: "c1" }} />);
+    render(<TimetableGrid boardId="b" grid={grid} view={{ kind: "class", id: "c1" }} />);
     const cell = (day: number, period: number) => screen.getByTestId(`cell-${day}-${period}`);
     expect(cell(0, 1)).toHaveTextContent("Math");
     expect(cell(0, 1)).toHaveTextContent("Dana");
@@ -132,7 +132,7 @@ describe("TimetableGrid", () => {
 
   it("shows a teacher's week including a meeting, and replaces the URL on switch", async () => {
     const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
-    render(<TimetableGrid boardId="b" runId="r" grid={grid} view={{ kind: "teacher", id: "t1" }} />);
+    render(<TimetableGrid boardId="b" grid={grid} view={{ kind: "teacher", id: "t1" }} />);
     expect(screen.getByTestId("cell-1-2")).toHaveTextContent("meeting");
     expect(screen.getByTestId("cell-0-1")).toHaveTextContent("label_71");
     fireEvent.click(screen.getByRole("button", { name: "viewClass" }));

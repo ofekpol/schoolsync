@@ -34,7 +34,7 @@ export default async function SolutionGridPage({ params, searchParams }: Props) 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 p-4 text-neutral-950 md:p-8">
       <h1 className="text-2xl font-bold tracking-tight">{t("gridTitle", { profile: t(`profile.${grid.solution.profile}`) })}</h1>
-      <TimetableGrid boardId={board.id} runId={ids.data.run} grid={grid} view={{ kind, id }} />
+      <TimetableGrid boardId={board.id} grid={grid} view={{ kind, id }} />
     </main>
   );
 }

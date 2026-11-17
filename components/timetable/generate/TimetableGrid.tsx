@@ -9,13 +9,12 @@ import { className } from "@/components/timetable/setup/className";
 
 interface Props {
   boardId: string;
-  runId: string;
   grid: SolutionGrid;
   view: GridView;
 }
 
 /** A read-only week table of one class or teacher in one generated option. */
-export function TimetableGrid({ boardId, runId, grid, view }: Props) {
+export function TimetableGrid({ boardId, grid, view }: Props) {
   const t = useTranslations("timetable.generate");
   const tc = useTranslations("timetable.constraints");
   const tGrades = useTranslations("grades");

@@ -1054,6 +1054,20 @@
       "notEntitled": "This teacher is not entitled to a free day. You can mark them answered with no request.",
       "save": "Save",
       "close": "Close"
+    },
+    "me": {
+      "title": "My constraints",
+      "subtitle": "Boards management is collecting constraints for, where you are a teacher. Choose a free day (if you are entitled) before the deadline.",
+      "empty": "No boards are waiting for your answer right now.",
+      "deadline": "Deadline: {when}",
+      "closed": "The deadline has passed. Your answer is kept as it is.",
+      "freeDay": "Free day",
+      "noRequest": "No request",
+      "save": "Save",
+      "notEntitled": "Management has not entitled you to a free day on this board. You can save \"No request\".",
+      "answered": "You answered on {when}",
+      "filledByManagement": "Management answered for you on {when}",
+      "saveFailed": "Saving failed, try again"
     }
   }
 }

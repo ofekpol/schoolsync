@@ -143,19 +143,18 @@ Stale rule (one helper used by `getRun`, `listRuns` and `startRun`): a `queued`/
 **Files:**
 - Create: `app/api/v1/timetable/boards/[board]/runs/route.ts` (GET list, POST start)
 - Create: `app/api/v1/timetable/boards/[board]/runs/[run]/route.ts` (GET one run)
-- Create: `app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/route.ts` (GET grid data, Task 5's shape)
 - Create: `lib/validations/timetable-runs.ts`
 - Test: `test/unit/timetable/runs-routes.test.ts` (pattern of `routes.test.ts`: mocked session, school, domain)
 
 **Interfaces:**
-- Consumes: Task 3 functions; `requireBoard`, `withTimetableErrors`, `notFoundResponse` from `api-guard.ts`; Task 5's `getSolutionGrid`.
-- Produces (in `timetable-runs.ts`): `SolutionSummarySchema`, `RunSchema`, `RunsResponseSchema = { runs: Run[] }`, `RunResponseSchema = { run: Run }`, `StartRunResponseSchema = { runId }`, `SolutionGridResponseSchema` (Task 5's `SolutionGrid`). `violations` reuse `SolverViolationSchema`.
+- Consumes: Task 3 functions; `requireBoard`, `withTimetableErrors`, `notFoundResponse` from `api-guard.ts`.
+- Produces (in `timetable-runs.ts`): `SolutionSummarySchema`, `RunSchema`, `RunsResponseSchema = { runs: Run[] }`, `RunResponseSchema = { run: Run }`, `StartRunResponseSchema = { runId }`. `violations` reuse `SolverViolationSchema`.
 
 POST: `requireBoard(true, params)` → `startRun` → `after(() => executeRun(schoolId, runId))` → 202 `{ runId }`. The runs route file exports `export const maxDuration = 300`. No request body.
 
-- [ ] **Step 1: Write failing route tests:** POST → 202 and `executeRun` scheduled (mock `next/server`'s `after` to call its callback); POST for a viewer → 403; POST for a demo user → 403 `demo_disabled`; POST with `input_problems` → 422 with `problems`; POST with `run_in_progress` → 409; GET run of an unknown id or non-uuid → 404; GET solution not belonging to the run → 404; responses parse with their schemas.
+- [ ] **Step 1: Write failing route tests:** POST → 202 and `executeRun` scheduled (mock `next/server`'s `after` to call its callback); POST for a viewer → 403; POST for a demo user → 403 `demo_disabled`; POST with `input_problems` → 422 with `problems`; POST with `run_in_progress` → 409; GET run of an unknown id or non-uuid → 404; responses parse with their schemas.
 - [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement the three routes and the schemas.**
+- [ ] **Step 3: Implement the two routes and the schemas.**
 - [ ] **Step 4: Run, expect PASS**; `pnpm lint && pnpm tsc`.
 - [ ] **Step 5: Commit** — `feat: timetable run routes`.
 
@@ -164,6 +163,7 @@ POST: `requireBoard(true, params)` → `startRun` → `after(() => executeRun(sc
 **Files:**
 - Create: `lib/timetable/grid.ts` (pure, no DB)
 - Create: `lib/timetable/solutions.ts` (`getSolutionGrid`, DB read)
+- Create: `app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/route.ts` (GET, `requireBoard(false, ...)`, 404 when null; response `SolutionGridResponseSchema` added to `lib/validations/timetable-runs.ts`)
 - Test: `test/unit/timetable/grid.test.ts`, and one case in `test/integration/timetable-runs.test.ts`
 
 **Interfaces:**
@@ -184,7 +184,7 @@ POST: `requireBoard(true, params)` → `startRun` → `after(() => executeRun(sc
   `getSolutionGrid` joins placements with the run's stored `input.blocks` (by `blockId`) and reads current names with `listClasses`, `listTeachers`, `listSubjects`. Names missing from the current tables are simply absent; the UI shows the "removed" label (Review Focus 1).
 
 - [ ] **Step 1: Write failing unit tests for `cellsFor`:** a class view returns only lessons whose `classIds` include it; a teacher view likewise by `teacherIds`; a Plata block appears under every one of its classes; a meeting (`classIds: []`) shows in its teachers' views and in no class view; two lessons in one cell (a teacher clash the solver reported) both appear.
-- [ ] **Step 2: Integration case** `gridSurvivesDeletedTeacher` — run, solve with a fake, delete a teacher's block and the teacher, `getSolutionGrid` still returns all lessons and `names.teachers` lacks that id.
+- [ ] **Step 2: Integration case** `gridSurvivesDeletedTeacher`, and a route test in `test/unit/timetable/runs-routes.test.ts`: a solution id not belonging to the run → 404, a found grid parses with `SolutionGridResponseSchema`. Original case: — run, solve with a fake, delete a teacher's block and the teacher, `getSolutionGrid` still returns all lessons and `names.teachers` lacks that id.
 - [ ] **Step 3: Run, expect FAIL.**
 - [ ] **Step 4: Implement both files.**
 - [ ] **Step 5: Run, expect PASS. Commit** — `feat: timetable solution grid projection`.

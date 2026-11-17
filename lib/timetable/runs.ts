@@ -31,11 +31,13 @@ export interface Run {
 }
 export type SolveFn = (input: SolverInput) => Promise<SolverOutput>;
 
-type RunRow = typeof ttRuns.$inferSelect;
+type FullRunRow = typeof ttRuns.$inferSelect;
+// The big `input` jsonb is left out: only executeRun reads it.
+type RunRow = Pick<FullRunRow, "id" | "status" | "error" | "createdAt" | "finishedAt">;
 type SolutionRow = typeof ttSolutions.$inferSelect;
 
 /** A queued/running row older than RUN_STALE_MINUTES reads as failed (the worker died or timed out). */
-function effectiveState(row: RunRow, now: Date): { status: RunStatus; error: string | null } {
+function effectiveState(row: Pick<RunRow, "status" | "error" | "createdAt">, now: Date): { status: RunStatus; error: string | null } {
   const active = row.status === "queued" || row.status === "running";
   if (active && now.getTime() - row.createdAt.getTime() > RUN_STALE_MINUTES * MINUTE_MS) {
     return { status: "failed", error: "timed_out" };
@@ -76,8 +78,12 @@ export async function startRun(schoolId: string, boardId: string, staffId: strin
   return withSchool(schoolId, async (tx) => {
     // Serialises concurrent starts on this board.
     await tx.select({ id: ttBoards.id }).from(ttBoards).where(eq(ttBoards.id, boardId)).for("update");
-    const runs = await tx.select().from(ttRuns).where(eq(ttRuns.boardId, boardId)).orderBy(desc(ttRuns.createdAt));
-    if (runs.some((r) => ["queued", "running"].includes(effectiveState(r, now).status))) {
+    const runs = await tx
+      .select({ id: ttRuns.id, status: ttRuns.status, createdAt: ttRuns.createdAt })
+      .from(ttRuns)
+      .where(eq(ttRuns.boardId, boardId))
+      .orderBy(desc(ttRuns.createdAt));
+    if (runs.some((r) => ["queued", "running"].includes(effectiveState({ ...r, error: null }, now).status))) {
       throw new TimetableError("run_in_progress");
     }
     const excess = runs.slice(MAX_RUNS_PER_BOARD - 1).map((r) => r.id);
@@ -96,7 +102,7 @@ function errorCode(reason: unknown): string {
 
 async function saveSolution(
   schoolId: string,
-  run: RunRow,
+  run: FullRunRow,
   profile: WeightProfile,
   result: PromiseSettledResult<SolverOutput>,
 ): Promise<boolean> {
@@ -152,7 +158,10 @@ export async function executeRun(schoolId: string, runId: string, solve: SolveFn
 async function loadRuns(schoolId: string, boardId: string, runId: string | null, now: Date): Promise<Run[]> {
   return withSchool(schoolId, async (tx) => {
     const where = runId ? and(eq(ttRuns.boardId, boardId), eq(ttRuns.id, runId)) : eq(ttRuns.boardId, boardId);
-    const rows = await tx.select().from(ttRuns).where(where).orderBy(desc(ttRuns.createdAt));
+    const rows = await tx
+      .select({ id: ttRuns.id, status: ttRuns.status, error: ttRuns.error, createdAt: ttRuns.createdAt, finishedAt: ttRuns.finishedAt })
+      .from(ttRuns)
+      .where(where).orderBy(desc(ttRuns.createdAt));
     if (rows.length === 0) return [];
     const solutions = await tx.select().from(ttSolutions).where(inArray(ttSolutions.runId, rows.map((r) => r.id)));
     return rows.map((row) => toRun(row, solutions, now));

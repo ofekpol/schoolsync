@@ -1034,9 +1034,9 @@
       "score": "ציון: {score}",
       "noViolations": "בלי הפרות",
       "violation": {
-        "teacher_clash": "{count} התנגשויות של מורים",
-        "class_clash": "{count} התנגשויות של כיתות",
-        "unplaced": "{count} שיעורים לא שובצו",
+        "teacher_clash": "{count, plural, one {התנגשות אחת של מורים} other {# התנגשויות של מורים}}",
+        "class_clash": "{count, plural, one {התנגשות אחת של כיתות} other {# התנגשויות של כיתות}}",
+        "unplaced": "{count, plural, one {שיעור אחד לא שובץ} other {# שיעורים לא שובצו}}",
         "constraint": "{text} ({count})",
         "removedConstraint": "אילוץ שהוסר"
       },
@@ -1052,7 +1052,8 @@
         "run_in_progress": "חישוב כבר רץ ללוח הזה",
         "input_problems": "יש בעיות בנתוני הלוח",
         "demo": "לא זמין בגרסת הדגמה",
-        "start": "לא הצלחנו להתחיל את החישוב"
+        "start": "לא הצלחנו להתחיל את החישוב",
+        "all_profiles_failed": "כל שלוש האפשרויות נכשלו"
       },
       "status": {
         "queued": "ממתין",

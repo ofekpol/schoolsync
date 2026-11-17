@@ -11,6 +11,8 @@ import { OptionCard, type CardNames } from "./OptionCard";
 
 export const POLL_MS = 3000;
 const TICK_MS = 1000;
+// Client copy of RUN_STALE_MINUTES (server-only module): past this a run reads as timed out.
+const STALE_MS = 6 * 60_000;
 
 interface Props extends CardNames {
   boardId: string;
@@ -40,7 +42,11 @@ export function GeneratePanel({ boardId, problemCount, runs: initialRuns, ...nam
     let active = true;
     const poll = setInterval(async () => {
       const run = await fetchRun(boardId, pollId);
-      if (active && run) setRuns((prev) => upsert(prev, run));
+      if (!active) return;
+      if (run) setRuns((prev) => upsert(prev, run));
+      else if (Date.now() - pollStart > STALE_MS) {
+        setRuns((prev) => prev.map((r) => (r.id === pollId ? { ...r, status: "failed", error: "timed_out" } : r)));
+      }
     }, POLL_MS);
     const tick = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => {
@@ -48,7 +54,7 @@ export function GeneratePanel({ boardId, problemCount, runs: initialRuns, ...nam
       clearInterval(poll);
       clearInterval(tick);
     };
-  }, [boardId, pollId]);
+  }, [boardId, pollId, pollStart]);
 
   async function generate() {
     setStarting(true);
@@ -89,7 +95,7 @@ export function GeneratePanel({ boardId, problemCount, runs: initialRuns, ...nam
           {t("failed")} {t(`error.${errorKey(selected.error)}`)}
         </p>
       )}
-      {selected?.status === "done" && (
+      {selected && selected.solutions.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3">
           {PROFILE_ORDER.flatMap((profile) => selected.solutions.filter((s) => s.profile === profile)).map((solution) => (
             <OptionCard key={solution.id} boardId={boardId} runId={selected.id} solution={solution} {...names} />

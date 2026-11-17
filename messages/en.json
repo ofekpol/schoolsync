@@ -1034,9 +1034,9 @@
       "score": "Score: {score}",
       "noViolations": "No violations",
       "violation": {
-        "teacher_clash": "{count} teacher clashes",
-        "class_clash": "{count} class clashes",
-        "unplaced": "{count} lessons not placed",
+        "teacher_clash": "{count, plural, one {# teacher clash} other {# teacher clashes}}",
+        "class_clash": "{count, plural, one {# class clash} other {# class clashes}}",
+        "unplaced": "{count, plural, one {# lesson not placed} other {# lessons not placed}}",
         "constraint": "{text} ({count})",
         "removedConstraint": "Removed constraint"
       },
@@ -1052,7 +1052,8 @@
         "run_in_progress": "A run is already in progress for this board",
         "input_problems": "The board data has problems",
         "demo": "Not available in the demo",
-        "start": "Could not start the run"
+        "start": "Could not start the run",
+        "all_profiles_failed": "All three options failed"
       },
       "status": {
         "queued": "Queued",

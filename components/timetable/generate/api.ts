@@ -14,6 +14,7 @@ export type GenerateErrorKey =
   | "solver_bad_output"
   | "timed_out"
   | "solver_failed"
+  | "all_profiles_failed"
   | "internal_error"
   | "run_in_progress"
   | "input_problems"
@@ -22,7 +23,7 @@ export type GenerateErrorKey =
 
 const KNOWN = new Set<string>([
   "solver_not_configured", "solver_unreachable", "solver_http_error", "solver_bad_output",
-  "timed_out", "solver_failed", "internal_error", "run_in_progress", "input_problems",
+  "timed_out", "solver_failed", "all_profiles_failed", "internal_error", "run_in_progress", "input_problems",
 ]);
 
 /** A stored error code (run or profile) as a message key; unknown codes read as an internal error. */

@@ -83,6 +83,26 @@ describe("GeneratePanel", () => {
     expect(screen.getByText("error.timed_out")).toBeInTheDocument();
   });
 
+  it("shows the cards and the specific error when every profile failed", () => {
+    const run = { ...doneRun(profiles.map(() => ({ status: "failed" as const, error: "solver_http_error" }))), status: "failed" as const, error: "all_profiles_failed" };
+    render(<GeneratePanel {...baseProps} runs={[run]} />);
+    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByText("error.solver_http_error")).toHaveLength(3);
+    expect(screen.getByRole("alert")).toHaveTextContent("error.all_profiles_failed");
+  });
+
+  it("stops polling and shows timed_out when the run is stale and fetches keep failing", async () => {
+    vi.setSystemTime(new Date("2026-11-18T08:00:00.000Z"));
+    fetchMock.mockResolvedValue(respond(500, {}));
+    const queued = { ...doneRun(), status: "running" as const, solutions: [] };
+    render(<GeneratePanel {...baseProps} runs={[queued]} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(7 * 60_000); });
+    expect(screen.getByRole("alert")).toHaveTextContent("error.timed_out");
+    const calls = fetchMock.mock.calls.length;
+    await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
+    expect(fetchMock.mock.calls.length).toBe(calls);
+  });
+
   it("shows run_in_progress when the server answers 409", async () => {
     fetchMock.mockResolvedValueOnce(respond(409, { error: "run_in_progress" }));
     render(<GeneratePanel {...baseProps} />);

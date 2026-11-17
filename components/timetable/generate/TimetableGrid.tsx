@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -32,7 +33,7 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
   const options = view.kind === "class" ? classIds : teacherIds;
   const label = (id: string) => (view.kind === "class" ? classLabel(id) : names.teachers[id] ?? "");
 
-  const go = (kind: GridView["kind"], id: string) => router.replace(`${pathname}?view=${kind}&id=${id}`);
+  const go = (kind: GridView["kind"], id: string) => router.replace(`${pathname}?view=${kind}&id=${id}` as Route);
   const switchTo = (kind: GridView["kind"]) => {
     const first = (kind === "class" ? classIds : teacherIds)[0];
     if (first) go(kind, first);

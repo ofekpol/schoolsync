@@ -20,7 +20,7 @@ Two people, two tracks. Each plan is its own branch from `staging` and its own P
 | 5a | Setup data: tables, domain, solver contract, export, demo seed | A | `feature/timetable-setup` | now | **merged into `staging`**; detailed: `2026-11-14-timetable-05-setup-data.md`, Tasks 1-5 |
 | 5b | Setup data: API routes and setup tabs | B | `feature/timetable-setup-ui` | plan 2 Task 5 merged and plan 5a merged | **merged into `staging`** (PR #107); detailed: same file, Tasks 6-8 |
 | 4 | Solver service (Python, CP-SAT), benchmark, hosting | A | `feature/timetable-solver` | plan 5a merged (it holds the contract) | outline below |
-| 7 | Generate, compare three options, read-only timetable grid | A | `feature/timetable-generate` | plan 4 merged | outline below |
+| 7 | Generate, compare three options, read-only timetable grid | A | `feature/timetable-generate` | plan 4 task 1 merged (contract v1 + `/api/solve` exist) | detailed: `2026-11-18-timetable-07-generate.md` |
 | 6 | Constraints: entry screens, collect, seeded demo constraints | B | `feature/timetable-collect` | plan 5b merged | **merged into `staging`** (PR #108, migration 0025); detailed: `2026-11-16-timetable-06-constraints.md` |
 | 8 | Edit by hand, pin, regenerate, publish, teacher view | A | `feature/timetable-edit` | plans 6 and 7 merged | outline below |
 

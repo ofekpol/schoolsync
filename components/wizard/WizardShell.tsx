@@ -6,14 +6,7 @@ import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { buildEventTimeRange } from "@/lib/events/date-range";
 import { jerusalemWallClockToIso } from "@/lib/datetime";
-
-export interface EventType {
-  id: string;
-  key: string;
-  labelHe: string;
-  colorHex: string;
-  glyph: string;
-}
+import type { EventType } from "@/lib/events/event-type";
 
 export interface WizardShellProps {
   eventTypes: EventType[];
@@ -37,16 +30,9 @@ export interface WizardData {
   requirementsText?: string;
 }
 
-export interface StepProps {
-  data: WizardData;
-  saving: boolean;
-  onNext: (d: WizardData) => Promise<void>;
-  onBack: () => void;
-}
-
 /**
- * Maps wizard state to the EventDraftSchema PATCH body. The wizard tracks the
- * Step-6 fields as responsibleText/requirementsText, but they persist to the
+ * Maps wizard state to the EventDraftSchema PATCH body. The form tracks the
+ * responsible/requirements fields as responsibleText/requirementsText, but they persist to the
  * `location`/`description` columns — without this mapping Zod silently drops
  * the unknown keys and the data is lost on save. `date` is a wizard-only field
  * (the canonical timestamp is startAt/endAt) and is intentionally omitted.

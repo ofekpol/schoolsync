@@ -16,7 +16,7 @@ import type { CalendarMonth } from "@/lib/views/calendar";
 import type { CalendarPrintOptions } from "@/components/ExportToGoogleCalendarButton";
 import { toCalendarInputEvents } from "@/lib/views/calendar-event-input";
 import type { CalendarRange } from "@/lib/views/date-range";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import {
   shouldShowDashboardGradeFilter,
   visibleWeeklyGrades,
@@ -25,6 +25,7 @@ import type { GradeColorMap } from "@/lib/grade-colors";
 import { GradeSelector } from "./GradeSelector";
 import { GradeColorLegend } from "@/components/GradeColorLegend";
 import { TOOLBAR_BUTTON_CLASS } from "./toolbar-styles";
+import { monthIndexForKey, monthKey } from "@/lib/views/month-key";
 
 interface SerializedEvent {
   id: string;
@@ -374,14 +375,4 @@ export function DashboardCalendar({
       />
     </div>
   );
-}
-
-function monthKey(year: number, monthIndex: number): string {
-  return `${year}-${String(monthIndex).padStart(2, "0")}`;
-}
-
-function monthIndexForKey(months: CalendarMonth[], key: string | null): number {
-  if (!key) return 0;
-  const index = months.findIndex((month) => monthKey(month.year, month.monthIndex) === key);
-  return index >= 0 ? index : 0;
 }

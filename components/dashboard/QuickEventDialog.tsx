@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import { buildEventTimeRange } from "@/lib/events/date-range";
+import { TIME_OF_DAY_RE } from "@/lib/datetime";
 
 interface Props {
   open: boolean;
@@ -63,7 +64,6 @@ const EMPTY_DATA: QuickEventData = {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function QuickEventDialog({
   open,
@@ -123,7 +123,7 @@ export function QuickEventDialog({
     if (!data.date) return t1("errorRequired");
     if (!data.eventTypeId) return t3("errorRequired");
     if (data.grades.length === 0) return t2("errorRequired");
-    if (!data.allDay && (!TIME_RE.test(data.startTime) || !TIME_RE.test(data.endTime))) {
+    if (!data.allDay && (!TIME_OF_DAY_RE.test(data.startTime) || !TIME_OF_DAY_RE.test(data.endTime))) {
       return t5("errorInvalid");
     }
     if (!data.allDay && data.startTime >= data.endTime) return t5("errorInverted");
@@ -487,7 +487,7 @@ function TimeWheelInput({
         onChange={(e) => {
           const next = e.target.value.replace(/[^\d:]/g, "").slice(0, 5);
           setDraft(next);
-          if (TIME_RE.test(next)) onChange(next);
+          if (TIME_OF_DAY_RE.test(next)) onChange(next);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -555,18 +555,18 @@ function WheelColumn({
 }
 
 function normalizeTime(value: string): string | null {
-  if (TIME_RE.test(value)) return value;
+  if (TIME_OF_DAY_RE.test(value)) return value;
 
   const compact = value.replace(/\D/g, "");
   if (compact.length === 3) {
     const hour = compact.slice(0, 1).padStart(2, "0");
     const minute = compact.slice(1);
     const normalized = `${hour}:${minute}`;
-    return TIME_RE.test(normalized) ? normalized : null;
+    return TIME_OF_DAY_RE.test(normalized) ? normalized : null;
   }
   if (compact.length === 4) {
     const normalized = `${compact.slice(0, 2)}:${compact.slice(2)}`;
-    return TIME_RE.test(normalized) ? normalized : null;
+    return TIME_OF_DAY_RE.test(normalized) ? normalized : null;
   }
 
   return null;

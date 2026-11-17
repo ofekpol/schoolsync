@@ -4,6 +4,8 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { updateStaffUser } from "@/lib/db/staff";
 import { StaffUserUpdateSchema } from "@/lib/validations/admin";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
+import { thrownResponseToJson } from "@/lib/auth/thrown-response";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -13,8 +15,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext): Pro
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const { id } = await params;
   const body = await request.json().catch(() => null);
@@ -26,9 +27,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext): Pro
     await updateStaffUser(user!.schoolId, id, parsed.data);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
-    if (e instanceof Response) {
-      return NextResponse.json({ error: e.statusText || "Error" }, { status: e.status });
-    }
-    throw e;
+    return thrownResponseToJson(e);
   }
 }

@@ -5,14 +5,14 @@ import { createStaffUserDirect, listStaffUsers } from "@/lib/db/staff";
 import { generateTempPassword } from "@/lib/auth/password";
 import { StaffUserCreateSchema } from "@/lib/validations/admin";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 export async function GET(): Promise<NextResponse> {
   const user = await getStaffUser();
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const staff = await listStaffUsers(user!.schoolId);
   return NextResponse.json({ staff }, { status: 200 });
@@ -24,8 +24,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   if (user.mustChangePassword) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

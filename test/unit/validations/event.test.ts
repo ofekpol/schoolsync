@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EventDraftSchema,
   EventQuickPublishSchema,
-  EventSubmitSchema,
   ICalSubscriptionSchema,
-  RejectSchema,
 } from "@/lib/validations/events";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -14,7 +12,7 @@ const VALID_DT = "2026-09-01T08:00:00+03:00"; // ISO 8601 with offset
 const END_DT = "2026-09-01T16:00:00+03:00";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EventDraftSchema  (all fields optional — used for wizard autosave / PATCH)
+// EventDraftSchema  (all fields optional — used for draft create / PATCH / publish)
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("EventDraftSchema: all-optional autosave schema (PATCH /api/v1/events/:id)", () => {
@@ -86,70 +84,6 @@ describe("EventDraftSchema: all-optional autosave schema (PATCH /api/v1/events/:
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EventSubmitSchema  (strict — all fields required at publish step)
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("EventSubmitSchema: strict publish schema (POST /api/v1/events/:id/submit)", () => {
-  const VALID = {
-    title: "Field trip",
-    startAt: VALID_DT,
-    endAt: END_DT,
-    eventTypeId: VALID_UUID,
-    grades: [9],
-  };
-
-  it("accepts a fully populated valid payload", () => {
-    expect(EventSubmitSchema.safeParse(VALID).success).toBe(true);
-  });
-
-  it("rejects when title is missing", () => {
-    const { title: _, ...rest } = VALID;
-    expect(EventSubmitSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects when title is an empty string", () => {
-    expect(EventSubmitSchema.safeParse({ ...VALID, title: "" }).success).toBe(false);
-  });
-
-  it("rejects when startAt is missing", () => {
-    const { startAt: _, ...rest } = VALID;
-    expect(EventSubmitSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects when startAt is not a valid ISO datetime string", () => {
-    expect(EventSubmitSchema.safeParse({ ...VALID, startAt: "2026-09-01" }).success).toBe(false);
-  });
-
-  it("rejects when startAt has no timezone offset", () => {
-    expect(
-      EventSubmitSchema.safeParse({ ...VALID, startAt: "2026-09-01T08:00:00" }).success,
-    ).toBe(false);
-  });
-
-  it("rejects when eventTypeId is missing", () => {
-    const { eventTypeId: _, ...rest } = VALID;
-    expect(EventSubmitSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects when eventTypeId is not a UUID", () => {
-    expect(EventSubmitSchema.safeParse({ ...VALID, eventTypeId: "trip" }).success).toBe(false);
-  });
-
-  it("rejects when grades array is empty (min 1)", () => {
-    expect(EventSubmitSchema.safeParse({ ...VALID, grades: [] }).success).toBe(false);
-  });
-
-  it("rejects when grades array is missing", () => {
-    const { grades: _, ...rest } = VALID;
-    expect(EventSubmitSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects a grade outside the 7–12 range", () => {
-    expect(EventSubmitSchema.safeParse({ ...VALID, grades: [5, 9] }).success).toBe(false);
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // EventQuickPublishSchema  (strict — one-step dashboard create + publish)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -194,27 +128,26 @@ describe("EventQuickPublishSchema: strict quick publish schema (POST /api/v1/eve
     expect(EventQuickPublishSchema.safeParse(withoutStart).success).toBe(false);
     expect(EventQuickPublishSchema.safeParse(withoutEnd).success).toBe(false);
   });
-});
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RejectSchema
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("RejectSchema", () => {
-  it("accepts a non-empty reason string", () => {
-    expect(RejectSchema.safeParse({ reason: "Dates conflict with Passover." }).success).toBe(true);
+  it("rejects when title is an empty string", () => {
+    expect(EventQuickPublishSchema.safeParse({ ...VALID, title: "" }).success).toBe(false);
   });
 
-  it("rejects an empty reason string", () => {
-    expect(RejectSchema.safeParse({ reason: "" }).success).toBe(false);
+  it("rejects a startAt that is not an ISO datetime or has no timezone offset", () => {
+    expect(EventQuickPublishSchema.safeParse({ ...VALID, startAt: "2026-09-01" }).success).toBe(false);
+    expect(
+      EventQuickPublishSchema.safeParse({ ...VALID, startAt: "2026-09-01T08:00:00" }).success,
+    ).toBe(false);
   });
 
-  it("rejects a reason longer than 2000 characters", () => {
-    expect(RejectSchema.safeParse({ reason: "x".repeat(2001) }).success).toBe(false);
+  it("rejects when eventTypeId is not a UUID", () => {
+    expect(EventQuickPublishSchema.safeParse({ ...VALID, eventTypeId: "trip" }).success).toBe(false);
   });
 
-  it("rejects when reason field is absent", () => {
-    expect(RejectSchema.safeParse({}).success).toBe(false);
+  it("rejects when grades is missing or contains a grade outside 7–12", () => {
+    const { grades: _, ...rest } = VALID;
+    expect(EventQuickPublishSchema.safeParse(rest).success).toBe(false);
+    expect(EventQuickPublishSchema.safeParse({ ...VALID, grades: [5, 9] }).success).toBe(false);
   });
 });
 

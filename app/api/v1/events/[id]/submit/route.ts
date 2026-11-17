@@ -5,13 +5,14 @@ import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { publishEvent } from "@/lib/events/approval";
 import { updateDraft } from "@/lib/events/crud";
 import { EventDraftSchema } from "@/lib/validations/events";
+import { canEditEvents, findDisallowedGrades } from "@/lib/events/scope";
 import {
-  getEditorAllowedGrades,
   getEventForEditor,
   isEventTypeAllowed,
 } from "@/lib/events/queries";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { thrownResponseToJson } from "@/lib/auth/thrown-response";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -27,7 +28,7 @@ async function handlePOST(
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Not found" }, { status: 404 });
   try {
-    if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+    if (!canEditEvents(user)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -42,16 +43,12 @@ async function handlePOST(
       }
       const draftFields = parsed.data;
       if (Object.keys(draftFields).length > 0) {
-        if (draftFields.grades && draftFields.grades.length > 0 && user.role !== "admin") {
-          const allowed = await getEditorAllowedGrades(user.schoolId!, user.id);
-          const allowedSet = new Set(allowed);
-          const violators = draftFields.grades.filter((g) => !allowedSet.has(g));
-          if (violators.length > 0) {
-            return NextResponse.json(
-              { error: "scope_violation", grades: violators },
-              { status: 403 },
-            );
-          }
+        const disallowedGrades = await findDisallowedGrades(user, draftFields.grades);
+        if (disallowedGrades.length > 0) {
+          return NextResponse.json(
+            { error: "scope_violation", grades: disallowedGrades },
+            { status: 403 },
+          );
         }
         const { eventTypeId } = draftFields;
         if (eventTypeId && !(await isEventTypeAllowed(user, eventTypeId))) {
@@ -93,13 +90,7 @@ async function handlePOST(
     invalidatePublicViewerCache(user.schoolSlug);
     return NextResponse.json({ ok: true, status: "approved" }, { status: 200 });
   } catch (e) {
-    if (e instanceof Response) {
-      return NextResponse.json(
-        { error: e.statusText || "Error" },
-        { status: e.status },
-      );
-    }
-    throw e;
+    return thrownResponseToJson(e);
   }
 }
 

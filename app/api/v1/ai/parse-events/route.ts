@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { canEditEvents } from "@/lib/events/scope";
 import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { isAiEnabled } from "@/lib/ai/model";
 import { consumeAiQuota } from "@/lib/ai/quota";
@@ -13,11 +14,12 @@ import { getEditorAllowedGrades, isEventTypeAllowed, listEventTypes } from "@/li
 import { jerusalemDateString } from "@/lib/datetime";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { demoDisabledResponse, isDemoUser } from "@/lib/auth/demo-guard";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 const ParseEventsRequestSchema = z.object({ text: z.string().trim().min(1).max(3000) });
 const ParseEventsResponseSchema = z.object({ candidates: z.array(CandidateEventSchema) });
 
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 function error(code: string, status: number, extra: Record<string, unknown> = {}) {
   return NextResponse.json({ error: code, ...extra }, { status });
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return error("unauthorized", 401);
-  if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+  if (!canEditEvents(user)) {
     return error("forbidden", 403);
   }
   const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");

@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { GradeSchema } from "@/lib/validations/grade";
 
 /**
- * All-optional schema for PATCH autosave requests — allows partial saves at every wizard step.
- * See RESEARCH Pitfall 1: never require all fields on PATCH (blocks wizard advance).
+ * All-optional schema for draft create/PATCH/publish requests — partial saves
+ * are allowed, so never require every field here.
  */
 export const EventDraftSchema = z.object({
   title: z.string().min(1).max(255).optional(),
@@ -12,29 +13,22 @@ export const EventDraftSchema = z.object({
   endAt: z.string().datetime({ offset: true }).optional(),
   allDay: z.boolean().optional(),
   eventTypeId: z.string().uuid().optional(),
-  grades: z.array(z.number().int().min(7).max(12)).optional(),
+  grades: z.array(GradeSchema).optional(),
 });
 
 export type EventDraftInput = z.infer<typeof EventDraftSchema>;
 
 /**
- * Strict schema for POST /submit — all required fields must be present.
- * Validated at the submit step (Step 7), not during autosave.
+ * Strict schema for one-step quick publish from the dashboard: every field
+ * needed to show the event publicly is required; description, location and
+ * allDay are optional.
  */
-export const EventSubmitSchema = z.object({
+export const EventQuickPublishSchema = z.object({
   title: z.string().min(1).max(255),
   startAt: z.string().datetime({ offset: true }),
   endAt: z.string().datetime({ offset: true }),
   eventTypeId: z.string().uuid(),
-  grades: z.array(z.number().int().min(7).max(12)).min(1),
-});
-
-/**
- * Strict schema for one-step quick publish from the dashboard.
- * Unlike EventSubmitSchema, this includes the optional draft fields that are
- * normally PATCHed before submit in the wizard flow.
- */
-export const EventQuickPublishSchema = EventSubmitSchema.extend({
+  grades: z.array(GradeSchema).min(1),
   description: z.string().optional(),
   location: z.string().max(255).optional(),
   allDay: z.boolean().optional(),
@@ -43,18 +37,10 @@ export const EventQuickPublishSchema = EventSubmitSchema.extend({
 export type EventQuickPublishInput = z.infer<typeof EventQuickPublishSchema>;
 
 /**
- * Reject reason payload — admin must explain rejection (PRD §6.3).
- * Editor sees this on /dashboard/rejected.
- */
-export const RejectSchema = z.object({
-  reason: z.string().min(1).max(2000),
-});
-
-/**
  * Filters captured when a staff user creates an iCal subscription.
  * Empty arrays mean "no filter on this axis" (i.e. include all).
  */
 export const ICalSubscriptionSchema = z.object({
-  grades: z.array(z.number().int().min(7).max(12)).max(6).optional(),
+  grades: z.array(GradeSchema).max(6).optional(),
   eventTypes: z.array(z.string().uuid()).max(50).optional(),
 });

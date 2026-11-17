@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Sparkles, X } from "lucide-react";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import { isCandidateComplete, toPublishPayload } from "@/lib/ai/adder/complete";
 import type { AdderWarning, CandidateEvent } from "@/lib/ai/adder/types";
 import { SmartAdderCard } from "./SmartAdderCard";

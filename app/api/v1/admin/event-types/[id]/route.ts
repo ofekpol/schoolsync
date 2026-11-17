@@ -5,6 +5,7 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { updateEventType, deleteEventType } from "@/lib/admin/event-types";
 import { EventTypeUpdateSchema } from "@/lib/validations/admin";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -13,8 +14,7 @@ async function handlePATCH(request: NextRequest, { params }: RouteContext): Prom
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;
@@ -34,8 +34,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext): Promi
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;

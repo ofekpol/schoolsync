@@ -1,6 +1,7 @@
 /** Pure field helpers shared by normalize.ts and complete.ts. */
+import { SCHOOL_GRADES } from "@/lib/grades";
 
-export const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+export const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 /** "YYYY-MM-DD" when d/m/y is a real calendar date, else null. Never swaps day and month. */
 export function toIsoDate(day: number, month: number, year: number): string | null {

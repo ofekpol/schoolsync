@@ -8,6 +8,7 @@ import {
 } from "@/lib/events/queries";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { jerusalemOffset } from "@/lib/datetime";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 interface PageProps {
   searchParams: Promise<{ resumeId?: string; date?: string }>;
@@ -31,7 +32,7 @@ export default async function NewEventPage({ searchParams }: PageProps) {
     listEventTypes(user.schoolId),
     user.role === "editor"
       ? getEditorAllowedGrades(user.schoolId, user.id)
-      : Promise.resolve([7, 8, 9, 10, 11, 12] as number[]),
+      : Promise.resolve([...SCHOOL_GRADES] as number[]),
   ]);
 
   const allowedGrades = allowedGradesRaw;

@@ -4,6 +4,7 @@ import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { assertAdmin } from "@/lib/auth/admin";
 import { reorderEventTypes } from "@/lib/admin/event-types";
 import { EventTypeOrderSchema } from "@/lib/validations/admin";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 /** PUT { ids } — admin sets the display order of the school's event types. */
 export async function PUT(request: NextRequest): Promise<NextResponse> {
@@ -11,8 +12,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;

@@ -7,6 +7,9 @@
  * local midnight).
  */
 
+/** "HH:MM" on a 24-hour clock, 00:00–23:59. */
+export const TIME_OF_DAY_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 export const SCHOOL_TIMEZONE = "Asia/Jerusalem";
 
 const offsetFormatter = new Intl.DateTimeFormat("en-US", {

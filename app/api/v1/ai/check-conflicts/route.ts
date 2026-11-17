@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStaffUser } from "@/lib/auth/session";
+import { canEditEvents } from "@/lib/events/scope";
 import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { findConflicts } from "@/lib/ai/adder/conflicts";
 import { AdderWarningSchema, CandidateEventSchema } from "@/lib/ai/adder/types";
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getStaffUser();
   if (isDemoUser(user)) return demoDisabledResponse();
   if (!user || !user.schoolId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+  if (!canEditEvents(user)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");

@@ -5,8 +5,13 @@ import {
   editorScopes,
   eventGrades,
   events,
+  eventStatusEnum,
   eventTypes,
 } from "@/lib/db/schema";
+
+/** Every value of the events.status column (pending/rejected are never produced). */
+export type EventStatus = (typeof eventStatusEnum.enumValues)[number];
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 /**
  * Returns grade numbers the editor is allowed to assign.
@@ -28,7 +33,7 @@ export async function getEditorAllowedGrades(
         ),
       ),
   );
-  if (rows.length === 0) return [7, 8, 9, 10, 11, 12];
+  if (rows.length === 0) return [...SCHOOL_GRADES];
   return rows.map((r) => Number(r.scopeValue));
 }
 
@@ -70,7 +75,7 @@ export async function isEventTypeAllowed(
 export interface DashboardEvent {
   id: string;
   title: string | null;
-  status: "draft" | "pending" | "approved" | "rejected" | "canceled";
+  status: EventStatus;
   updatedAt: Date;
   startAt: Date | null;
   endAt: Date | null;
@@ -117,7 +122,7 @@ export interface EventWithGrades {
     startAt: Date | null;
     endAt: Date | null;
     allDay: boolean;
-    status: "draft" | "pending" | "approved" | "rejected" | "canceled";
+    status: EventStatus;
     version: number;
     eventTypeId: string;
     createdBy: string;
@@ -201,7 +206,7 @@ export interface EventTypeListItem {
 
 /**
  * Returns the school's event-type palette ordered by sortOrder.
- * Used by the wizard entry page so Step 3 can render the full chip list.
+ * Used by the event form page to render the full event-type chip list.
  */
 export async function listEventTypes(
   schoolId: string,

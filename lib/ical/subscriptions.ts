@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db, withSchool } from "@/lib/db/client";
 import { editorScopes, eventTypes, icalSubscriptions } from "@/lib/db/schema";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
 export interface SubscriptionRow {
   id: string;
@@ -44,7 +45,7 @@ export function generateToken(): string {
  * Creates an iCal subscription for the calling staff user, capturing the
  * current filter selection (grades + event-type ids). Returns the row id
  * and the freshly-minted token (the only time the token is returned in
- * cleartext — the /profile page surfaces it then).
+ * cleartext — the UI shows it once, right after creation).
  */
 export async function createSubscription(
   schoolId: string,
@@ -86,7 +87,7 @@ export async function buildPersonalSubscriptionFilters(
     const grades =
       gradeRows.length > 0
         ? gradeRows.map((row) => Number(row.scopeValue)).sort((a, b) => a - b)
-        : [7, 8, 9, 10, 11, 12];
+        : [...SCHOOL_GRADES];
 
     const typeScopeRows = await tx
       .select({ scopeValue: editorScopes.scopeValue })
@@ -126,8 +127,8 @@ export async function createPersonalCalendarSubscription(
 
 /**
  * Lists the calling staff user's subscriptions, newest-first. Both active
- * and revoked rows are returned so the UI can show history; the /profile
- * page can filter to active locally.
+ * and revoked rows are returned so the UI can show history and filter to
+ * active locally.
  */
 export async function listSubscriptionsForStaff(
   schoolId: string,

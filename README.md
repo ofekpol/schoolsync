@@ -1,6 +1,6 @@
 # School Gantt Chart System
 
-Multi-tenant school event calendar. Multi-tenant school event calendar, the first product of EduSolutions ([site](https://edusolutions-site.vercel.app/)). Staff editors create and publish events directly (no approval queue) → events appear on the public views (Gantt, agenda, printable calendar, iCal). Guests open a school through its secret link. Each school is isolated via Postgres RLS. Hebrew RTL by default, English toggle available.
+Multi-tenant school event calendar, the first product of EduSolutions ([site](https://edusolutions-site.vercel.app/)). Staff editors create and publish events directly (no approval queue) → events appear on the public views (Gantt, agenda, printable calendar, iCal). Guests open a school through its secret link. Each school is isolated via Postgres RLS. Hebrew RTL by default, English toggle available.
 
 ## Quickstart
 
@@ -68,7 +68,7 @@ See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
 |-------|-------|--------|
 | 0 | Foundation — scaffold, RTL toolchain, CI | ✅ |
 | 1 | Database, RLS, Auth — schema, withSchool, lockout | ✅ |
-| 2 | Event CRUD + 7-step wizard with draft autosave | ✅ |
+| 2 | Event CRUD + single-page event form with drafts | ✅ |
 | 3 | Approval workflow + revisions (later replaced by direct publish) | ✅ |
 | 4 | Public surface: FilterBar + mobile agenda | ✅ |
 | 5 | Gantt view (Sept–Jul timeline, zoom presets) | ✅ |
@@ -79,7 +79,7 @@ See [CLAUDE.md](./CLAUDE.md) for canonical conventions.
 ## Quality bars
 
 - **Performance** — Gantt ≤ 2 s first paint with 1 k events · iCal ≤ 500 ms · public view freshness ≤ 5 s after publish
-- **Accessibility** — WCAG 2.1 AA · axe-core "no serious/critical" across all four public views · 44 px tap targets · keyboard-only wizard · color + glyph encoding (color-blind safe)
+- **Accessibility** — WCAG 2.1 AA · axe-core "no serious/critical" across all four public views · 44 px tap targets · keyboard-only event form · color + glyph encoding (color-blind safe)
 - **i18n** — Hebrew default, English toggle persists in `NEXT_LOCALE` cookie · all UI strings flow through `next-intl`
 - **Print** — `@media print` produces an 11-page A4 PDF · monochrome fallback (glyph + dashed border) keeps chips legible
 - **Multi-tenancy** — Every query touching school data runs inside `db.withSchool(schoolId, fn)` · ESLint bans `supabaseAdmin` outside `lib/db/`

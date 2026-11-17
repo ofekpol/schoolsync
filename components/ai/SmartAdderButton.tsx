@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
-import type { EventType } from "@/components/wizard/WizardShell";
+import type { EventType } from "@/lib/events/event-type";
 import { SmartAdderDialog } from "./SmartAdderDialog";
 
 interface Props {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GradeSchema } from "@/lib/validations/grade";
 
 export const PublicViewerEventSchema = z.object({
   id: z.string().uuid(),
@@ -13,7 +14,7 @@ export const PublicViewerEventSchema = z.object({
   eventTypeLabelHe: z.string(),
   eventTypeColor: z.string(),
   eventTypeGlyph: z.string(),
-  grades: z.array(z.number().int().min(7).max(12)),
+  grades: z.array(GradeSchema),
   status: z.enum(["approved", "canceled"]),
   isCanceled: z.boolean(),
   isUpdated: z.boolean(),

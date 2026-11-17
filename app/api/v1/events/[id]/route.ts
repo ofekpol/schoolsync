@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/session";
 import { serviceDisabledResponse } from "@/lib/auth/service-guard";
 import { EventDraftSchema } from "@/lib/validations/events";
+import { canEditEvents, findDisallowedGrades } from "@/lib/events/scope";
 import {
   deleteOrCancelEvent,
   dismissCanceledEventForStaff,
   updateDraft,
 } from "@/lib/events/crud";
 import {
-  getEditorAllowedGrades,
   getEventForEditor,
   isEventTypeAllowed,
 } from "@/lib/events/queries";
@@ -46,7 +46,7 @@ async function handlePATCH(
 ): Promise<NextResponse> {
   const user = await getStaffUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.role === "viewer" || user.status !== "active" || user.mustChangePassword) {
+  if (!canEditEvents(user)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const ganttOff = await serviceDisabledResponse(user.schoolId, "gantt");
@@ -73,17 +73,13 @@ async function handlePATCH(
     );
   }
 
-  // Scope check: every grade in body.grades must be in the editor's allowed set (WIZARD-05)
-  if (parsed.data.grades && parsed.data.grades.length > 0 && user.role !== "admin") {
-    const allowed = await getEditorAllowedGrades(user.schoolId!, user.id);
-    const allowedSet = new Set(allowed);
-    const violators = parsed.data.grades.filter((g) => !allowedSet.has(g));
-    if (violators.length > 0) {
-      return NextResponse.json(
-        { error: "scope_violation", grades: violators },
-        { status: 403 },
-      );
-    }
+  // Scope check: every grade in body.grades must be in the editor's allowed set
+  const disallowedGrades = await findDisallowedGrades(user, parsed.data.grades);
+  if (disallowedGrades.length > 0) {
+    return NextResponse.json(
+      { error: "scope_violation", grades: disallowedGrades },
+      { status: 403 },
+    );
   }
 
   const { eventTypeId } = parsed.data;

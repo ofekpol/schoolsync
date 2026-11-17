@@ -1,5 +1,4 @@
 {
-  "_placeholder": "Hebrew strings — populated as features are built",
   "a11y": {
     "skipToContent": "דלג לתוכן",
     "closeDialog": "סגור חלון",
@@ -18,8 +17,6 @@
     "tryAgain": "נסה שוב",
     "unnamed": "(ללא שם)",
     "more": "+{count} נוספים",
-    "yes": "כן",
-    "no": "לא",
     "confirm": "אישור",
     "cancel": "ביטול",
     "notFound": "הדף לא נמצא",
@@ -245,25 +242,6 @@
       "customColor": "צבע מותאם אישית",
       "empty": "אין סוגי אירועים עדיין."
     },
-    "queue": {
-      "title": "תור אישורים",
-      "empty": "אין אירועים ממתינים לאישור.",
-      "submittedAt": "הוגש ב",
-      "submittedBy": "מגיש",
-      "eventType": "סוג אירוע",
-      "grades": "שכבות",
-      "startAt": "תאריך",
-      "approve": "אשר",
-      "reject": "דחה",
-      "rejectTitle": "דחיית האירוע",
-      "rejectReasonLabel": "סיבת הדחייה (נדרשת)",
-      "rejectReasonPlaceholder": "פרט מדוע האירוע נדחה — העורך יראה זאת",
-      "rejectConfirm": "אישור דחייה",
-      "cancel": "ביטול",
-      "errorRequired": "נא להזין סיבת דחייה",
-      "errorGeneric": "אירעה שגיאה",
-      "isRevision": "עדכון של אירוע מאושר"
-    },
     "gradeColors": {
       "title": "צבעי שכבות",
       "description": "כל אירוע בלוח השנה נצבע לפי השכבה שלו. אירוע של כמה שכבות מוצג עם נקודות צבע, ואירוע של כל בית הספר בצבע כהה.",
@@ -383,8 +361,6 @@
     "viewMonthly": "תצוגה חודשית",
     "gradeFilterLabel": "השכבות שלי",
     "gradeFilterOption": "סמן שכבה {grade}",
-    "confirmNewEventTitle": "אירוע חדש",
-    "confirmNewEvent": "ליצור אירוע חדש בתאריך {date}?",
     "myDrafts": "האירועים שלי",
     "status": {
       "draft": "טיוטה",
@@ -471,12 +447,6 @@
       "month": "חודש"
     }
   },
-  "home": {
-    "title": "SchoolSync",
-    "subtitle": "בחר בית ספר כדי לצפות בלוח האירועים.",
-    "viewGantt": "לוח גאנט",
-    "viewAgenda": "סדר יום"
-  },
   "calendar": {
     "subtitle": "לוח שנה מודפס",
     "previousMonth": "חודש קודם",
@@ -513,21 +483,11 @@
   },
   "profile": {
     "title": "הפרופיל שלי",
-    "icalTitle": "מנויי יומן (iCal)",
-    "icalIntro": "צור כתובת URL לסנכרון אירועים עם Google Calendar, Apple Calendar ועוד. ניתן לסנן לפי שכבה וסוג אירוע.",
     "create": "צור מנוי חדש",
     "cancel": "ביטול",
-    "done": "סיום",
-    "revoke": "בטל מנוי",
     "grades": "שכבות",
     "types": "סוגי אירועים",
     "empty": "אין מנויים פעילים.",
-    "createdAt": "נוצר ב",
-    "emptyMeansAll": "ללא סימון = כל השכבות / כל הסוגים.",
-    "filterNone": "כל האירועים",
-    "filterSummary": "שכבות: {grades} · {types} סוגים",
-    "freshTokenTitle": "המנוי נוצר",
-    "freshTokenHint": "העתק את הקישור והדבק ב-Google Calendar (\"From URL\"). הקישור גלוי רק עכשיו.",
     "errorGeneric": "אירעה שגיאה",
     "intro": "סמנו את מה שמתאר אתכם. ההנהלה משתמשת בתיוגים כדי למצוא אנשי צוות; הם לא משנים הרשאות.",
     "required": "חובה",
@@ -575,9 +535,7 @@
     },
     "step6": {
       "title": "אחראי",
-      "errorRequired": "יש להזין שם אחראי",
-      "requirementsTitle": "דרישות וציוד",
-      "requirementsPlaceholder": "פרטים נוספים, חדר, ציוד…"
+      "errorRequired": "יש להזין שם אחראי"
     },
     "step7": {
       "title": "סיכום ופרסום",

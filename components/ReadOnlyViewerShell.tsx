@@ -18,8 +18,9 @@ import {
 import type { PublicViewerEventType, PublicViewerYear } from "@/lib/views/public-viewer-data";
 import { usePublicViewerEvents } from "@/lib/views/use-public-viewer-events";
 import { DEFAULT_GRADE_COLORS, type GradeColorMap } from "@/lib/grade-colors";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 const TABS = ["weekly", "monthly"] as const;
 type ReadOnlyTab = (typeof TABS)[number];
 

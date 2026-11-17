@@ -6,11 +6,7 @@ import { getGradeColors, setGradeColors } from "@/lib/db/grade-colors";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
 import { GradeColorsResponseSchema, GradeColorsUpdateSchema } from "@/lib/validations/admin";
 import type { GradeColorMap } from "@/lib/grade-colors";
-
-function forbidden(e: unknown): NextResponse {
-  if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-  throw e;
-}
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 function respond(colors: GradeColorMap): NextResponse {
   const body = GradeColorsResponseSchema.parse({ colors });
@@ -22,7 +18,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    return forbidden(e);
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;
@@ -34,7 +30,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    return forbidden(e);
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;

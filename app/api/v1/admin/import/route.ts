@@ -8,6 +8,7 @@ import { createPublishedEvents } from "@/lib/events/crud";
 import { parseCalendarImport } from "@/lib/import/calendar-import";
 import { invalidatePublicViewerCache } from "@/lib/views/public-viewer-data";
 import { withDemoLimits } from "@/lib/auth/demo-guard";
+import { guardFailureResponse } from "@/lib/auth/thrown-response";
 
 const MAX_CSV_CHARS = 1_000_000;
 
@@ -26,8 +27,7 @@ async function handlePOST(request: NextRequest): Promise<NextResponse> {
   try {
     assertAdmin(user);
   } catch (e) {
-    if (e instanceof Response) return NextResponse.json({ error: "Forbidden" }, { status: e.status });
-    throw e;
+    return guardFailureResponse(e);
   }
   const ganttOff = await serviceDisabledResponse(user!.schoolId, "gantt");
   if (ganttOff) return ganttOff;

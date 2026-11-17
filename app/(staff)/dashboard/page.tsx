@@ -21,8 +21,9 @@ import { CalendarImportButton } from "@/components/admin/CalendarImportButton";
 import { importTemplateCsv } from "@/lib/import/calendar-import";
 import { SmartAdderButton } from "@/components/ai/SmartAdderButton";
 import { isAiEnabled } from "@/lib/ai/model";
+import { SCHOOL_GRADES } from "@/lib/grades";
 
-const ALL_GRADES = [7, 8, 9, 10, 11, 12];
+const ALL_GRADES: number[] = [...SCHOOL_GRADES];
 
 interface PageProps {
   searchParams: Promise<{

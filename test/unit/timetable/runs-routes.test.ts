@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { RunResponseSchema, RunsResponseSchema, StartRunResponseSchema } from "@/lib/validations/timetable-runs";
+import { RunResponseSchema, SolutionGridResponseSchema, RunsResponseSchema, StartRunResponseSchema } from "@/lib/validations/timetable-runs";
 import { TimetableError } from "@/lib/timetable/errors";
 
 const { getStaffUserMock, getSchoolByIdMock, getBoardMock, runs } = vi.hoisted(() => ({
@@ -9,6 +9,7 @@ const { getStaffUserMock, getSchoolByIdMock, getBoardMock, runs } = vi.hoisted((
   getBoardMock: vi.fn(),
   runs: { startRun: vi.fn(), executeRun: vi.fn(), getRun: vi.fn(), listRuns: vi.fn() },
 }));
+const getSolutionGridMock = vi.hoisted(() => vi.fn());
 vi.mock("next/server", async () => {
   const actual = await vi.importActual<typeof import("next/server")>("next/server");
   return { ...actual, after: (callback: () => unknown) => void callback() };
@@ -24,6 +25,9 @@ vi.mock("@/lib/timetable/runs", () => ({
 }));
 
 import { GET as GET_RUNS, POST as POST_RUN } from "@/app/api/v1/timetable/boards/[board]/runs/route";
+vi.mock("@/lib/timetable/solutions", () => ({ getSolutionGrid: (...a: unknown[]) => getSolutionGridMock(...a) }));
+
+import { GET as GET_SOLUTION } from "@/app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/route";
 import { GET as GET_RUN } from "@/app/api/v1/timetable/boards/[board]/runs/[run]/route";
 
 const SCHOOL = "00000000-0000-0000-0000-00000000000a";
@@ -120,5 +124,35 @@ describe("/api/v1/timetable/boards/[board]/runs", () => {
   it("404 for a non-uuid run id without querying", async () => {
     expect((await GET_RUN(req("GET"), runCtx("nope"))).status).toBe(404);
     expect(runs.getRun).not.toHaveBeenCalled();
+  });
+
+  describe("GET solution grid", () => {
+    const SOLUTION_ID = "00000000-0000-0000-0000-0000000000e1";
+    const solutionCtx = (solution: string) => ({ params: Promise.resolve({ board: BOARD_ID, run: RUN_ID, solution }) });
+    const GRID = {
+      solution: RUN.solutions[0],
+      week: { days: [{ day: 0, periods: [{ period: 1, start: "08:00", end: "08:45" }] }] },
+      lessons: [{ blockId: SOLUTION_ID, subjectId: null, classIds: [], teacherIds: [], day: 0, period: 1 }],
+      names: { classes: {}, teachers: {}, subjects: {} },
+    };
+
+    it("returns a grid matching the schema", async () => {
+      getSolutionGridMock.mockReset().mockResolvedValue(GRID);
+      const res = await GET_SOLUTION(req("GET"), solutionCtx(SOLUTION_ID));
+      expect(res.status).toBe(200);
+      expect(SolutionGridResponseSchema.parse(await res.json()).lessons).toHaveLength(1);
+      expect(getSolutionGridMock).toHaveBeenCalledWith(SCHOOL, BOARD_ID, RUN_ID, SOLUTION_ID);
+    });
+
+    it("404 when the solution does not belong to the run", async () => {
+      getSolutionGridMock.mockReset().mockResolvedValue(null);
+      expect((await GET_SOLUTION(req("GET"), solutionCtx(SOLUTION_ID))).status).toBe(404);
+    });
+
+    it("404 for a non-uuid id without querying", async () => {
+      getSolutionGridMock.mockReset();
+      expect((await GET_SOLUTION(req("GET"), solutionCtx("nope"))).status).toBe(404);
+      expect(getSolutionGridMock).not.toHaveBeenCalled();
+    });
   });
 });

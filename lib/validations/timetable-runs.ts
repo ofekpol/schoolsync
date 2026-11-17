@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WeekSchema } from "@/lib/timetable/week";
 import { SolverViolationSchema, WeightProfileSchema } from "@/lib/timetable/solver-contract";
 
 export const SolutionSummarySchema = z.object({
@@ -22,3 +23,23 @@ export const RunSchema = z.object({
 export const RunsResponseSchema = z.object({ runs: z.array(RunSchema) });
 export const RunResponseSchema = z.object({ run: RunSchema });
 export const StartRunResponseSchema = z.object({ runId: z.string().uuid() });
+
+export const SolutionGridResponseSchema = z.object({
+  solution: SolutionSummarySchema,
+  week: WeekSchema,
+  lessons: z.array(
+    z.object({
+      blockId: z.string().uuid(),
+      subjectId: z.string().uuid().nullable(),
+      classIds: z.array(z.string().uuid()),
+      teacherIds: z.array(z.string().uuid()),
+      day: z.number().int(),
+      period: z.number().int(),
+    }),
+  ),
+  names: z.object({
+    classes: z.record(z.string(), z.object({ grade: z.number().int(), number: z.number().int() })),
+    teachers: z.record(z.string(), z.string()),
+    subjects: z.record(z.string(), z.string()),
+  }),
+});

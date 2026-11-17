@@ -43,6 +43,17 @@ function effectiveState(row: RunRow, now: Date): { status: RunStatus; error: str
   return { status: row.status, error: row.error };
 }
 
+export function toSolutionSummary(s: SolutionRow): SolutionSummary {
+  return {
+    id: s.id,
+    profile: s.profile,
+    status: s.status,
+    error: s.error,
+    score: s.score,
+    violations: s.violations as SolverViolation[],
+  };
+}
+
 function toRun(row: RunRow, solutions: SolutionRow[], now: Date): Run {
   return {
     id: row.id,
@@ -51,14 +62,7 @@ function toRun(row: RunRow, solutions: SolutionRow[], now: Date): Run {
     finishedAt: row.finishedAt?.toISOString() ?? null,
     solutions: solutions
       .filter((s) => s.runId === row.id)
-      .map((s) => ({
-        id: s.id,
-        profile: s.profile,
-        status: s.status,
-        error: s.error,
-        score: s.score,
-        violations: s.violations as SolverViolation[],
-      })),
+      .map(toSolutionSummary),
   };
 }
 

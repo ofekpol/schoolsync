@@ -4,14 +4,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "@/lib/db/schema";
 import { ttPlacements, ttRuns } from "@/lib/db/schema-timetable";
 import { createBoard, deleteBoard, type Board } from "@/lib/timetable/boards";
-import { createBlock, listBlocks } from "@/lib/timetable/blocks";
-import { setGradeClassCount } from "@/lib/timetable/classes";
+import { createBlock, deleteBlock, listBlocks } from "@/lib/timetable/blocks";
+import { listClasses, setGradeClassCount } from "@/lib/timetable/classes";
 import { TimetableError } from "@/lib/timetable/errors";
 import { getRun, listRuns, startRun, executeRun, MAX_RUNS_PER_BOARD, type SolveFn } from "@/lib/timetable/runs";
+import { getSolutionGrid } from "@/lib/timetable/solutions";
 import { SolverCallError } from "@/lib/timetable/solver-client";
 import { SolverInputSchema } from "@/lib/timetable/solver-contract";
 import { addSubjects } from "@/lib/timetable/subjects";
-import { addTeachers } from "@/lib/timetable/teachers";
+import { addTeachers, deleteTeacher } from "@/lib/timetable/teachers";
 import { boardName, ensureActiveYear } from "./timetable-helpers";
 import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
 
@@ -161,5 +162,26 @@ describe.skipIf(skipIfNoTestDb)("timetable runs", () => {
     const { runId } = await startRun(testSchoolA, board.id, staffId);
     expect(await getRun(testSchoolB, board.id, runId)).toBeNull();
     expect(await listRuns(testSchoolB, board.id)).toEqual([]);
+  });
+
+  it("gridSurvivesDeletedTeacher", async () => {
+    await reset();
+    const [gone] = await addTeachers(testSchoolA, board.id, ["נמחק"]);
+    const [subject] = await addSubjects(testSchoolA, board.id, ["תנך"]);
+    const [cls] = await listClasses(testSchoolA, board.id);
+    const goneBlock = await createBlock(testSchoolA, board.id, { subjectId: subject.id, weeklyPeriods: 1, classIds: [cls.id], teacherIds: [gone.id] });
+    const { runId } = await startRun(testSchoolA, board.id, staffId);
+    await executeRun(testSchoolA, runId, solveOk);
+    await deleteBlock(testSchoolA, goneBlock.id);
+    await deleteTeacher(testSchoolA, gone.id);
+    const run = await getRun(testSchoolA, board.id, runId);
+    const solution = run!.solutions[0];
+    const grid = await getSolutionGrid(testSchoolA, board.id, runId, solution.id);
+    expect(grid!.lessons).toHaveLength(blockCount + 1);
+    expect(grid!.solution.id).toBe(solution.id);
+    expect(grid!.names.teachers).not.toHaveProperty(gone.id);
+    expect(Object.values(grid!.names.teachers)).toContain("א");
+    expect(await getSolutionGrid(testSchoolB, board.id, runId, solution.id)).toBeNull();
+    expect(await getSolutionGrid(testSchoolA, board.id, randomUUID(), solution.id)).toBeNull();
   });
 });

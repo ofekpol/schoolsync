@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { MAX_WEEKLY_PERIODS } from "@/lib/validations/timetable";
 import { cn } from "@/lib/utils";
 import type { SetupErrorKey } from "./api";
-import type { Cell } from "./lessons-grid";
+import { DiffersDot } from "./DiffersDot";
+import { cellPeriods, type Cell } from "./lessons-grid";
 
 export interface CellDraft {
   periods: number;
@@ -15,6 +16,8 @@ export interface CellDraft {
 interface Props {
   cell: Cell;
   label: string;
+  /** The grade's standard for this subject; a cell that differs shows a small dot. */
+  norm: number;
   row: number;
   col: number;
   /** Options of the shared teacher datalist: id and unique label. */
@@ -33,16 +36,12 @@ function initial(cell: Cell, teachers: Props["teachers"]) {
 }
 
 /** One class × subject cell: weekly periods and one teacher. Saves on Enter or when focus leaves it. */
-export function LessonCell({ cell, label, row, col, teachers, datalistId, onSave }: Props) {
+export function LessonCell({ cell, label, norm, row, col, teachers, datalistId, onSave }: Props) {
   const t = useTranslations("timetable.setup");
   const start = initial(cell, teachers);
   const [periods, setPeriods] = useState(start.periods);
   const [teacher, setTeacher] = useState(start.teacher);
   const [error, setError] = useState<SetupErrorKey | "unknownTeacher" | null>(null);
-
-  if (cell.kind === "plata") {
-    return <span className="block px-2 py-1 text-center text-xs text-violet-700">{t("lessons.inPlata")}</span>;
-  }
 
   const dirty = periods !== start.periods || teacher !== start.teacher;
 
@@ -68,8 +67,10 @@ export function LessonCell({ cell, label, row, col, teachers, datalistId, onSave
     }
   }
 
+  const saved = cellPeriods(cell);
   return (
-    <div onBlur={onBlur} className={cn("flex flex-col gap-1 p-1", error && "rounded-md ring-2 ring-red-400")}>
+    <div onBlur={onBlur} className={cn("relative flex flex-col gap-1 p-1", error && "rounded-md ring-2 ring-red-400")}>
+      {saved !== norm && <DiffersDot norm={norm} />}
       <input type="number" min={0} max={MAX_WEEKLY_PERIODS} inputMode="numeric" value={periods}
         aria-label={`${label} · ${t("lessons.periods")}`} data-row={row} data-col={col}
         onChange={(e) => setPeriods(e.target.value)} onKeyDown={onKeyDown}

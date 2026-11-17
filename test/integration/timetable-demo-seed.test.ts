@@ -29,7 +29,7 @@ describe.skipIf(skipIfNoTestDb)("timetable demo seed", () => {
   it("writes exactly one demo board, leaves other boards alone and exports with no problems", async () => {
     const staff = await loadDemoStaff(testSchoolA, "no-such-category");
     expect(staff.every((s) => s.subjects.length === 0)).toBe(true);
-    const plan = generateDemoPlan({ staff, classCounts: { 7: 3, 8: 2 }, seed: 1, anonymize: true });
+    const plan = generateDemoPlan({ staff, classCounts: { 7: 3, 8: 2 }, seed: 1 });
     await writeDemoBoard(testSchoolA, plan);
     const { boardId } = await writeDemoBoard(testSchoolA, plan);
 

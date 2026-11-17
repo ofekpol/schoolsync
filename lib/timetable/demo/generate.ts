@@ -2,6 +2,7 @@ import {
   DEMO_CURRICULUM,
   MAX_TEACHER_LOAD,
   MIN_CLASSES_FOR_PLATA,
+  teacherTitle,
   type CurriculumSubject,
 } from "./curriculum";
 
@@ -72,14 +73,36 @@ function staffTeachers(staff: DemoStaff[]): PoolTeacher[] {
   });
 }
 
-/** One block per class, except a Plata subject in a large grade: all classes but the last together. */
+/** One block per class, except a Plata subject in a large grade: all classes but the last together,
+ * the last one on its own (with the subject's soloPeriods). */
 function lessonsFor(grade: number, count: number, subject: CurriculumSubject): Array<Omit<DemoBlock, "teacherKeys">> {
   const classes = Array.from({ length: count }, (_, index) => ({ grade, number: index + 1 }));
   const base = { subject: subject.name, weeklyPeriods: subject.weeklyPeriods };
   if (subject.plata && count >= MIN_CLASSES_FOR_PLATA) {
-    return [{ ...base, classes: classes.slice(0, -1) }, { ...base, classes: classes.slice(-1) }];
+    const solo = { ...base, weeklyPeriods: subject.soloPeriods ?? subject.weeklyPeriods, classes: classes.slice(-1) };
+    return [{ ...base, classes: classes.slice(0, -1) }, solo];
   }
   return classes.map((klass) => ({ ...base, classes: [klass] }));
+}
+
+/**
+ * Demo names by subject, not by person: "מורה למתמטיקה 1", "מורה למתמטיקה 2"...
+ * A teacher's subject is the one of their first lesson (else their first label).
+ */
+function subjectNames(pool: PoolTeacher[], blocks: DemoBlock[]): Map<string, string> {
+  const firstSubject = new Map<string, string>();
+  for (const block of blocks) for (const key of block.teacherKeys) if (!firstSubject.has(key)) firstSubject.set(key, block.subject);
+  const titles = new Map(DEMO_CURRICULUM.map((s) => [s.name, teacherTitle(s)]));
+  const counters = new Map<string, number>();
+  const names = new Map<string, string>();
+  for (const teacher of pool) {
+    const subject = firstSubject.get(teacher.key) ?? teacher.subjects[0];
+    const title = titles.get(subject) ?? "מורה";
+    const n = (counters.get(title) ?? 0) + 1;
+    counters.set(title, n);
+    names.set(teacher.key, `${title} ${n}`);
+  }
+  return names;
 }
 
 /** The least-loaded teacher of the subject who still has room, or a new placeholder. */
@@ -97,12 +120,14 @@ function pickTeacher(pool: PoolTeacher[], subject: string, periods: number, take
   return extra;
 }
 
-/** A full, deterministic demo board: classes, the curriculum's lessons, teachers within their load. */
+/**
+ * A full, deterministic demo board: classes, the curriculum's lessons, teachers within their load.
+ * Teachers are named by subject; staff links are kept, real names never leave the plan.
+ */
 export function generateDemoPlan(opts: {
   staff: DemoStaff[];
   classCounts: Record<number, number>;
   seed: number;
-  anonymize: boolean;
   /** Per-teacher weekly periods; defaults to MAX_TEACHER_LOAD. A low value gives many part-timers. */
   maxLoad?: number;
 }): DemoPlan {
@@ -122,10 +147,7 @@ export function generateDemoPlan(opts: {
       }
     }
   }
-  const teachers = pool.map(({ key, fullName, staffUserId }, index) => ({
-    key,
-    staffUserId,
-    fullName: opts.anonymize ? `מורה ${index + 1}` : fullName,
-  }));
+  const names = subjectNames(pool, blocks);
+  const teachers = pool.map(({ key, staffUserId }) => ({ key, staffUserId, fullName: names.get(key)! }));
   return { classCounts: opts.classCounts, subjects: DEMO_CURRICULUM.map((s) => s.name), teachers, blocks };
 }

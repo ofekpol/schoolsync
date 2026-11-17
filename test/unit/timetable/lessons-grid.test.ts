@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLessonsGrid, classTotals } from "@/components/timetable/setup/lessons-grid";
+import { buildLessonsGrid, classTotals, gradeNorms } from "@/components/timetable/setup/lessons-grid";
 
 const classes = [
   { id: "c1", grade: 7, number: 1 },
@@ -37,5 +37,25 @@ describe("classTotals", () => {
 
   it("is zero for a class without lessons", () => {
     expect(classTotals(classes, []).get("c1")).toBe(0);
+  });
+});
+
+describe("gradeNorms", () => {
+  const block = (id: string, subjectId: string, weeklyPeriods: number, classIds: string[]) =>
+    ({ id, subjectId, weeklyPeriods, classIds, teacherIds: [] });
+
+  it("takes the value most classes have, counting a Plata for each of its classes", () => {
+    const blocks = [block("a", "math", 3, ["c1"]), block("b", "math", 3, ["c2"]), block("c", "math", 5, ["c3"]),
+      block("d", "eng", 4, ["c1", "c2"]), block("e", "eng", 2, ["c3"])];
+    const norms = gradeNorms(classes, subjects, buildLessonsGrid(classes, subjects, blocks));
+    expect(norms.get("math")).toBe(3);
+    expect(norms.get("eng")).toBe(4);
+  });
+
+  it("counts an empty cell as 0 and breaks a tie by the first class", () => {
+    const blocks = [block("a", "math", 2, ["c2"])];
+    expect(gradeNorms(classes, subjects, buildLessonsGrid(classes, subjects, blocks)).get("math")).toBe(0);
+    const tie = [block("a", "math", 2, ["c1"]), block("b", "math", 6, ["c2"])];
+    expect(gradeNorms(classes.slice(0, 2), subjects, buildLessonsGrid(classes, subjects, tie)).get("math")).toBe(2);
   });
 });

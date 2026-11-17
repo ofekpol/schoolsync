@@ -71,3 +71,7 @@ export const createBlock = (board: string, input: BlockInput) => send(`${boardUr
 export const replaceBlock = (board: string, id: string, input: BlockInput) =>
   send(`${boardUrl(board)}/blocks/${id}`, "PUT", input);
 export const deleteBlock = (board: string, id: string) => send(`${boardUrl(board)}/blocks/${id}`, "DELETE");
+export const setGradePeriods = (board: string, input: { grade: number; subjectId: string; weeklyPeriods: number }) =>
+  send(`${boardUrl(board)}/grade-periods`, "PUT", input);
+export const detachFromPlata = (board: string, blockId: string, classId: string) =>
+  send(`${boardUrl(board)}/blocks/${blockId}/detach`, "POST", { classId });

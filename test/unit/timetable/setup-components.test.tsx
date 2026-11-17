@@ -42,7 +42,7 @@ describe("LessonsTab", () => {
 
   it("creates the class's lesson on Enter with the chosen teacher", async () => {
     renderTab();
-    const periods = screen.getAllByRole("spinbutton")[0];
+    const periods = screen.getByLabelText(`lessons.cellLabel:{"subject":"מתמטיקה","class":"ז1"} · lessons.periods`);
     fireEvent.change(periods, { target: { value: "5" } });
     const teacher = screen.getAllByPlaceholderText("lessons.noTeacher")[0];
     fireEvent.change(teacher, { target: { value: "דנה" } });
@@ -52,6 +52,46 @@ describe("LessonsTab", () => {
     expect(url).toBe(`/api/v1/timetable/boards/${BOARD}/blocks`);
     expect(JSON.parse(init.body)).toEqual({ subjectId: MATH, weeklyPeriods: 5, classIds: [C1], teacherIds: [T1] });
     await waitFor(() => expect(refresh).toHaveBeenCalled());
+  });
+
+  it("applies a subject's periods to every class of the grade in one call", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ updated: 0, created: 3 }), { status: 200 }));
+    renderTab();
+    fireEvent.change(screen.getByLabelText(`normLabel:{"subject":"מתמטיקה"}`), { target: { value: "3" } });
+    fireEvent.click(screen.getByRole("button", { name: `applyNorm:{"subject":"מתמטיקה"}` }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`/api/v1/timetable/boards/${BOARD}/grade-periods`);
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body)).toEqual({ grade: 7, subjectId: MATH, weeklyPeriods: 3 });
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+  });
+
+  it("marks only the class that differs from the grade's standard", () => {
+    renderTab();
+    // English: ז1 and ז2 in a 30-period Plata, ז3 empty: the standard is 30, ז3 differs.
+    expect(screen.getAllByText(`differs:{"norm":30}`)).toHaveLength(1);
+    expect(screen.queryAllByText(/differs:\{"norm":0\}/)).toHaveLength(0);
+  });
+
+  it("takes a class out of its Plata", async () => {
+    renderTab();
+    fireEvent.click(screen.getByRole("button", { name: /lessons.detach:.*אנגלית.*ז1/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`/api/v1/timetable/boards/${BOARD}/blocks/${plata.id}/detach`);
+    expect(JSON.parse(init.body)).toEqual({ classId: C1 });
+  });
+
+  it("changes a Plata's periods from any of its cells", async () => {
+    renderTab();
+    const cell = screen.getByLabelText(`lessons.cellLabel:{"subject":"אנגלית","class":"ז2"} · lessons.plataPeriods`);
+    fireEvent.change(cell, { target: { value: "4" } });
+    fireEvent.keyDown(cell, { key: "Enter" });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`/api/v1/timetable/boards/${BOARD}/blocks/${plata.id}`);
+    expect(JSON.parse(init.body)).toEqual({ subjectId: ENG, weeklyPeriods: 4, classIds: [C1, C2], teacherIds: [] });
   });
 
   it("refuses a teacher name that is not on the board", async () => {

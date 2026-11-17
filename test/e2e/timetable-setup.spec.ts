@@ -88,7 +88,7 @@ test("a lesson with a teacher leaves the readiness list", async ({ browser }) =>
   await expect(page.getByText("מוכן ליצירת מערכת")).toBeVisible();
 });
 
-test("a Plata shows as read-only cells in the lessons grid", async ({ browser }) => {
+test("a Plata shows in the lessons grid", async ({ browser }) => {
   const page = await (await context(browser, "admin")).newPage();
   await page.goto(`${boardUrl}?tab=plata`);
   await page.getByRole("button", { name: "הקבצה חדשה" }).click();
@@ -102,6 +102,16 @@ test("a Plata shows as read-only cells in the lessons grid", async ({ browser })
 
   await page.goto(`${boardUrl}?tab=lessons`);
   await expect(page.getByText("בהקבצה")).toHaveCount(2);
+});
+
+test("one number sets a subject for the whole grade, Plata included", async ({ browser }) => {
+  const page = await (await context(browser, "admin")).newPage();
+  await page.goto(`${boardUrl}?tab=lessons`);
+  await page.getByLabel("שעות אנגלית לכל כיתות השכבה").fill("3");
+  await page.getByRole("button", { name: "החלה על כל כיתות השכבה: אנגלית" }).click();
+  await expect(page.getByLabel("אנגלית, ז1 · שעות", { exact: true })).toHaveValue("3");
+  await expect(page.getByLabel("אנגלית, ז2 · שעות ההקבצה")).toHaveValue("3");
+  await expect(page.getByText("8 מתוך 45")).toBeVisible();
 });
 
 test("an editor opening the setup page lands on /timetable", async ({ browser }) => {

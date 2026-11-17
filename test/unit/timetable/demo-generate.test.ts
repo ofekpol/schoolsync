@@ -11,8 +11,9 @@ const staff: DemoStaff[] = Array.from({ length: 10 }, (_, i) => ({
 }));
 const classCounts = { 7: 3, 8: 2 };
 const CURRICULUM_PERIODS = DEMO_CURRICULUM.reduce((sum, s) => sum + s.weeklyPeriods, 0);
+const ENGLISH = DEMO_CURRICULUM.find((s) => s.name === "אנגלית")!;
 const plan = (overrides: Partial<Parameters<typeof generateDemoPlan>[0]> = {}): DemoPlan =>
-  generateDemoPlan({ staff, classCounts, seed: 1, anonymize: false, ...overrides });
+  generateDemoPlan({ staff, classCounts, seed: 1, ...overrides });
 
 function loads(p: DemoPlan): Map<string, number> {
   const totals = new Map<string, number>();
@@ -45,14 +46,38 @@ describe("generateDemoPlan", () => {
     const perClass = new Map<string, number>();
     for (const b of p.blocks) for (const c of b.classes) perClass.set(`${c.grade}:${c.number}`, (perClass.get(`${c.grade}:${c.number}`) ?? 0) + b.weeklyPeriods);
     expect(perClass.size).toBe(5);
-    expect([...perClass.values()].every((total) => total === CURRICULUM_PERIODS)).toBe(true);
+    // 7:3 learns English outside the Plata, with its own periods.
+    const outside = CURRICULUM_PERIODS - ENGLISH.weeklyPeriods + ENGLISH.soloPeriods!;
+    expect(Object.fromEntries(perClass)).toEqual({ "7:1": CURRICULUM_PERIODS, "7:2": CURRICULUM_PERIODS, "7:3": outside,
+      "8:1": CURRICULUM_PERIODS, "8:2": CURRICULUM_PERIODS });
   });
 
-  it("anonymizes names but keeps the staff links", () => {
-    const p = plan({ anonymize: true });
+  it("gives the class outside the English Plata its own weekly periods", () => {
+    const english = plan().blocks.filter((b) => b.subject === "אנגלית" && b.classes[0].grade === 7);
+    expect(english.map((b) => [b.classes.map((c) => c.number), b.weeklyPeriods])).toEqual([
+      [[1, 2], ENGLISH.weeklyPeriods],
+      [[3], ENGLISH.soloPeriods],
+    ]);
+  });
+
+  it("names teachers by subject, numbered, and keeps the staff links", () => {
+    const p = plan();
     const text = JSON.stringify(p);
     expect(staff.some((s) => text.includes(s.fullName))).toBe(false);
     expect(p.teachers.filter((t) => t.staffUserId).map((t) => t.staffUserId).sort()).toEqual(staff.map((s) => s.staffUserId).sort());
+    const math = p.teachers.filter((t) => t.fullName.startsWith("מורה למתמטיקה ")).map((t) => t.fullName);
+    expect(math.slice(0, 3)).toEqual(["מורה למתמטיקה 1", "מורה למתמטיקה 2", "מורה למתמטיקה 3"]);
+    expect(p.teachers.some((t) => t.fullName.startsWith("מחנך/ת "))).toBe(true);
+    expect(new Set(p.teachers.map((t) => t.fullName)).size).toBe(p.teachers.length);
+  });
+
+  it("names a teacher after the subject they teach", () => {
+    const p = plan();
+    const name = new Map(p.teachers.map((t) => [t.key, t.fullName]));
+    for (const block of p.blocks) {
+      const first = p.blocks.find((b) => b.teacherKeys.includes(block.teacherKeys[0]))!;
+      expect(name.get(block.teacherKeys[0])).toMatch(first.subject === "חינוך" ? /^מחנך\/ת \d+$/ : new RegExp(`^מורה ל${first.subject} \\d+$`));
+    }
   });
 
   it("covers every lesson with placeholders when there is no staff", () => {

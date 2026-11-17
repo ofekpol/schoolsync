@@ -11,8 +11,10 @@ import { cn } from "@/lib/utils";
 import * as api from "./api";
 import type { SetupErrorKey } from "./api";
 import { className } from "./className";
+import { GradeNormControl } from "./GradeNormControl";
 import { LessonCell, type CellDraft } from "./LessonCell";
-import { buildLessonsGrid, cellKey, classTotals, teacherOptions, type Cell } from "./lessons-grid";
+import { PlataCell } from "./PlataCell";
+import { buildLessonsGrid, cellKey, cellPeriods, classTotals, gradeNorms, teacherOptions, type Cell } from "./lessons-grid";
 
 interface Props {
   boardId: string;
@@ -61,15 +63,25 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
   const gradeClasses = classes.filter((c) => c.grade === grade);
   const grid = useMemo(() => buildLessonsGrid(gradeClasses, subjects, blocks), [gradeClasses, subjects, blocks]);
   const totals = classTotals(gradeClasses, blocks);
+  const norms = useMemo(() => gradeNorms(gradeClasses, subjects, grid), [gradeClasses, subjects, grid]);
   const options = useMemo(() => teacherOptions(teachers), [teachers]);
   const label = (g: number) => tGrades(`label_${g}`);
 
-  async function save(classId: string, subjectId: string, draft: CellDraft): Promise<SetupErrorKey | null> {
-    const res = await saveCell(boardId, classId, subjectId, grid.get(cellKey(classId, subjectId))!, draft);
+  async function done(res: { ok: true } | { ok: false; error: SetupErrorKey } | null): Promise<SetupErrorKey | null> {
     if (res && !res.ok) return res.error;
     router.refresh();
     return null;
   }
+
+  const save = async (classId: string, subjectId: string, draft: CellDraft) =>
+    done(await saveCell(boardId, classId, subjectId, grid.get(cellKey(classId, subjectId))!, draft));
+  const applyNorm = async (subjectId: string, weeklyPeriods: number) =>
+    done(await api.setGradePeriods(boardId, { grade, subjectId, weeklyPeriods }));
+  const setPlataPeriods = async ({ id, ...block }: TtBlock, weeklyPeriods: number) =>
+    done(await api.replaceBlock(boardId, id, { ...block, weeklyPeriods }));
+  const detach = async (block: TtBlock, classId: string) => done(await api.detachFromPlata(boardId, block.id, classId));
+  const differing = (subjectId: string) =>
+    gradeClasses.filter((c) => cellPeriods(grid.get(cellKey(c.id, subjectId))!) !== norms.get(subjectId)).length;
 
   if (grades.length === 0) return <p className="text-sm text-neutral-600">{t("lessons.noClasses")}</p>;
   if (subjects.length === 0) return <p className="text-sm text-neutral-600">{t("lessons.noSubjects")}</p>;
@@ -83,6 +95,7 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
           {grades.map((g) => <option key={g} value={g}>{t("lessons.gradeOption", { grade: label(g) })}</option>)}
         </select>
       </label>
+      <p className="max-w-2xl text-xs text-neutral-500">{t("lessons.normHelp")}</p>
       <datalist id={datalistId}>
         {options.map((o) => <option key={o.id} value={o.label} />)}
       </datalist>
@@ -101,15 +114,27 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
           <tbody className="divide-y divide-neutral-100">
             {subjects.map((subject, row) => (
               <tr key={subject.id}>
-                <th scope="row" className="sticky start-0 bg-white px-3 py-1 text-start font-medium">{subject.name}</th>
+                <th scope="row" className="sticky start-0 z-10 bg-white px-3 py-1 text-start align-top font-medium">
+                  {subject.name}
+                  <GradeNormControl key={`${grade}:${norms.get(subject.id)}`} subject={subject.name}
+                    norm={norms.get(subject.id) ?? 0} differing={differing(subject.id)}
+                    onApply={(periods) => applyNorm(subject.id, periods)} />
+                </th>
                 {gradeClasses.map((c, col) => {
                   const key = cellKey(c.id, subject.id);
                   const cell = grid.get(key)!;
+                  const norm = norms.get(subject.id) ?? 0;
+                  const cellLabel = t("lessons.cellLabel", { subject: subject.name, class: className(c.grade, c.number, label) });
                   return (
-                    <td key={`${key}:${cell.kind === "empty" ? "" : cell.block.id}`} className="align-top">
-                      <LessonCell cell={cell} row={row} col={col} teachers={options} datalistId={datalistId}
-                        label={t("lessons.cellLabel", { subject: subject.name, class: className(c.grade, c.number, label) })}
-                        onSave={(draft) => save(c.id, subject.id, draft)} />
+                    <td key={`${key}:${cell.kind === "empty" ? "" : `${cell.block.id}:${cell.block.weeklyPeriods}`}`} className="align-top">
+                      {cell.kind === "plata" ? (
+                        <PlataCell block={cell.block} label={cellLabel} norm={norm} row={row} col={col}
+                          onPeriods={(periods) => setPlataPeriods(cell.block, periods)}
+                          onDetach={() => detach(cell.block, c.id)} />
+                      ) : (
+                        <LessonCell cell={cell} norm={norm} row={row} col={col} teachers={options} datalistId={datalistId}
+                          label={cellLabel} onSave={(draft) => save(c.id, subject.id, draft)} />
+                      )}
                     </td>
                   );
                 })}

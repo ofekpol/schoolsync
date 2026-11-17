@@ -7,7 +7,10 @@ import type { TtBlock } from "@/lib/timetable/blocks";
 import type { TtClass } from "@/lib/timetable/classes";
 import type { TtSubject } from "@/lib/timetable/subjects";
 import type { BlockInput } from "@/lib/validations/timetable";
-import { MAX_WEEKLY_PERIODS } from "@/lib/validations/timetable";
+import { MAX_CLASSES_PER_GRADE, MAX_WEEKLY_PERIODS } from "@/lib/validations/timetable";
+
+/** BlockInputSchema caps a block's teachers at MAX_CLASSES_PER_GRADE. */
+const MAX_BLOCK_TEACHERS = MAX_CLASSES_PER_GRADE;
 import type { SetupErrorKey } from "./api";
 import { className } from "./className";
 import { teacherOptions } from "./lessons-grid";
@@ -33,7 +36,7 @@ export function PlataEditor({ block, classes, subjects, teachers, onSave, onCanc
   const [classIds, setClassIds] = useState(new Set(block?.classIds ?? []));
   const [teacherIds, setTeacherIds] = useState(new Set(block?.teacherIds ?? []));
   const [teacherFilter, setTeacherFilter] = useState("");
-  const [error, setError] = useState<SetupErrorKey | "needTwoClasses" | null>(null);
+  const [error, setError] = useState<SetupErrorKey | "needTwoClasses" | "tooManyTeachers" | null>(null);
   const [busy, setBusy] = useState(false);
   const label = (g: number) => tGrades(`label_${g}`);
   const gradeClasses = classes.filter((c) => c.grade === grade);
@@ -49,6 +52,7 @@ export function PlataEditor({ block, classes, subjects, teachers, onSave, onCanc
     event.preventDefault();
     const chosen = gradeClasses.filter((c) => classIds.has(c.id)).map((c) => c.id);
     if (chosen.length < 2) return setError("needTwoClasses");
+    if (teacherIds.size > MAX_BLOCK_TEACHERS) return setError("tooManyTeachers");
     setBusy(true);
     const failure = await onSave({ subjectId, weeklyPeriods: periods, classIds: chosen, teacherIds: [...teacherIds] });
     setBusy(false);
@@ -109,7 +113,9 @@ export function PlataEditor({ block, classes, subjects, teachers, onSave, onCanc
       </fieldset>
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          {error === "needTwoClasses" ? t("plata.needTwoClasses") : t(`errors.${error}`)}
+          {error === "needTwoClasses" || error === "tooManyTeachers"
+            ? t(`plata.${error}`, { max: MAX_BLOCK_TEACHERS })
+            : t(`errors.${error}`)}
         </p>
       )}
       <div className="flex gap-2">

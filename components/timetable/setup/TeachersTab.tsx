@@ -81,6 +81,7 @@ function TeacherRow({ boardId, teacher, staffName }: { boardId: string; teacher:
   const t = useTranslations("timetable.setup");
   const router = useRouter();
   const [name, setName] = useState(teacher.fullName);
+  const [freeDay, setFreeDay] = useState(teacher.freeDayEntitled);
   const [error, setError] = useState<SetupErrorKey | null>(null);
   const [confirming, setConfirming] = useState(false);
 
@@ -88,6 +89,7 @@ function TeacherRow({ boardId, teacher, staffName }: { boardId: string; teacher:
     const res = await api.updateTeacher(boardId, teacher.id, change);
     if (!res.ok) {
       setName(teacher.fullName);
+      setFreeDay(teacher.freeDayEntitled);
       return setError(res.error);
     }
     setError(null);
@@ -118,9 +120,9 @@ function TeacherRow({ boardId, teacher, staffName }: { boardId: string; teacher:
       </td>
       <td className="px-3 py-1 text-neutral-600">{staffName ?? (teacher.staffUserId ? t("teachers.linked") : "—")}</td>
       <td className="px-3 py-1">
-        <input type="checkbox" checked={teacher.freeDayEntitled}
+        <input type="checkbox" checked={freeDay}
           aria-label={t("teachers.freeDayFor", { name: teacher.fullName })}
-          onChange={(e) => void patch({ freeDayEntitled: e.target.checked })}
+          onChange={(e) => { setFreeDay(e.target.checked); void patch({ freeDayEntitled: e.target.checked }); }}
           className="size-4 accent-violet-600" />
       </td>
       <td className="px-3 py-1 text-end">

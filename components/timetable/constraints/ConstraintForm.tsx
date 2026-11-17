@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import type { TtConstraint } from "@/lib/timetable/constraints/crud";
@@ -158,16 +158,17 @@ function Hardness({ hardness, hard, weight, setHard, setWeight }: {
   setWeight: (weight: number) => void;
 }) {
   const t = useTranslations("timetable.constraints");
+  const name = useId();
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm">
       {hardness === "either" ? (
         <>
           <label className="flex items-center gap-1.5">
-            <input type="radio" checked={hard} onChange={() => setHard(true)} className="accent-violet-600" />
+            <input type="radio" name={name} checked={hard} onChange={() => setHard(true)} className="accent-violet-600" />
             {t("hard")}
           </label>
           <label className="flex items-center gap-1.5">
-            <input type="radio" checked={!hard} onChange={() => setHard(false)} className="accent-violet-600" />
+            <input type="radio" name={name} checked={!hard} onChange={() => setHard(false)} className="accent-violet-600" />
             {t("soft")}
           </label>
         </>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StaffDialog } from "@/components/admin/staff-ui";
 import { cleanNames } from "@/lib/timetable/errors";
 import { MAX_NAME_LENGTH } from "@/lib/validations/timetable";
+import { MAX_PASTED_NAMES } from "@/lib/validations/timetable-api";
 
 interface Props {
   title: string;
@@ -20,18 +21,19 @@ export function PasteNamesDialog({ title, onSubmit }: Props) {
   const titleId = useId();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [tooLong, setTooLong] = useState(false);
+  const [error, setError] = useState<"tooLong" | "tooMany" | null>(null);
   const [busy, setBusy] = useState(false);
   const names = cleanNames(text.split("\n"));
 
   function close() {
     setOpen(false);
     setText("");
-    setTooLong(false);
+    setError(null);
   }
 
   async function submit() {
-    if (names.some((name) => name.length > MAX_NAME_LENGTH)) return setTooLong(true);
+    if (names.some((name) => name.length > MAX_NAME_LENGTH)) return setError("tooLong");
+    if (names.length > MAX_PASTED_NAMES) return setError("tooMany");
     setBusy(true);
     try {
       await onSubmit(names);
@@ -53,10 +55,12 @@ export function PasteNamesDialog({ title, onSubmit }: Props) {
         <StaffDialog titleId={titleId} title={title} subtitle={t("paste.hint")} closeLabel={t("close")}
           onClose={close} size="md">
           <textarea aria-label={title} value={text} rows={10} dir="auto"
-            onChange={(event) => { setText(event.target.value); setTooLong(false); }}
+            onChange={(event) => { setText(event.target.value); setError(null); }}
             className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500" />
-          {tooLong && (
-            <p role="alert" className="mt-2 text-sm text-red-700">{t("paste.tooLong", { max: MAX_NAME_LENGTH })}</p>
+          {error && (
+            <p role="alert" className="mt-2 text-sm text-red-700">
+              {error === "tooLong" ? t("paste.tooLong", { max: MAX_NAME_LENGTH }) : t("paste.tooMany", { max: MAX_PASTED_NAMES })}
+            </p>
           )}
           <div className="mt-4 flex items-center justify-between gap-3">
             <span className="text-xs text-neutral-500">{t("paste.count", { count: names.length })}</span>

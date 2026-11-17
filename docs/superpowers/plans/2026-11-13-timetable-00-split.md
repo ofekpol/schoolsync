@@ -18,10 +18,10 @@ Two people, two tracks. Each plan is its own branch from `staging` and its own P
 | 2 | Profile categories, Task 5 (gate, nav link, labels in the staff table) | B | `feature/profile-gate` | now | **merged into `staging`** (PR #99); detailed: `2026-11-13-timetable-02-profile-categories.md` |
 | 3 | Solver spike | - | - | - | **retired**; its measurements moved into plan 4 |
 | 5a | Setup data: tables, domain, solver contract, export, demo seed | A | `feature/timetable-setup` | now | **merged into `staging`**; detailed: `2026-11-14-timetable-05-setup-data.md`, Tasks 1-5 |
-| 5b | Setup data: API routes and setup tabs | B | `feature/timetable-setup-ui` | plan 2 Task 5 merged and plan 5a merged | detailed: same file, Tasks 6-8 |
+| 5b | Setup data: API routes and setup tabs | B | `feature/timetable-setup-ui` | plan 2 Task 5 merged and plan 5a merged | **merged into `staging`** (PR #107); detailed: same file, Tasks 6-8 |
 | 4 | Solver service (Python, CP-SAT), benchmark, hosting | A | `feature/timetable-solver` | plan 5a merged (it holds the contract) | outline below |
 | 7 | Generate, compare three options, read-only timetable grid | A | `feature/timetable-generate` | plan 4 merged | outline below |
-| 6 | Constraints: entry screens, collect, seeded demo constraints | B | `feature/timetable-collect` | plan 5b merged | outline below |
+| 6 | Constraints: entry screens, collect, seeded demo constraints | B | `feature/timetable-collect` | plan 5b merged | **merged into `staging`** (PR #108, migration 0025); detailed: `2026-11-16-timetable-06-constraints.md` |
 | 8 | Edit by hand, pin, regenerate, publish, teacher view | A | `feature/timetable-edit` | plans 6 and 7 merged | outline below |
 
 **Track A = Ofek (with Claude). Track B = Maor** (start from `2026-11-13-timetable-TRACK-B-handoff.md`).
@@ -100,6 +100,11 @@ is met.
 - Done when: a run on the staging demo board stores three options and each opens as a grid.
 
 ### Plan 6: constraints (track B, encoders by track A)
+
+**Merged (PR #108).** Six decisions it made wait for Ofek's OK; they are listed at the top of
+`2026-11-16-timetable-06-constraints.md`. The one the encoders depend on: a meeting's
+`consecutive` means all its weekly periods back to back on one day.
+
 - Migration 0025: `tt_constraints`. Type registry in `lib/timetable/constraints/`.
 - Management constraints aimed at a teacher, a class, a grade, a subject or a profile label;
   the form shows how many teachers a label reaches and lists unlinked ones.

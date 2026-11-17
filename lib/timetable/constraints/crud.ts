@@ -2,9 +2,10 @@ import "server-only";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { withSchool } from "@/lib/db/client";
 import { profileCategories, profileCategoryOptions } from "@/lib/db/schema-profile";
-import { ttConstraints, ttTeachers } from "@/lib/db/schema-timetable";
+import { ttBoards, ttConstraints, ttTeachers } from "@/lib/db/schema-timetable";
 import { assertBoard } from "../boards";
 import { pgErrorCode, type Tx } from "../errors";
+import { WeekSchema } from "../week";
 import { ConstraintError } from "./errors";
 import { MAX_CONSTRAINTS_PER_BOARD } from "./limits";
 import type { ConstraintInput, ConstraintType } from "./registry";
@@ -42,8 +43,18 @@ function targetOf(input: ConstraintInput): Target | null {
   return "target" in input.params ? input.params.target : null;
 }
 
+/** Throws day_not_in_week unless the params' day is a day of the board's week and has every period named. */
+async function assertInWeek(tx: Tx, boardId: string, input: ConstraintInput): Promise<void> {
+  const params = input.params as { day?: number; periods?: number[] };
+  if (params.day === undefined) return;
+  const [board] = await tx.select({ week: ttBoards.week }).from(ttBoards).where(eq(ttBoards.id, boardId));
+  const day = board ? WeekSchema.parse(board.week).days.find((d) => d.day === params.day) : undefined;
+  if (!day || (params.periods ?? []).some((p) => p > day.periods.length)) throw new ConstraintError("day_not_in_week");
+}
+
 /** Throws unless every teacher is on the board, the option is active, and a free day's teacher is entitled. */
 async function validate(tx: Tx, boardId: string, input: ConstraintInput): Promise<void> {
+  await assertInWeek(tx, boardId, input);
   const target = targetOf(input);
   const teacherIds = [...(target?.kind === "teachers" ? target.teacherIds : []), ...(input.teacherId ? [input.teacherId] : [])];
   if (teacherIds.length > 0) {

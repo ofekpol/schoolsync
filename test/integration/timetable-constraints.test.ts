@@ -70,6 +70,20 @@ describe.skipIf(skipIfNoTestDb)("timetable constraints domain", () => {
     expect(await listConstraints(testSchoolA, ids.board)).toHaveLength(before);
   });
 
+  it("refuses a day outside the board's week and a period that day does not have", async () => {
+    await expect(createConstraint(testSchoolA, ids.board, freeDay(ids.t1, 6), MANAGEMENT)).rejects.toMatchObject({
+      code: "day_not_in_week",
+    });
+    const friday = (periods: number[]) =>
+      ({ type: "teacher_unavailable", hard: true, weight: 100,
+        params: { target: { kind: "teachers", teacherIds: [ids.t1] }, day: 5, periods } }) as ConstraintInput;
+    await expect(createConstraint(testSchoolA, ids.board, friday([6]), MANAGEMENT)).rejects.toMatchObject({
+      code: "day_not_in_week",
+    });
+    const ok = await createConstraint(testSchoolA, ids.board, friday([5]), MANAGEMENT);
+    expect(await deleteConstraint(testSchoolA, ids.board, ok.id)).toBe(true);
+  });
+
   it("refuses a free day for a teacher who is not entitled", async () => {
     await expect(createConstraint(testSchoolA, ids.board, freeDay(ids.t2), MANAGEMENT)).rejects.toMatchObject({
       code: "not_entitled",

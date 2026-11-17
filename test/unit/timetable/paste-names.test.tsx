@@ -36,4 +36,12 @@ describe("PasteNamesDialog", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("paste.tooLong");
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("refuses more names than one paste may add", () => {
+    const { onSubmit, textarea, submit } = open();
+    fireEvent.change(textarea, { target: { value: Array.from({ length: 201 }, (_, i) => `שם ${i}`).join("\n") } });
+    fireEvent.click(submit);
+    expect(screen.getByRole("alert")).toHaveTextContent("paste.tooMany");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

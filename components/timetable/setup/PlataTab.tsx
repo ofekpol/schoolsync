@@ -32,6 +32,7 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
   const [rowError, setRowError] = useState<{ id: string; key: SetupErrorKey } | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
   const classById = new Map(classes.map((c) => [c.id, c]));
   const subjectName = new Map(subjects.map((s) => [s.id, s.name]));
   const teacherName = new Map(teachers.map((x) => [x.id, x.fullName]));
@@ -51,6 +52,7 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
   }
 
   async function remove(id: string) {
+    setConfirming(null);
     const res = await api.deleteBlock(boardId, id);
     if (!res.ok) return setRowError({ id, key: res.error });
     router.refresh();
@@ -92,10 +94,17 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
                       onClick={() => setEditing({ kind: "block", id: b.id })}>
                       <Pencil aria-hidden className="size-4" />
                     </Button>
-                    <Button type="button" size="icon" variant="ghost" onClick={() => remove(b.id)}
-                      aria-label={t("deleteNamed", { name: subjectName.get(b.subjectId) ?? "" })}>
-                      <Trash2 aria-hidden className="size-4" />
-                    </Button>
+                    {confirming === b.id ? (
+                      <span className="flex items-center gap-1">
+                        <Button type="button" size="sm" variant="destructive" onClick={() => remove(b.id)}>{t("delete")}</Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(null)}>{t("cancel")}</Button>
+                      </span>
+                    ) : (
+                      <Button type="button" size="icon" variant="ghost" onClick={() => setConfirming(b.id)}
+                        aria-label={t("deleteNamed", { name: subjectName.get(b.subjectId) ?? "" })}>
+                        <Trash2 aria-hidden className="size-4" />
+                      </Button>
+                    )}
                     {rowError?.id === b.id && <p role="alert" className="w-full text-sm text-red-700">{t(`errors.${rowError.key}`)}</p>}
                   </div>
                 )}

@@ -12,7 +12,8 @@ import {
 /** Request and response shapes of the /api/v1/timetable routes (plan 5b). */
 
 const id = z.string().uuid();
-const MAX_PASTED_NAMES = 200;
+/** The most names one paste may add (subjects or teachers). */
+export const MAX_PASTED_NAMES = 200;
 
 export const BoardSchema = z.object({
   id,

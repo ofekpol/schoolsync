@@ -843,7 +843,8 @@
         "hint": "One name per line. Blank lines, repeats and names already here are skipped.",
         "add": "Add",
         "count": "{count, plural, one {# name} other {# names}}",
-        "tooLong": "A name is longer than {max} characters"
+        "tooLong": "A name is longer than {max} characters",
+        "tooMany": "You can paste up to {max} names at a time"
       },
       "classes": {
         "hint": "How many classes each grade has. Classes are numbered from 1.",
@@ -908,7 +909,8 @@
         "save": "Save",
         "needTwoClasses": "Choose at least two classes.",
         "summary": "{periods} periods · {classes}",
-        "filterTeachers": "Find a teacher"
+        "filterTeachers": "Find a teacher",
+        "tooManyTeachers": "A Plata can have up to {max} teachers"
       },
       "readiness": {
         "title": "Ready to generate",
@@ -977,7 +979,8 @@
         "wrongStatus": "Collection can't be opened for this board in its current state",
         "invalid": "The constraint is missing details",
         "demo": "Not available in the demo",
-        "save": "Saving failed, try again"
+        "save": "Saving failed, try again",
+        "dayNotInWeek": "That day or period isn't in the board's week"
       },
       "fields": {
         "teacher": "Teacher",

@@ -1015,6 +1015,59 @@
         "teacher_few_gaps": "As few gaps as possible for teachers"
       }
     },
+    "generate": {
+      "link": "Generate timetable",
+      "title": "Generate timetable: {name}",
+      "subtitle": "Three options are computed in parallel. Pick the one that suits the school.",
+      "back": "Back to board setup",
+      "generate": "Generate timetable",
+      "running": "Computing the three options...",
+      "elapsed": "{seconds} s",
+      "failed": "The run failed.",
+      "problems": "{count} data problems prevent generating.",
+      "fixProblems": "Fix in board setup",
+      "profile": {
+        "teachers": "Teachers first",
+        "classes": "Classes first",
+        "balanced": "Balanced"
+      },
+      "score": "Score: {score}",
+      "noViolations": "No violations",
+      "violation": {
+        "teacher_clash": "{count} teacher clashes",
+        "class_clash": "{count} class clashes",
+        "unplaced": "{count} lessons not placed",
+        "constraint": "{text} ({count})",
+        "removedConstraint": "Removed constraint"
+      },
+      "profileFailed": "This option failed",
+      "error": {
+        "solver_not_configured": "The solver is not configured",
+        "solver_unreachable": "The solver is unavailable right now",
+        "solver_http_error": "The solver returned an error",
+        "solver_bad_output": "The solver returned an invalid answer",
+        "timed_out": "The run took too long",
+        "solver_failed": "The solver found no solution",
+        "internal_error": "Internal error",
+        "run_in_progress": "A run is already in progress for this board",
+        "input_problems": "The board data has problems",
+        "demo": "Not available in the demo",
+        "start": "Could not start the run"
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "done": "Done",
+        "failed": "Failed"
+      },
+      "open": "Open",
+      "history": "Earlier runs",
+      "removedSubject": "Removed subject",
+      "removedTeacher": "Removed teacher",
+      "meeting": "Meeting",
+      "byClass": "Classes: {names}",
+      "byTeacher": "Teachers: {names}"
+    },
     "collect": {
       "link": {
         "open": "Collect constraints"

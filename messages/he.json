@@ -1066,7 +1066,15 @@
       "removedTeacher": "מורה שהוסר",
       "meeting": "ישיבה",
       "byClass": "כיתות: {names}",
-      "byTeacher": "מורים: {names}"
+      "byTeacher": "מורים: {names}",
+      "viewClass": "לפי כיתה",
+      "viewTeacher": "לפי מורה",
+      "pickClass": "כיתה",
+      "pickTeacher": "מורה",
+      "clash": "התנגשות",
+      "backToOptions": "חזרה לאפשרויות",
+      "gridTitle": "{profile}: מערכת שבועית",
+      "periodLabel": "שעה {period}"
     },
     "collect": {
       "link": {

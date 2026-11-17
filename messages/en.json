@@ -1066,7 +1066,15 @@
       "removedTeacher": "Removed teacher",
       "meeting": "Meeting",
       "byClass": "Classes: {names}",
-      "byTeacher": "Teachers: {names}"
+      "byTeacher": "Teachers: {names}",
+      "viewClass": "By class",
+      "viewTeacher": "By teacher",
+      "pickClass": "Class",
+      "pickTeacher": "Teacher",
+      "clash": "Clash",
+      "backToOptions": "Back to options",
+      "gridTitle": "{profile}: weekly timetable",
+      "periodLabel": "Period {period}"
     },
     "collect": {
       "link": {

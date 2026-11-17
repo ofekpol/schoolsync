@@ -8,6 +8,12 @@ vi.mock("next-intl", () => ({
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+  usePathname: () => "/timetable/b/generate/r/s",
+}));
+
 const uuid = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
 const [BOARD, RUN] = [uuid(99), uuid(50)];
 const profiles = ["teachers", "classes", "balanced"] as const;
@@ -92,5 +98,44 @@ describe("GeneratePanel", () => {
     const calls = fetchMock.mock.calls.length;
     await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
     expect(fetchMock.mock.calls.length).toBe(calls);
+  });
+});
+
+describe("TimetableGrid", () => {
+  const week = { days: [0, 1].map((day) => ({ day, periods: [1, 2].map((period) => ({ period, start: `0${7 + period}:00`, end: `0${8 + period}:00` })) })) };
+  const lesson = (day: number, period: number, o: Partial<{ subjectId: string | null; classIds: string[]; teacherIds: string[] }> = {}) =>
+    ({ day, period, blockId: `b${day}${period}`, subjectId: "s1", classIds: ["c1"], teacherIds: ["t1"], ...o });
+  const grid = {
+    solution: { id: "s", profile: "balanced", status: "ok", error: null, score: 1, violations: [] },
+    week,
+    lessons: [
+      lesson(0, 1),
+      lesson(1, 2, { subjectId: null, classIds: [], teacherIds: ["t1"] }),
+      lesson(0, 2, { subjectId: "gone", teacherIds: ["gone"] }),
+      lesson(0, 2, { classIds: ["c1"], teacherIds: ["t2"] }),
+    ],
+    names: { classes: { c1: { grade: 7, number: 1 } }, teachers: { t1: "Dana", t2: "Eli" }, subjects: { s1: "Math" } },
+  } as unknown as import("@/lib/timetable/grid").SolutionGrid;
+
+  it("shows a class's lessons in their day and period cells, with clash and removed names", async () => {
+    const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
+    render(<TimetableGrid boardId="b" runId="r" grid={grid} view={{ kind: "class", id: "c1" }} />);
+    const cell = (day: number, period: number) => screen.getByTestId(`cell-${day}-${period}`);
+    expect(cell(0, 1)).toHaveTextContent("Math");
+    expect(cell(0, 1)).toHaveTextContent("Dana");
+    expect(cell(0, 2)).toHaveTextContent("clash");
+    expect(cell(0, 2)).toHaveTextContent("removedSubject");
+    expect(cell(0, 2)).toHaveTextContent("removedTeacher");
+    expect(cell(1, 1)).toBeEmptyDOMElement();
+    expect(screen.getByRole("link", { name: "backToOptions" })).toHaveAttribute("href", "/timetable/b/generate");
+  });
+
+  it("shows a teacher's week including a meeting, and replaces the URL on switch", async () => {
+    const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
+    render(<TimetableGrid boardId="b" runId="r" grid={grid} view={{ kind: "teacher", id: "t1" }} />);
+    expect(screen.getByTestId("cell-1-2")).toHaveTextContent("meeting");
+    expect(screen.getByTestId("cell-0-1")).toHaveTextContent("label_71");
+    fireEvent.click(screen.getByRole("button", { name: "viewClass" }));
+    expect(replace).toHaveBeenCalledWith("/timetable/b/generate/r/s?view=class&id=c1");
   });
 });

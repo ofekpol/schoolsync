@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -36,6 +37,8 @@ export const ttBoards = pgTable(
     status: text({ enum: ["setup", "collecting", "review", "published"] }).notNull().default("setup"),
     week: jsonb().notNull(),
     teacherDeadline: timestamp("teacher_deadline", { withTimezone: true }),
+    // FK to tt_solutions lives in migration 0026; not declared here to avoid a circular import.
+    publishedSolutionId: uuid("published_solution_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -199,4 +202,73 @@ export const ttTeacherResponses = pgTable(
     answeredBy: uuid("answered_by").references(() => staffUsers.id, { onDelete: "set null" }),
   },
   (t) => [primaryKey({ name: "tt_teacher_responses_pk", columns: [t.boardId, t.teacherId] }), schoolIsolation],
+);
+
+/**
+ * Generation (migration 0026, plan 7). A run yields up to three solutions, one per
+ * profile. `blockId` has no FK: a meeting block's id is its constraint's id.
+ */
+export const ttRuns = pgTable(
+  "tt_runs",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    schoolId: schoolId(),
+    boardId: boardId(),
+    status: text({ enum: ["queued", "running", "done", "failed"] }).notNull().default("queued"),
+    error: text(),
+    input: jsonb().notNull(),
+    requestedBy: uuid("requested_by").references(() => staffUsers.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("tt_runs_board_created_idx").on(t.boardId, t.createdAt),
+    check("tt_runs_status_check", sql`${t.status} IN ('queued', 'running', 'done', 'failed')`),
+    schoolIsolation,
+  ],
+);
+
+export const ttSolutions = pgTable(
+  "tt_solutions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    schoolId: schoolId(),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => ttRuns.id, { onDelete: "cascade" }),
+    boardId: boardId(),
+    profile: text({ enum: ["teachers", "classes", "balanced"] }).notNull(),
+    status: text({ enum: ["ok", "failed"] }).notNull(),
+    error: text(),
+    score: doublePrecision().notNull().default(0),
+    violations: jsonb().notNull().default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("tt_solutions_run_profile_key").on(t.runId, t.profile),
+    check("tt_solutions_profile_check", sql`${t.profile} IN ('teachers', 'classes', 'balanced')`),
+    check("tt_solutions_status_check", sql`${t.status} IN ('ok', 'failed')`),
+    schoolIsolation,
+  ],
+);
+
+export const ttPlacements = pgTable(
+  "tt_placements",
+  {
+    schoolId: schoolId(),
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => ttSolutions.id, { onDelete: "cascade" }),
+    blockId: uuid("block_id").notNull(),
+    day: integer().notNull(),
+    period: integer().notNull(),
+    pinned: boolean().notNull().default(false),
+  },
+  (t) => [
+    primaryKey({ name: "tt_placements_pk", columns: [t.solutionId, t.blockId, t.day, t.period] }),
+    check("tt_placements_day_check", sql`${t.day} BETWEEN 0 AND 6`),
+    check("tt_placements_period_check", sql`${t.period} >= 1`),
+    schoolIsolation,
+  ],
 );

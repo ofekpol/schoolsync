@@ -213,7 +213,9 @@ GITHUB_SUPPORT_REPO             # private repo for staff Help/bug reports and se
 GITHUB_SUPPORT_TOKEN            # fine-grained token, Issues r/w on that repo only; unset = Help hidden
 TEST_LOGIN_ENABLED              # e2e-only test login route; never on Production
 PLAYWRIGHT_BASE_URL             # run e2e against a deployment
-VERCEL_AUTOMATION_BYPASS_SECRET # e2e against protected previews; revoke after use
+VERCEL_AUTOMATION_BYPASS_SECRET # kept on: the app sends it to reach /api/solve on previews and staging (also e2e); rotate if it leaks
+SOLVER_URL                      # optional solver endpoint; default https://$VERCEL_URL/api/solve; set locally to use a preview
+SOLVER_TOKEN                    # shared secret for /api/solve; required on Production (unset there = solver refuses)
 DEMO_SESSION_SECRET             # demo cookie + IP hashing (>= 32 bytes); unset = demo unavailable
 CRON_SECRET                     # Vercel cron auth for /api/cron/demo-cleanup (daily, vercel.json)
 ```

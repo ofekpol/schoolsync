@@ -17,7 +17,7 @@ Copy `.env.example` to `.env.local` and fill these in:
 | `GROQ_API_KEY` / `AI_MODEL` | Staff AI chat + smart adder. Unset = AI hidden (Production today) | `lib/ai/` |
 | `GITHUB_SUPPORT_REPO` / `GITHUB_SUPPORT_TOKEN` | Staff "עזרה" form → issues in the private support repo. Unset = Help link hidden. Setup: §9 "Support reports" | `lib/support/` |
 | `TEST_LOGIN_ENABLED` | Enables the e2e test login route. Never on Production | `app/api/v1/auth/login` |
-| `PLAYWRIGHT_BASE_URL` / `VERCEL_AUTOMATION_BYPASS_SECRET` | Run e2e against a deployment (bypass needed for protected previews). Revoke the bypass after testing | `playwright.config.ts` |
+| `PLAYWRIGHT_BASE_URL` / `VERCEL_AUTOMATION_BYPASS_SECRET` | Run e2e against a deployment (bypass needed for protected previews). The bypass stays on: timeTable Generate sends it to reach `/api/solve` on previews and staging; rotate it if it leaks | `playwright.config.ts` |
 
 Never commit `.env.local`. The `.env.example` file is the canonical list of expected variables.
 
@@ -137,7 +137,7 @@ Blocked until `edusolutions.co.il` DNS is live (`nslookup edusolutions.co.il 1.1
 7. **Company site (EduSolutions repo):** set `NEXT_PUBLIC_GANTT_URL=https://app.edusolutions.co.il`.
 8. **Check:** password reset from `/auth/login` arrives from `no-reply@edusolutions.co.il` and its link opens on the new domain; Google sign-in works; an old `school-gantt.vercel.app/<token>` link still opens.
 
-**E2E against staging:** `PLAYWRIGHT_BASE_URL=<staging url> VERCEL_AUTOMATION_BYPASS_SECRET=<from .env.staging.local> pnpm playwright`. Generate the bypass in Vercel → Settings → Deployment Protection; it applies to the whole project, so revoke it afterwards.
+**E2E against staging:** `PLAYWRIGHT_BASE_URL=<staging url> VERCEL_AUTOMATION_BYPASS_SECRET=<from .env.staging.local> pnpm playwright`. Generate the bypass in Vercel → Settings → Deployment Protection; it applies to the whole project and stays on (timeTable Generate needs it on previews and staging).
 
 **Plans:** Vercel Hobby and Supabase Free today. Hobby forbids commercial use; see `docs/COST_PLAN.md` (PR #55) for upgrade thresholds.
 

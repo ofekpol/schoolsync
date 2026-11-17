@@ -25,7 +25,7 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
 
   const classLabel = (id: string) => {
     const c = names.classes[id];
-    return c ? className(c.grade, c.number, (g) => tGrades(`label_${g}`)) : "";
+    return c ? className(c.grade, c.number, (g) => tGrades(`label_${g}`)) : t("removedClass");
   };
   const classIds = Object.keys(names.classes).sort(
     (a, b) => names.classes[a].grade - names.classes[b].grade || names.classes[a].number - names.classes[b].number);
@@ -47,7 +47,7 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
     l.subjectId === null ? t("meeting") : names.subjects[l.subjectId] ?? t("removedSubject");
   const otherOf = (l: GridLesson) =>
     view.kind === "class"
-      ? l.teacherIds.map((id) => names.teachers[id] ?? tc("removedTeacher")).join(", ")
+      ? l.teacherIds.map((id) => names.teachers[id] ?? t("removedTeacher")).join(", ")
       : l.classIds.map(classLabel).join(", ");
 
   return (
@@ -69,8 +69,8 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
         <table className="w-full min-w-[40rem] border-collapse text-sm">
           <thead>
             <tr>
-              <th className="border border-neutral-200 p-2" />
-              {week.days.map((d) => <th key={d.day} className="border border-neutral-200 bg-neutral-50 p-2">{tc(`days.${d.day}`)}</th>)}
+              <th scope="col" className="border border-neutral-200 p-2"><span className="sr-only">{t("cornerLabel")}</span></th>
+              {week.days.map((d) => <th key={d.day} scope="col" className="border border-neutral-200 bg-neutral-50 p-2">{tc(`days.${d.day}`)}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -82,8 +82,11 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
                 </th>
                 {week.days.map((d) => {
                   const lessons = cells.get(`${d.day}:${period}`) ?? [];
+                  const exists = d.periods.some((x) => x.period === period);
                   return (
-                    <td key={d.day} data-testid={`cell-${d.day}-${period}`} className="border border-neutral-200 p-2 align-top">
+                    <td key={d.day} data-testid={`cell-${d.day}-${period}`}
+                      className={`border border-neutral-200 p-2 align-top ${exists ? "" : "bg-neutral-100 text-neutral-500"}`}>
+                      {!exists && <p className="text-xs">{t("noPeriod")}</p>}
                       {lessons.length > 1 && (
                         <p className="mb-1 inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-900">
                           <AlertTriangle aria-hidden className="size-3.5" />{t("clash")}

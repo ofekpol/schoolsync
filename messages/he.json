@@ -1074,7 +1074,10 @@
       "clash": "התנגשות",
       "backToOptions": "חזרה לאפשרויות",
       "gridTitle": "{profile}: מערכת שבועית",
-      "periodLabel": "שעה {period}"
+      "periodLabel": "שעה {period}",
+      "noPeriod": "אין שעה כזו",
+      "removedClass": "כיתה שהוסרה",
+      "cornerLabel": "שעה / יום"
     },
     "collect": {
       "link": {

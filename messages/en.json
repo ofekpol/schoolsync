@@ -1074,7 +1074,10 @@
       "clash": "Clash",
       "backToOptions": "Back to options",
       "gridTitle": "{profile}: weekly timetable",
-      "periodLabel": "Period {period}"
+      "periodLabel": "Period {period}",
+      "noPeriod": "No such period",
+      "removedClass": "Removed class",
+      "cornerLabel": "Period / day"
     },
     "collect": {
       "link": {

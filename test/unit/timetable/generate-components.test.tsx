@@ -138,4 +138,17 @@ describe("TimetableGrid", () => {
     fireEvent.click(screen.getByRole("button", { name: "viewClass" }));
     expect(replace).toHaveBeenCalledWith("/timetable/b/generate/r/s?view=class&id=c1");
   });
+
+  it("marks periods a short day does not have, even when a lesson sits there, and names removed classes", async () => {
+    const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
+    const short = {
+      ...grid,
+      week: { days: [week.days[0], { day: 1, periods: [week.days[1].periods[0]] }] },
+      lessons: [...grid.lessons, lesson(1, 2, { classIds: ["c1", "gone"], teacherIds: ["t1"] })],
+    } as unknown as import("@/lib/timetable/grid").SolutionGrid;
+    render(<TimetableGrid boardId="b" grid={short} view={{ kind: "teacher", id: "t1" }} />);
+    expect(screen.getByTestId("cell-1-2")).toHaveTextContent("noPeriod");
+    expect(screen.getByTestId("cell-0-2")).not.toHaveTextContent("noPeriod");
+    expect(screen.getByTestId("cell-1-2")).toHaveTextContent("removedClass");
+  });
 });

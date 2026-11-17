@@ -2,6 +2,8 @@ import { z } from "zod";
 import { WeekSchema } from "@/lib/timetable/week";
 import {
   BlockInputSchema,
+  DetachClassInputSchema,
+  GradePeriodsInputSchema,
   MAX_CLASSES_PER_GRADE,
   MAX_GRADE,
   MAX_TEACHERS,
@@ -76,7 +78,8 @@ export const TeacherPatchInputSchema = z
     staffUserId: id.nullable().optional(),
   })
   .strict();
-export { BlockInputSchema };
+export { BlockInputSchema, DetachClassInputSchema, GradePeriodsInputSchema };
+export const GradePeriodsResponseSchema = z.object({ updated: z.number().int(), created: z.number().int() });
 
 // Plan 6: constraints and the collection round.
 const constraintType = z.enum([

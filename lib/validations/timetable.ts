@@ -27,3 +27,14 @@ export const BlockInputSchema = z.object({
   teacherIds: uniqueIds(MAX_CLASSES_PER_GRADE, 0),
 });
 export type BlockInput = z.infer<typeof BlockInputSchema>;
+
+/** One subject's weekly periods for every class of a grade (lessons and Plata alike). */
+export const GradePeriodsInputSchema = z.object({
+  grade: z.number().int().min(MIN_GRADE).max(MAX_GRADE),
+  subjectId: z.string().uuid(),
+  weeklyPeriods: z.number().int().min(1).max(MAX_WEEKLY_PERIODS),
+});
+export type GradePeriodsInput = z.infer<typeof GradePeriodsInputSchema>;
+
+/** The class to take out of a Plata. */
+export const DetachClassInputSchema = z.object({ classId: z.string().uuid() });

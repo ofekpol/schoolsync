@@ -40,3 +40,28 @@ export function teacherOptions(teachers: Array<{ id: string; fullName: string }>
     return { id: teacher.id, label: n === 1 ? teacher.fullName : `${teacher.fullName} (${n})` };
   });
 }
+
+/** A cell's weekly periods: its lesson's or its Plata's, 0 when empty. */
+export const cellPeriods = (cell: Cell): number => (cell.kind === "empty" ? 0 : cell.block.weeklyPeriods);
+
+/**
+ * Each subject's standard for the grade: the weekly periods most of its classes
+ * have (an empty cell counts as 0). A tie goes to the value of the first class.
+ */
+export function gradeNorms(classes: TtClass[], subjects: TtSubject[], grid: Map<string, Cell>): Map<string, number> {
+  const norms = new Map<string, number>();
+  for (const subject of subjects) {
+    const counts = new Map<number, number>();
+    let best = 0;
+    let bestCount = 0;
+    for (const klass of classes) {
+      const cell = grid.get(cellKey(klass.id, subject.id));
+      const value = cell ? cellPeriods(cell) : 0;
+      const count = (counts.get(value) ?? 0) + 1;
+      counts.set(value, count);
+      if (count > bestCount) [best, bestCount] = [value, count];
+    }
+    norms.set(subject.id, best);
+  }
+  return norms;
+}

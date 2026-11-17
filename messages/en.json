@@ -894,7 +894,16 @@
         "cellLabel": "{subject}, {class}",
         "save": "Save",
         "saved": "Saved",
-        "unknownTeacher": "Pick a teacher from the list"
+        "unknownTeacher": "Pick a teacher from the list",
+        "normLabel": "{subject} periods for every class in the grade",
+        "normHint": "Weekly periods of this subject for every class in the grade",
+        "applyNorm": "Apply to every class in the grade: {subject}",
+        "normHelp": "The number next to a subject applies to every class in the grade (Plata included): type it and press ✓. You can still change a single class; a small orange dot marks a class that differs.",
+        "differs": "Differs from the grade ({norm} periods)",
+        "plataPeriods": "Plata periods",
+        "plataPeriodsHint": "Weekly periods of the whole Plata (every class in it)",
+        "detach": "Take {class} out of the Plata",
+        "detachHint": "Take the class out of the Plata: it gets its own lesson, with its own number of periods"
       },
       "plata": {
         "hint": "A Plata: several classes of one grade learn the same subject at the same periods.",

@@ -69,9 +69,35 @@ export function listResponses(schoolId: string, boardId: string): Promise<Teache
 }
 
 /**
- * Management answers for a teacher: sets (or clears, with null) their free day
- * and marks them answered, in one transaction.
+ * Records a teacher's answer inside an open transaction: replaces their free
+ * day (null = no request) and marks them answered. Used by management fill-in
+ * and by the teacher's own page.
  */
+export async function recordAnswer(
+  tx: Tx,
+  schoolId: string,
+  boardId: string,
+  teacherId: string,
+  freeDay: number | null,
+  actor: { staffUserId: string | null; byManagement: boolean },
+): Promise<TeacherResponse> {
+  await deleteFreeDay(tx, boardId, teacherId);
+  if (freeDay !== null) {
+    await insertConstraint(
+      tx, schoolId, boardId,
+      { type: "teacher_free_day", hard: true, weight: 100, teacherId, params: { day: freeDay } },
+      { staffUserId: actor.staffUserId, source: "teacher" },
+    );
+  }
+  const values = { answeredAt: new Date(), byManagement: actor.byManagement, answeredBy: actor.staffUserId };
+  await tx
+    .insert(ttTeacherResponses)
+    .values({ schoolId, boardId, teacherId, ...values })
+    .onConflictDoUpdate({ target: [ttTeacherResponses.boardId, ttTeacherResponses.teacherId], set: values });
+  return (await loadResponses(tx, boardId, teacherId))[0];
+}
+
+/** Management answers for a teacher: sets (or clears, with null) their free day and marks them answered. */
 export function fillInForTeacher(
   schoolId: string,
   boardId: string,
@@ -85,19 +111,6 @@ export function fillInForTeacher(
       .from(ttTeachers)
       .where(and(eq(ttTeachers.id, teacherId), eq(ttTeachers.boardId, boardId)));
     if (!teacher) throw new ConstraintError("unknown_id");
-    await deleteFreeDay(tx, boardId, teacherId);
-    if (freeDay !== null) {
-      await insertConstraint(
-        tx, schoolId, boardId,
-        { type: "teacher_free_day", hard: true, weight: 100, teacherId, params: { day: freeDay } },
-        { staffUserId: actorStaffId, source: "teacher" },
-      );
-    }
-    const values = { answeredAt: new Date(), byManagement: true, answeredBy: actorStaffId };
-    await tx
-      .insert(ttTeacherResponses)
-      .values({ schoolId, boardId, teacherId, ...values })
-      .onConflictDoUpdate({ target: [ttTeacherResponses.boardId, ttTeacherResponses.teacherId], set: values });
-    return (await loadResponses(tx, boardId, teacherId))[0];
+    return recordAnswer(tx, schoolId, boardId, teacherId, freeDay, { staffUserId: actorStaffId, byManagement: true });
   });
 }

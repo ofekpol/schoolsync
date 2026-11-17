@@ -32,6 +32,21 @@ export async function requireTimetableAdmin(write: boolean): Promise<Guarded<Sch
   return { ok: true, value: user as SchoolUser };
 }
 
+/**
+ * Any active staff user of a school with the timeTable service (every role):
+ * the teacher's own page. Writes are off for demo users.
+ */
+export async function requireTimetableStaff(write: boolean): Promise<Guarded<SchoolUser>> {
+  const user = await getStaffUser();
+  if (!user) return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  if (!user.schoolId) return { ok: false, response: forbidden() };
+  const disabled = await serviceDisabledResponse(user.schoolId, "timetable");
+  if (disabled) return { ok: false, response: disabled };
+  if (user.status !== "active") return { ok: false, response: forbidden() };
+  if (write && isDemoUser(user)) return { ok: false, response: demoDisabledResponse() };
+  return { ok: true, value: user as SchoolUser };
+}
+
 /** The guard plus the route's `[board]`: 404 unless it is one of the school's boards. */
 export async function requireBoard(
   write: boolean,

@@ -116,3 +116,18 @@ export const CollectStateResponseSchema = z.object({ state: CollectStateSchema }
 export const FillInResponseSchema = z.object({ response: TeacherAnswerSchema });
 export const DeadlineInputSchema = z.object({ deadline: z.string().datetime({ offset: true }) });
 export const FillInInputSchema = z.object({ freeDay: z.number().int().min(0).max(6).nullable() }).strict();
+
+// The teacher's own page (/timetable/me).
+export const MyBoardSchema = z.object({
+  boardId: id,
+  boardName: z.string(),
+  teacherId: id,
+  deadline: z.string().nullable(),
+  open: z.boolean(),
+  freeDayEntitled: z.boolean(),
+  freeDay: z.number().int().nullable(),
+  answeredAt: z.string().nullable(),
+  byManagement: z.boolean(),
+  days: z.array(z.number().int()),
+});
+export const MyBoardsResponseSchema = z.object({ boards: z.array(MyBoardSchema) });

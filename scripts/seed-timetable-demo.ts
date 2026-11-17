@@ -1,8 +1,8 @@
 /**
  * Fills the timeTable demo board ("הדגמה") of one school from its staff and
- * their subject labels. Local or staging databases only; other boards are untouched.
+ * their subject labels. Teachers are named by subject ("מורה למתמטיקה 1"), never by person. Local or staging databases only; other boards are untouched.
  *
- *   pnpm seed:timetable-demo [slug] [--anonymize] [--seed=<n>] [--subject-category=<name>]
+ *   pnpm seed:timetable-demo [slug] [--seed=<n>] [--subject-category=<name>]
  *
  * Prints counts only: no names, no tokens.
  */
@@ -21,7 +21,6 @@ import { buildSolverInput } from "@/lib/timetable/export";
 
 interface SeedArgs {
   slug: string;
-  anonymize: boolean;
   seed: number;
   subjectCategory: string;
 }
@@ -31,14 +30,13 @@ export function parseSeedArgs(argv: string[]): SeedArgs {
     args: argv,
     allowPositionals: true,
     options: {
-      anonymize: { type: "boolean", default: false },
       seed: { type: "string", default: "1" },
       "subject-category": { type: "string", default: DEMO_SUBJECT_CATEGORY },
     },
   });
   const seed = Number(values.seed);
   if (!Number.isInteger(seed)) throw new Error("--seed must be an integer");
-  return { slug: positionals[0] ?? "kfar-galim", anonymize: values.anonymize, seed, subjectCategory: values["subject-category"] };
+  return { slug: positionals[0] ?? "kfar-galim", seed, subjectCategory: values["subject-category"] };
 }
 
 function teacherCounts(plan: DemoPlan): { linked: number; placeholder: number } {
@@ -56,7 +54,7 @@ async function main(args: SeedArgs): Promise<void> {
   if (!school) throw new Error(`school "${args.slug}" not found`);
 
   const staff = await loadDemoStaff(school.id, args.subjectCategory);
-  const plan = generateDemoPlan({ staff, classCounts: DEMO_CLASS_COUNTS, seed: args.seed, anonymize: args.anonymize });
+  const plan = generateDemoPlan({ staff, classCounts: DEMO_CLASS_COUNTS, seed: args.seed });
   const { boardId } = await writeDemoBoard(school.id, plan);
   const demoConstraints = await writeDemoConstraints(school.id, boardId, args.seed); // plan 6
   const exported = await buildSolverInput(school.id, boardId);

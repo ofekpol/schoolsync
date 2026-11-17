@@ -26,7 +26,7 @@ function stableId(label: string): string {
 
 function syntheticInput(grades: number, classesPerGrade: number, maxLoad: number): SolverInput {
   const classCounts = Object.fromEntries(Array.from({ length: grades }, (_, i) => [7 + i, classesPerGrade]));
-  const plan = generateDemoPlan({ staff: [], classCounts, seed: SYNTHETIC_SEED, anonymize: true, maxLoad });
+  const plan = generateDemoPlan({ staff: [], classCounts, seed: SYNTHETIC_SEED, maxLoad });
   const classIds = Object.entries(classCounts).flatMap(([grade, count]) =>
     Array.from({ length: count }, (_, i) => stableId(`class:${grade}:${i + 1}`)),
   );

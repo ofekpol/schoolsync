@@ -31,7 +31,7 @@ export async function loadDemoStaff(schoolId: string, subjectCategory: string): 
     }));
 }
 
-/** teacher key -> teacher id, writing linked staff, placeholders and anonymized names. */
+/** teacher key -> teacher id, writing linked staff, placeholders and the plan's subject-based names. */
 async function writeTeachers(schoolId: string, boardId: string, plan: DemoPlan): Promise<Map<string, string>> {
   const linked = plan.teachers.filter((t) => t.staffUserId !== null);
   const placeholders = plan.teachers.filter((t) => t.staffUserId === null);

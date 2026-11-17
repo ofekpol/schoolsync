@@ -8,6 +8,7 @@ export type ConstraintErrorKey =
   | "duplicateFreeDay"
   | "limit"
   | "typeChanged"
+  | "dayNotInWeek"
   | "deadlinePast"
   | "wrongStatus"
   | "invalid"
@@ -20,6 +21,7 @@ const ERRORS: Record<string, ConstraintErrorKey> = {
   duplicate_free_day: "duplicateFreeDay",
   limit_reached: "limit",
   type_changed: "typeChanged",
+  day_not_in_week: "dayNotInWeek",
   deadline_past: "deadlinePast",
   wrong_status: "wrongStatus",
   "Invalid input": "invalid",

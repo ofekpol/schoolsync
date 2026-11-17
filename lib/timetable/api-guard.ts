@@ -66,6 +66,7 @@ const CONSTRAINT_STATUS: Record<ConstraintErrorCode, number> = {
   unknown_id: 400,
   not_entitled: 400,
   type_changed: 400,
+  day_not_in_week: 400,
   duplicate_free_day: 409,
   wrong_status: 409,
   limit_reached: 422,

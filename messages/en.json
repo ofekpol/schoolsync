@@ -977,7 +977,8 @@
         "wrongStatus": "Collection can't be opened for this board in its current state",
         "invalid": "The constraint is missing details",
         "demo": "Not available in the demo",
-        "save": "Saving failed, try again"
+        "save": "Saving failed, try again",
+        "dayNotInWeek": "That day or period isn't in the board's week"
       },
       "fields": {
         "teacher": "Teacher",

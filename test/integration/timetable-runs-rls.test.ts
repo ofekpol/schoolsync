@@ -52,14 +52,17 @@ describe.skipIf(skipIfNoTestDb)("timetable runs RLS", () => {
   it("cannotWriteRunForOtherSchool", async () => {
     await expect(
       withSchool(testSchoolA, (tx) => tx.insert(ttRuns).values({ schoolId: testSchoolB, boardId: ids.board, input: {} })),
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({ cause: { message: expect.stringMatching(/row-level security/) } });
   });
 
   it("deletingSolutionClearsPublished", async () => {
+    // A throwaway solution, so the board-delete test keeps its own rows.
+    const spare = randomUUID();
+    await testDb!.insert(ttSolutions).values({ id: spare, schoolId: testSchoolA, runId: ids.run, boardId: ids.board, profile: "teachers", status: "ok" });
     await withSchool(testSchoolA, (tx) =>
-      tx.update(ttBoards).set({ publishedSolutionId: ids.solution }).where(eq(ttBoards.id, ids.board)),
+      tx.update(ttBoards).set({ publishedSolutionId: spare }).where(eq(ttBoards.id, ids.board)),
     );
-    await withSchool(testSchoolA, (tx) => tx.delete(ttSolutions).where(eq(ttSolutions.id, ids.solution)));
+    await withSchool(testSchoolA, (tx) => tx.delete(ttSolutions).where(eq(ttSolutions.id, spare)));
     const [board] = await withSchool(testSchoolA, (tx) => tx.select().from(ttBoards).where(eq(ttBoards.id, ids.board)));
     expect(board.publishedSolutionId).toBeNull();
   });

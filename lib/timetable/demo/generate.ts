@@ -83,11 +83,11 @@ function lessonsFor(grade: number, count: number, subject: CurriculumSubject): A
 }
 
 /** The least-loaded teacher of the subject who still has room, or a new placeholder. */
-function pickTeacher(pool: PoolTeacher[], subject: string, periods: number, taken: Set<string>): PoolTeacher {
+function pickTeacher(pool: PoolTeacher[], subject: string, periods: number, taken: Set<string>, maxLoad: number): PoolTeacher {
   let best: PoolTeacher | null = null;
   for (const teacher of pool) {
     if (taken.has(teacher.key) || !teacher.subjects.includes(subject)) continue;
-    if (teacher.load + periods > MAX_TEACHER_LOAD) continue;
+    if (teacher.load + periods > maxLoad) continue;
     if (!best || teacher.load < best.load) best = teacher;
   }
   if (best) return best;
@@ -103,6 +103,8 @@ export function generateDemoPlan(opts: {
   classCounts: Record<number, number>;
   seed: number;
   anonymize: boolean;
+  /** Per-teacher weekly periods; defaults to MAX_TEACHER_LOAD. A low value gives many part-timers. */
+  maxLoad?: number;
 }): DemoPlan {
   const pool = staffTeachers(shuffled(opts.staff, seededRandom(opts.seed)));
   const grades = Object.keys(opts.classCounts).map(Number).sort((a, b) => a - b);
@@ -112,7 +114,7 @@ export function generateDemoPlan(opts: {
       for (const lesson of lessonsFor(grade, opts.classCounts[grade], subject)) {
         const taken = new Set<string>();
         for (let i = 0; i < lesson.classes.length; i++) {
-          const teacher = pickTeacher(pool, lesson.subject, lesson.weeklyPeriods, taken);
+          const teacher = pickTeacher(pool, lesson.subject, lesson.weeklyPeriods, taken, opts.maxLoad ?? MAX_TEACHER_LOAD);
           teacher.load += lesson.weeklyPeriods;
           taken.add(teacher.key);
         }

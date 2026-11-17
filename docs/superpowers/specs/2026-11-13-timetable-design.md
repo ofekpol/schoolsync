@@ -312,3 +312,50 @@ screens.
 
 Order, owners and what is showable at each stage:
 `docs/superpowers/plans/2026-11-13-timetable-00-split.md`.
+
+## Solver benchmark and host, 2026-11-16
+
+Plan 4, task 1 (`docs/superpowers/plans/2026-11-14-timetable-04-benchmark.md`). The solver
+enforces only the built-in rules: no teacher clash, no class clash, every block placed (a
+shortfall is reported as `unplaced`, never as an infeasible run). No constraint encoders yet.
+
+**Inputs**
+- Synthetic: the plan 5a generator, 6 grades x 8 classes, placeholder teachers only,
+  `maxLoad` 7 periods per teacher: 287 teachers, 48 classes, 600 blocks, 1,260 lessons,
+  45 slots a week. (The default load of 22 gives only 88 teachers; load 8 gives 222.)
+- Kfar Galim (staging board `הדגמה`, 109 teachers, 744 blocks): **pending**, the export file
+  will be supplied later.
+
+**Results** (local: Ryzen 7 5800H, 16 logical cores, 16 GB; preview: Vercel Hobby, fra1)
+
+| Input | Where | Limit | Workers | Wall | Status | Peak memory | Unplaced |
+|-------|-------|-------|---------|------|--------|-------------|----------|
+| synthetic | local | 60 s | default (16) | 8.6 s | optimal | 806 MB | 0 |
+| synthetic | local | 60 s | 1 | 12.7 s | optimal | 170 MB | 0 |
+| synthetic | local | 300 s | default (16) | 8.4 s | optimal | 793 MB | 0 |
+| synthetic | local | 300 s | 1 | 12.4 s | optimal | 170 MB | 0 |
+| synthetic | Vercel preview | 60 s | default (2 CPUs seen) | 22.8 s (22.1 s solve) | ok | 324 MB | 0 |
+| Kfar Galim | local, preview | 60 s, 300 s | - | pending | - | - | - |
+
+Both limits gave the same result because the model proves optimal in seconds; with only the
+built-in rules the time limit never binds.
+
+**Vercel limits** (read 2026-11-14): Hobby with Fluid compute (on by default) gives 300 s
+maximum duration and 2 GB / 1 vCPU, not configurable
+(https://vercel.com/docs/functions/limitations). Python bundles may be 500 MB uncompressed
+(https://vercel.com/docs/functions/runtimes/python); OR-Tools with numpy and pandas is about
+200 MB installed. Request bodies are capped at 4.5 MB; the synthetic input is 165 KB.
+
+**Decision: stay on Vercel** (`api/solve.py`, a Python function next to the Next.js app).
+The synthetic 287-teacher solve uses 22 s of 300 s and 324 MB of 2 GB, so the 2x headroom
+rule holds by more than 10x on time and 6x on memory. Cost: **$0** on Hobby.
+
+Conditions on this decision:
+- It is provisional until the Kfar Galim input is measured on the preview.
+- Constraint encoders (plan 4 proper) will make solves slower. Re-measure with them; if a
+  solve passes 150 s on the preview, move the same code to a small container and record the
+  provider and price here.
+- Hobby is for non-commercial use (spec "Risks"); a paying school means the Pro upgrade in
+  `docs/COST_PLAN.md`, not a solver host change.
+- Before production: set `SOLVER_TOKEN` on Production. Without it the function refuses
+  production calls; on previews it is behind Vercel Authentication.

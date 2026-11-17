@@ -85,7 +85,7 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
                   const exists = d.periods.some((x) => x.period === period);
                   return (
                     <td key={d.day} data-testid={`cell-${d.day}-${period}`}
-                      className={`border border-neutral-200 p-2 align-top ${exists ? "" : "bg-neutral-100 text-neutral-500"}`}>
+                      className={`border border-neutral-200 p-2 align-top ${exists ? "" : "bg-neutral-100 text-neutral-600"}`}>
                       {!exists && <p className="text-xs">{t("noPeriod")}</p>}
                       {lessons.length > 1 && (
                         <p className="mb-1 inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-900">

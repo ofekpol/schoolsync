@@ -6,7 +6,8 @@ import { ttBoards, ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-tim
 import { createBoard, deleteBoard, type Board } from "@/lib/timetable/boards";
 import { createBlock } from "@/lib/timetable/blocks";
 import { setGradeClassCount } from "@/lib/timetable/classes";
-import { editPlacement, publishSolution, type SolutionRef } from "@/lib/timetable/edit";
+import { editPlacement, evaluateSolution, publishSolution, type SolutionRef } from "@/lib/timetable/edit";
+import { SolverCallError } from "@/lib/timetable/solver-client";
 import { executeRun, getRun, startRun, type SolveFn } from "@/lib/timetable/runs";
 import type { Slot } from "@/lib/timetable/grid";
 import type { PlacementEdit } from "@/lib/validations/timetable-runs";
@@ -205,5 +206,61 @@ describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
     await testDb!.update(ttBoards).set({ publishedSolutionId: null, status: "review" }).where(eq(ttBoards.id, board.id));
     expect(await publishSolution(testSchoolA, crossed)).toBe(false);
     expect(await published(board)).toMatchObject({ publishedSolutionId: null, status: "review" });
+  });
+
+  describe("evaluate", () => {
+    const viol = { constraintId: null, type: "teacher_clash", hard: true, count: 1, teacherIds: [], classIds: [] };
+    const echo = (violations = [viol]): SolveFn => async (input) => ({
+      version: 1,
+      status: "ok",
+      score: 7,
+      placements: input.placements.map(({ blockId, day, period }) => ({ blockId, day, period })),
+      violations,
+    });
+    const stored = async () => (await testDb!.select().from(ttSolutions).where(eq(ttSolutions.id, ref.solutionId)))[0];
+    const editedRef = async () => {
+      await freshRef();
+      await editPlacement(testSchoolA, ref, move(blockX, { day: 0, period: 1 }, { day: 1, period: 4 }));
+    };
+
+    it("evaluateSendsCurrentPlacementsInEvaluateMode", async () => {
+      await editedRef();
+      let seen: Parameters<SolveFn>[0] | undefined;
+      await evaluateSolution(testSchoolA, ref, async (input) => {
+        seen = input;
+        return echo()(input);
+      });
+      expect(seen!.mode).toBe("evaluate");
+      expect(seen!.profile).toBe((await stored()).profile);
+      expect(seen!.placements).toHaveLength(3);
+      expect(seen!.placements.find((p) => p.blockId === blockX)).toEqual({ blockId: blockX, day: 1, period: 4, pinned: true });
+    });
+
+    it("evaluateStoresReportAndClearsStale", async () => {
+      await editedRef();
+      const result = await evaluateSolution(testSchoolA, ref, echo());
+      expect(result).toMatchObject({ ok: true, solution: { reportStale: false, score: 7, violations: [viol] } });
+      expect(await stored()).toMatchObject({ reportStale: false, score: 7, violations: [viol] });
+    });
+
+    it("evaluateRejectsDifferentPlacements", async () => {
+      await editedRef();
+      const different: SolveFn = async (input) => ({ ...(await echo()(input)), placements: [{ blockId: blockX, day: 4, period: 1 }] });
+      expect(await evaluateSolution(testSchoolA, ref, different)).toEqual({ ok: false, error: "evaluate_unsupported" });
+      expect(await stored()).toMatchObject({ reportStale: true, violations: [] });
+    });
+
+    it("evaluateSolverErrorIsReported", async () => {
+      await editedRef();
+      const boom: SolveFn = async () => {
+        throw new SolverCallError("solver_http_error", 500);
+      };
+      expect(await evaluateSolution(testSchoolA, ref, boom)).toEqual({ ok: false, error: "solver_http_error" });
+      expect(await stored()).toMatchObject({ reportStale: true, violations: [] });
+    });
+
+    it("evaluateOtherBoardsSolutionIsNotFound", async () => {
+      expect(await evaluateSolution(testSchoolA, { ...otherRef, boardId: board.id }, echo())).toBeNull();
+    });
   });
 });

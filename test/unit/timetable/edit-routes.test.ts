@@ -2,23 +2,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { TimetableError } from "@/lib/timetable/errors";
 
-const { getStaffUserMock, getSchoolByIdMock, getBoardMock, editPlacementMock, publishSolutionMock } = vi.hoisted(() => ({
+const { getStaffUserMock, getSchoolByIdMock, getBoardMock, editPlacementMock, publishSolutionMock, evaluateSolutionMock } = vi.hoisted(() => ({
   getStaffUserMock: vi.fn(),
   getSchoolByIdMock: vi.fn(),
   getBoardMock: vi.fn(),
   editPlacementMock: vi.fn(),
   publishSolutionMock: vi.fn(),
+  evaluateSolutionMock: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({ getStaffUser: (...a: unknown[]) => getStaffUserMock(...a) }));
 vi.mock("@/lib/db/schools", () => ({ getSchoolById: (...a: unknown[]) => getSchoolByIdMock(...a) }));
 vi.mock("@/lib/timetable/boards", () => ({ getBoard: (...a: unknown[]) => getBoardMock(...a) }));
 vi.mock("@/lib/timetable/edit", () => ({ editPlacement: (...a: unknown[]) => editPlacementMock(...a),
   publishSolution: (...a: unknown[]) => publishSolutionMock(...a),
+  evaluateSolution: (...a: unknown[]) => evaluateSolutionMock(...a),
 }));
 
 import { PATCH } from "@/app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/placements/route";
 import { POST as PUBLISH } from "@/app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/publish/route";
-import { PublishResponseSchema } from "@/lib/validations/timetable-runs";
+import { POST as EVALUATE } from "@/app/api/v1/timetable/boards/[board]/runs/[run]/solutions/[solution]/evaluate/route";
+import { EvaluateResponseSchema, PublishResponseSchema } from "@/lib/validations/timetable-runs";
 
 const SCHOOL = "00000000-0000-0000-0000-00000000000a";
 const BOARD_ID = "00000000-0000-0000-0000-0000000000b1";
@@ -111,5 +114,46 @@ describe("POST …/solutions/[solution]/publish", () => {
   it("409 solution_failed", async () => {
     publishSolutionMock.mockRejectedValue(new TimetableError("solution_failed"));
     expect((await PUBLISH(post(), ctx())).status).toBe(409);
+  });
+});
+
+describe("POST …/solutions/[solution]/evaluate", () => {
+  const post = () => new NextRequest("http://localhost/x", { method: "POST" });
+  const summary = { id: SOLUTION_ID, profile: "balanced", status: "ok", error: null, score: 3, violations: [], reportStale: false };
+  beforeEach(() => {
+    getStaffUserMock.mockReset().mockResolvedValue(ADMIN);
+    getSchoolByIdMock.mockReset().mockResolvedValue({ id: SCHOOL, services: ["gantt", "timetable"] });
+    getBoardMock.mockReset().mockResolvedValue({ id: BOARD_ID });
+    evaluateSolutionMock.mockReset().mockResolvedValue({ ok: true, solution: summary });
+  });
+
+  it("200 with the summary", async () => {
+    const res = await EVALUATE(post(), ctx());
+    expect(res.status).toBe(200);
+    expect(EvaluateResponseSchema.parse(await res.json()).solution.id).toBe(SOLUTION_ID);
+    expect(evaluateSolutionMock).toHaveBeenCalledWith(SCHOOL, { boardId: BOARD_ID, runId: RUN_ID, solutionId: SOLUTION_ID });
+  });
+
+  it("502 with the error code", async () => {
+    evaluateSolutionMock.mockResolvedValue({ ok: false, error: "evaluate_unsupported" });
+    const res = await EVALUATE(post(), ctx());
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: "evaluate_unsupported" });
+  });
+
+  it("404 for another board's solution", async () => {
+    evaluateSolutionMock.mockResolvedValue(null);
+    expect((await EVALUATE(post(), ctx())).status).toBe(404);
+  });
+
+  it("409 solution_failed", async () => {
+    evaluateSolutionMock.mockRejectedValue(new TimetableError("solution_failed"));
+    expect((await EVALUATE(post(), ctx())).status).toBe(409);
+  });
+
+  it("403 demo_disabled for a demo user", async () => {
+    getStaffUserMock.mockResolvedValue({ ...ADMIN, demoExpiresAt: new Date() });
+    expect((await EVALUATE(post(), ctx())).status).toBe(403);
+    expect(evaluateSolutionMock).not.toHaveBeenCalled();
   });
 });

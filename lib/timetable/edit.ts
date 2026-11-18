@@ -4,8 +4,10 @@ import { withSchool } from "@/lib/db/client";
 import { ttBoards, ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
 import type { PlacementEdit } from "@/lib/validations/timetable-runs";
 import { TimetableError, mapPgError, type Tx } from "./errors";
+import { callSolver, SolverCallError, type SolverCallErrorCode } from "./solver-client";
+import { toSolutionSummary, type SolveFn, type SolutionSummary } from "./runs";
 import { slotInWeek, type Slot } from "./grid";
-import type { SolverInput } from "./solver-contract";
+import type { SolverInput, WeightProfile } from "./solver-contract";
 
 type StoredInput = Pick<SolverInput, "week" | "blocks">;
 
@@ -16,14 +18,14 @@ export interface SolutionRef {
 }
 
 /** The solution (id, run and board must all match) with its status and its run's stored input; null when none. `lock` row-locks the solution until the transaction ends. */
-export async function findSolution(tx: Tx, ref: SolutionRef, lock = false): Promise<{ status: string; input: StoredInput } | null> {
+export async function findSolution(tx: Tx, ref: SolutionRef, lock = false): Promise<{ status: string; profile: WeightProfile; input: StoredInput } | null> {
   const query = tx
-    .select({ status: ttSolutions.status, input: ttRuns.input })
+    .select({ status: ttSolutions.status, profile: ttSolutions.profile, input: ttRuns.input })
     .from(ttSolutions)
     .innerJoin(ttRuns, eq(ttRuns.id, ttSolutions.runId))
     .where(and(eq(ttSolutions.id, ref.solutionId), eq(ttSolutions.runId, ref.runId), eq(ttSolutions.boardId, ref.boardId)));
   const [row] = await (lock ? query.for("update", { of: ttSolutions }) : query);
-  return row ? { status: row.status, input: row.input as StoredInput } : null;
+  return row ? { status: row.status, profile: row.profile, input: row.input as StoredInput } : null;
 }
 
 const keyOf = (solutionId: string, blockId: string, slot: Slot) =>
@@ -99,5 +101,53 @@ export function publishSolution(schoolId: string, ref: SolutionRef): Promise<boo
     if (solution.status !== "ok") throw new TimetableError("solution_failed");
     await tx.update(ttBoards).set({ publishedSolutionId: ref.solutionId, status: "published" }).where(eq(ttBoards.id, ref.boardId));
     return true;
+  });
+}
+
+export type EvaluateResult =
+  | { ok: true; solution: SolutionSummary }
+  | { ok: false; error: SolverCallErrorCode | "evaluate_unsupported" | "solver_failed" };
+
+const placementKeys = (rows: { blockId: string; day: number; period: number }[]) =>
+  rows.map((r) => `${r.blockId}:${r.day}:${r.period}`).sort();
+
+/** Asks the solver for the constraint report of the current placements (outside any transaction) and stores it. null = not found. Never stores a report for placements other than the ones sent. */
+export async function evaluateSolution(schoolId: string, ref: SolutionRef, solve: SolveFn = callSolver): Promise<EvaluateResult | null> {
+  const read = await withSchool(schoolId, async (tx) => {
+    const solution = await findSolution(tx, ref);
+    if (!solution) return null;
+    if (solution.status !== "ok") throw new TimetableError("solution_failed");
+    const placements = await tx
+      .select({ blockId: ttPlacements.blockId, day: ttPlacements.day, period: ttPlacements.period, pinned: ttPlacements.pinned })
+      .from(ttPlacements)
+      .where(eq(ttPlacements.solutionId, ref.solutionId));
+    return { solution, placements };
+  });
+  if (!read) return null;
+
+  const input = { ...read.solution.input, mode: "evaluate", profile: read.solution.profile, placements: read.placements } as SolverInput;
+  let output;
+  try {
+    output = await solve(input);
+  } catch (error) {
+    console.error("[timetable-evaluate] solver call failed", ref.solutionId, error);
+    return { ok: false, error: error instanceof SolverCallError ? error.code : "solver_failed" };
+  }
+  if (output.status !== "ok") {
+    console.error("[timetable-evaluate] solver reported failure", ref.solutionId, output.error);
+    return { ok: false, error: "solver_failed" };
+  }
+  if (placementKeys(output.placements).join("|") !== placementKeys(read.placements).join("|")) {
+    console.error("[timetable-evaluate] solver changed the placements (evaluate unsupported)", ref.solutionId);
+    return { ok: false, error: "evaluate_unsupported" };
+  }
+
+  return withSchool(schoolId, async (tx) => {
+    const [row] = await tx
+      .update(ttSolutions)
+      .set({ score: output.score, violations: output.violations, reportStale: false })
+      .where(and(eq(ttSolutions.id, ref.solutionId), eq(ttSolutions.runId, ref.runId), eq(ttSolutions.boardId, ref.boardId)))
+      .returning();
+    return row ? { ok: true as const, solution: toSolutionSummary(row) } : null;
   });
 }

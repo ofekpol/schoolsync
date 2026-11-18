@@ -73,3 +73,4 @@ export const PlacementEditSchema = z
 export type PlacementEdit = z.infer<typeof PlacementEditSchema>;
 
 export const PublishResponseSchema = z.object({ publishedSolutionId: z.string().uuid() });
+export const EvaluateResponseSchema = z.object({ solution: SolutionSummarySchema });

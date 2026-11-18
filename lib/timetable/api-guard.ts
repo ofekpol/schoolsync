@@ -77,6 +77,10 @@ const STATUS: Record<TimetableErrorCode, number> = {
   duplicate_lesson: 400,
   run_in_progress: 409,
   input_problems: 422,
+  not_in_week: 422,
+  slot_taken: 409,
+  fully_placed: 409,
+  solution_failed: 409,
 };
 
 const CONSTRAINT_STATUS: Record<ConstraintErrorCode, number> = {

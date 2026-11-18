@@ -55,3 +55,19 @@ export const SolutionGridResponseSchema = z.object({
     subjects: z.record(z.string(), z.string()),
   }),
 });
+
+export const SlotSchema = z.object({ day: z.number().int().min(0).max(6), period: z.number().int().min(1) });
+
+export const PlacementEditSchema = z
+  .discriminatedUnion("action", [
+    z.object({ action: z.literal("move"), blockId: z.string().uuid(), from: SlotSchema.nullable(), to: SlotSchema.nullable() }),
+    z.object({
+      action: z.literal("pin"),
+      blockId: z.string().uuid(),
+      day: SlotSchema.shape.day,
+      period: SlotSchema.shape.period,
+      pinned: z.boolean(),
+    }),
+  ])
+  .refine((edit) => edit.action !== "move" || edit.from !== null || edit.to !== null);
+export type PlacementEdit = z.infer<typeof PlacementEditSchema>;

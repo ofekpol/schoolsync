@@ -1,0 +1,176 @@
+import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import * as schema from "@/lib/db/schema";
+import { ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
+import { createBoard, deleteBoard, type Board } from "@/lib/timetable/boards";
+import { createBlock } from "@/lib/timetable/blocks";
+import { setGradeClassCount } from "@/lib/timetable/classes";
+import { editPlacement, type SolutionRef } from "@/lib/timetable/edit";
+import { executeRun, getRun, startRun, type SolveFn } from "@/lib/timetable/runs";
+import type { Slot } from "@/lib/timetable/grid";
+import type { PlacementEdit } from "@/lib/validations/timetable-runs";
+import { addSubjects } from "@/lib/timetable/subjects";
+import { addTeachers } from "@/lib/timetable/teachers";
+import { boardName, ensureActiveYear } from "./timetable-helpers";
+import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA } from "./setup";
+
+const move = (blockId: string, from: Slot | null, to: Slot | null): PlacementEdit => ({ action: "move", blockId, from, to });
+
+describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
+  let board: Board;
+  let otherBoard: Board;
+  let staffId: string;
+  let blockX: string; // class 1, teacher 1, 1 period
+  let blockY: string; // class 2, teacher 1, 1 period (shares the teacher with X)
+  let blockW: string; // class 1, teacher 2, 2 periods (one placed)
+  let otherBlock: string;
+  let ref: SolutionRef;
+  let otherRef: SolutionRef;
+
+  const solveFixed =
+    (slots: Record<string, [number, number]>): SolveFn =>
+    async (input) => ({
+      version: 1,
+      status: "ok",
+      score: 1,
+      placements: input.blocks.map((b) => ({ blockId: b.id, day: slots[b.id]?.[0] ?? 0, period: slots[b.id]?.[1] ?? 1 })),
+      violations: [],
+    });
+
+  async function solutionFor(target: Board, solve: SolveFn): Promise<SolutionRef> {
+    await testDb!.delete(ttRuns).where(eq(ttRuns.boardId, target.id));
+    const { runId } = await startRun(testSchoolA, target.id, staffId);
+    await executeRun(testSchoolA, runId, solve);
+    const run = await getRun(testSchoolA, target.id, runId);
+    return { boardId: target.id, runId, solutionId: run!.solutions[0].id };
+  }
+
+  const freshRef = async () => {
+    ref = await solutionFor(board, solveFixed({ [blockX]: [0, 1], [blockY]: [0, 2], [blockW]: [0, 3] }));
+  };
+  const rows = (solutionId: string) => testDb!.select().from(ttPlacements).where(eq(ttPlacements.solutionId, solutionId));
+  const rowsOf = async (blockId: string) => (await rows(ref.solutionId)).filter((r) => r.blockId === blockId);
+  const stale = async (solutionId: string) =>
+    (await testDb!.select().from(ttSolutions).where(eq(ttSolutions.id, solutionId)))[0].reportStale;
+
+  beforeAll(async () => {
+    if (shouldSkip()) return;
+    await ensureActiveYear(testSchoolA);
+    const [staff] = await testDb!
+      .insert(schema.staffUsers)
+      .values({ id: randomUUID(), schoolId: testSchoolA, email: `${randomUUID()}@edit.test`, fullName: "edit", role: "admin" })
+      .returning({ id: schema.staffUsers.id });
+    staffId = staff.id;
+
+    board = await createBoard(testSchoolA, boardName("edit"));
+    const [c1, c2] = await setGradeClassCount(testSchoolA, board.id, 9, 2);
+    const [math, english, art] = await addSubjects(testSchoolA, board.id, ["מתמטיקה", "אנגלית", "אמנות"]);
+    const [t1, t2] = await addTeachers(testSchoolA, board.id, ["א", "ב"]);
+    blockX = (await createBlock(testSchoolA, board.id, { subjectId: math.id, weeklyPeriods: 1, classIds: [c1.id], teacherIds: [t1.id] })).id;
+    blockY = (await createBlock(testSchoolA, board.id, { subjectId: english.id, weeklyPeriods: 1, classIds: [c2.id], teacherIds: [t1.id] })).id;
+    blockW = (await createBlock(testSchoolA, board.id, { subjectId: art.id, weeklyPeriods: 2, classIds: [c1.id], teacherIds: [t2.id] })).id;
+
+    otherBoard = await createBoard(testSchoolA, boardName("edit-other"));
+    const [oc] = await setGradeClassCount(testSchoolA, otherBoard.id, 9, 1);
+    const [os] = await addSubjects(testSchoolA, otherBoard.id, ["מתמטיקה"]);
+    const [ot] = await addTeachers(testSchoolA, otherBoard.id, ["ג"]);
+    otherBlock = (await createBlock(testSchoolA, otherBoard.id, { subjectId: os.id, weeklyPeriods: 1, classIds: [oc.id], teacherIds: [ot.id] })).id;
+    otherRef = await solutionFor(otherBoard, solveFixed({}));
+
+  });
+
+  afterAll(async () => {
+    if (shouldSkip()) return;
+    await deleteBoard(testSchoolA, board.id);
+    await deleteBoard(testSchoolA, otherBoard.id);
+    await testDb!.delete(schema.staffUsers).where(eq(schema.staffUsers.id, staffId));
+  });
+
+  it("moveChangesSlotPinsAndMarksStale", async () => {
+    await freshRef();
+    expect(await editPlacement(testSchoolA, ref, move(blockX, { day: 0, period: 1 }, { day: 1, period: 4 }))).toBe(true);
+    expect((await rowsOf(blockX))[0]).toMatchObject({ day: 1, period: 4, pinned: true });
+    expect(await stale(ref.solutionId)).toBe(true);
+  });
+
+  it("moveToTrayDeletesRow", async () => {
+    await freshRef();
+    expect(await editPlacement(testSchoolA, ref, move(blockW, { day: 0, period: 3 }, null))).toBe(true);
+    expect(await rowsOf(blockW)).toHaveLength(0);
+    expect(await stale(ref.solutionId)).toBe(true);
+  });
+
+  it("placeFromTrayInsertsPinnedRow", async () => {
+    await freshRef();
+    expect(await editPlacement(testSchoolA, ref, move(blockW, null, { day: 2, period: 2 }))).toBe(true);
+    const placed = await rowsOf(blockW);
+    expect(placed).toHaveLength(2);
+    expect(placed.find((r) => r.day === 2)).toMatchObject({ period: 2, pinned: true });
+    expect(await stale(ref.solutionId)).toBe(true);
+  });
+
+  it("placeFullyPlacedBlockIsRefused", async () => {
+    await freshRef();
+    await expect(editPlacement(testSchoolA, ref, move(blockX, null, { day: 2, period: 2 }))).rejects.toMatchObject({ code: "fully_placed" });
+    expect(await rowsOf(blockX)).toHaveLength(1);
+  });
+
+  it("moveOutsideWeekIsRefused", async () => {
+    await freshRef();
+    await expect(editPlacement(testSchoolA, ref, move(blockX, { day: 0, period: 1 }, { day: 5, period: 6 }))).rejects.toMatchObject({
+      code: "not_in_week",
+    });
+    expect((await rowsOf(blockX))[0]).toMatchObject({ day: 0, period: 1 });
+  });
+
+  it("moveOntoSameBlockIsRefused", async () => {
+    await freshRef();
+    await editPlacement(testSchoolA, ref, move(blockW, null, { day: 2, period: 2 }));
+    await expect(editPlacement(testSchoolA, ref, move(blockW, { day: 0, period: 3 }, { day: 2, period: 2 }))).rejects.toMatchObject({
+      code: "slot_taken",
+    });
+    expect(await rowsOf(blockW)).toHaveLength(2);
+  });
+
+  it("moveIntoClashIsAllowed", async () => {
+    await freshRef();
+    expect(await editPlacement(testSchoolA, ref, move(blockY, { day: 0, period: 2 }, { day: 0, period: 1 }))).toBe(true);
+    const atSlot = (await rows(ref.solutionId)).filter((r) => r.day === 0 && r.period === 1);
+    expect(atSlot.map((r) => r.blockId).sort()).toEqual([blockX, blockY].sort());
+  });
+
+  it("missingSourceReturnsFalse", async () => {
+    await freshRef();
+    const edit = move(blockX, { day: 0, period: 1 }, { day: 1, period: 4 });
+    expect(await editPlacement(testSchoolA, ref, edit)).toBe(true);
+    expect(await editPlacement(testSchoolA, ref, edit)).toBe(false);
+    expect(await rowsOf(blockX)).toHaveLength(1);
+  });
+
+  it("pinTogglesWithoutStale", async () => {
+    await freshRef();
+    const edit: PlacementEdit = { action: "pin", blockId: blockX, day: 0, period: 1, pinned: true };
+    expect(await editPlacement(testSchoolA, ref, edit)).toBe(true);
+    expect((await rowsOf(blockX))[0].pinned).toBe(true);
+    expect(await stale(ref.solutionId)).toBe(false);
+    expect(await editPlacement(testSchoolA, ref, { ...edit, pinned: false })).toBe(true);
+    expect((await rowsOf(blockX))[0].pinned).toBe(false);
+    expect(await editPlacement(testSchoolA, ref, { ...edit, period: 9 })).toBe(false);
+  });
+
+  it("otherBoardsSolutionIsNotFound", async () => {
+    const before = await rows(otherRef.solutionId);
+    const crossed = { ...otherRef, boardId: board.id };
+    expect(await editPlacement(testSchoolA, crossed, move(otherBlock, { day: 0, period: 1 }, { day: 1, period: 1 }))).toBe(false);
+    expect(await rows(otherRef.solutionId)).toEqual(before);
+  });
+
+  it("failedSolutionIsRefused", async () => {
+    const failing: SolveFn = async () => ({ version: 1, status: "failed", error: "boom", score: 0, placements: [], violations: [] });
+    const failedRef = await solutionFor(board, failing);
+    await expect(editPlacement(testSchoolA, failedRef, move(blockX, null, { day: 1, period: 1 }))).rejects.toMatchObject({
+      code: "solution_failed",
+    });
+  });
+});

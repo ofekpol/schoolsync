@@ -13,7 +13,11 @@ export type TimetableErrorCode =
   | "duplicate_lesson"
   | "already_linked"
   | "run_in_progress"
-  | "input_problems";
+  | "input_problems"
+  | "not_in_week"
+  | "slot_taken"
+  | "fully_placed"
+  | "solution_failed";
 
 /** A timetable write the caller can explain to the user. */
 export class TimetableError extends Error {

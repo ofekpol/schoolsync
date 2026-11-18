@@ -22,7 +22,8 @@ Two people, two tracks. Each plan is its own branch from `staging` and its own P
 | 4 | Solver service (Python, CP-SAT), benchmark, hosting | A | `feature/timetable-solver` | plan 5a merged (it holds the contract) | outline below |
 | 7 | Generate, compare three options, read-only timetable grid | A | `feature/timetable-generate` | plan 4 task 1 merged (contract v1 + `/api/solve` exist) | **merged into `staging`** (PR #113, migration 0026); detailed: `2026-11-18-timetable-07-generate.md` |
 | 6 | Constraints: entry screens, collect, seeded demo constraints | B | `feature/timetable-collect` | plan 5b merged | **merged into `staging`** (PR #108, migration 0025); detailed: `2026-11-16-timetable-06-constraints.md` |
-| 8 | Edit by hand, pin, regenerate, publish, teacher view | A | `feature/timetable-edit` | plans 6 and 7 merged | outline below |
+| 8 | Edit by hand (click-to-move), pin, regenerate, publish, print | A | `feature/timetable-edit` | plans 6 and 7 merged | **detailed**: `2026-11-18-timetable-08-edit.md` (migration 0027) |
+| 9 | Teacher's own published week on `/timetable/me`, teacher-flow e2e | A | `feature/timetable-me-week` | plan 8 merged | outline under plan 8 |
 
 **Track A = Ofek (with Claude). Track B = Maor** (start from `2026-11-13-timetable-TRACK-B-handoff.md`).
 
@@ -130,9 +131,12 @@ is met.
 ### Plan 8: edit, publish, teacher view (track A)
 - Drag a lesson with instant double-booking checks; full report via `evaluate`; pin and regenerate.
 - Publish; print styles (A4, monochrome-legible).
-- `/timetable/me`: own constraints before the deadline, own week after publishing. Built last;
-  the demo can run without it because the seed fills the teachers' constraints.
-- Done when: the principal flow passes an e2e test, then the teacher flow.
+- Done when: the principal flow passes an e2e test.
+- Moved to plan 9 (Ofek, 2026-11-18): the teacher's own week on `/timetable/me` after
+  publishing, and the teacher-flow e2e. The own-constraints part of `/timetable/me` is already
+  on staging.
+- Pins and the `evaluate` report depend on plan 4: the solver on staging ignores both today.
+  Plan 8 sends them per contract v1 and reports `evaluate_unsupported` / `pin_moved` until then.
 
 ## Deferred, with the reason
 

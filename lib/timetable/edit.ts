@@ -106,10 +106,16 @@ export function publishSolution(schoolId: string, ref: SolutionRef): Promise<boo
 
 export type EvaluateResult =
   | { ok: true; solution: SolutionSummary }
-  | { ok: false; error: SolverCallErrorCode | "evaluate_unsupported" | "solver_failed" };
+  | { ok: false; error: SolverCallErrorCode | "evaluate_unsupported" | "solver_failed" | "placements_changed" };
 
 const placementKeys = (rows: { blockId: string; day: number; period: number }[]) =>
   rows.map((r) => `${r.blockId}:${r.day}:${r.period}`).sort();
+
+const loadPlacements = (tx: Tx, solutionId: string) =>
+  tx
+    .select({ blockId: ttPlacements.blockId, day: ttPlacements.day, period: ttPlacements.period, pinned: ttPlacements.pinned })
+    .from(ttPlacements)
+    .where(eq(ttPlacements.solutionId, solutionId));
 
 /** Asks the solver for the constraint report of the current placements (outside any transaction) and stores it. null = not found. Never stores a report for placements other than the ones sent. */
 export async function evaluateSolution(schoolId: string, ref: SolutionRef, solve: SolveFn = callSolver): Promise<EvaluateResult | null> {
@@ -117,11 +123,7 @@ export async function evaluateSolution(schoolId: string, ref: SolutionRef, solve
     const solution = await findSolution(tx, ref);
     if (!solution) return null;
     if (solution.status !== "ok") throw new TimetableError("solution_failed");
-    const placements = await tx
-      .select({ blockId: ttPlacements.blockId, day: ttPlacements.day, period: ttPlacements.period, pinned: ttPlacements.pinned })
-      .from(ttPlacements)
-      .where(eq(ttPlacements.solutionId, ref.solutionId));
-    return { solution, placements };
+    return { solution, placements: await loadPlacements(tx, ref.solutionId) };
   });
   if (!read) return null;
 
@@ -143,11 +145,16 @@ export async function evaluateSolution(schoolId: string, ref: SolutionRef, solve
   }
 
   return withSchool(schoolId, async (tx) => {
+    // Locks the solution: an edit can no longer slip in between the comparison and the write.
+    if (!(await findSolution(tx, ref, true))) return null;
+    if (placementKeys(await loadPlacements(tx, ref.solutionId)).join("|") !== placementKeys(read.placements).join("|")) {
+      return { ok: false as const, error: "placements_changed" as const };
+    }
     const [row] = await tx
       .update(ttSolutions)
       .set({ score: output.score, violations: output.violations, reportStale: false })
-      .where(and(eq(ttSolutions.id, ref.solutionId), eq(ttSolutions.runId, ref.runId), eq(ttSolutions.boardId, ref.boardId)))
+      .where(eq(ttSolutions.id, ref.solutionId))
       .returning();
-    return row ? { ok: true as const, solution: toSolutionSummary(row) } : null;
+    return { ok: true as const, solution: toSolutionSummary(row) };
   });
 }

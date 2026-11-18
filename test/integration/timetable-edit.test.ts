@@ -259,6 +259,16 @@ describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
       expect(await stored()).toMatchObject({ reportStale: true, violations: [] });
     });
 
+    it("evaluateRefusesWhenPlacementsChangedMeanwhile", async () => {
+      await editedRef();
+      const editsWhileSolving: SolveFn = async (input) => {
+        await editPlacement(testSchoolA, ref, move(blockY, { day: 0, period: 2 }, { day: 2, period: 5 }));
+        return echo()(input);
+      };
+      expect(await evaluateSolution(testSchoolA, ref, editsWhileSolving)).toEqual({ ok: false, error: "placements_changed" });
+      expect(await stored()).toMatchObject({ reportStale: true, violations: [] });
+    });
+
     it("evaluateOtherBoardsSolutionIsNotFound", async () => {
       expect(await evaluateSolution(testSchoolA, { ...otherRef, boardId: board.id }, echo())).toBeNull();
     });

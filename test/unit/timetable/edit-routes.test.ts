@@ -141,6 +141,13 @@ describe("POST …/solutions/[solution]/evaluate", () => {
     expect(await res.json()).toEqual({ error: "evaluate_unsupported" });
   });
 
+  it("409 placements_changed", async () => {
+    evaluateSolutionMock.mockResolvedValue({ ok: false, error: "placements_changed" });
+    const res = await EVALUATE(post(), ctx());
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: "placements_changed" });
+  });
+
   it("404 for another board's solution", async () => {
     evaluateSolutionMock.mockResolvedValue(null);
     expect((await EVALUATE(post(), ctx())).status).toBe(404);

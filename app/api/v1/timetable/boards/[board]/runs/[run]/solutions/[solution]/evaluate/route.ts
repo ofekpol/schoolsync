@@ -18,7 +18,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext): Pro
   return withTimetableErrors(async () => {
     const result = await evaluateSolution(user.schoolId, { boardId: board.id, runId: ids.data.run, solutionId: ids.data.solution });
     if (!result) return notFoundResponse();
-    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 });
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === "placements_changed" ? 409 : 502 });
     return NextResponse.json(EvaluateResponseSchema.parse({ solution: result.solution }));
   });
 }

@@ -23,6 +23,7 @@ export const RunSchema = z.object({
 
 export const RunsResponseSchema = z.object({ runs: z.array(RunSchema) });
 export const RunResponseSchema = z.object({ run: RunSchema });
+export const StartRunRequestSchema = z.object({ fromSolutionId: z.string().uuid().optional() });
 export const StartRunResponseSchema = z.object({ runId: z.string().uuid() });
 
 export const SolutionGridResponseSchema = z.object({

@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PrintSheets } from "@/components/timetable/edit/PrintSheets";
 import { TimetableGrid } from "@/components/timetable/generate/TimetableGrid";
 import { OptionCard } from "@/components/timetable/generate/OptionCard";
 import type { SolutionGrid } from "@/lib/timetable/grid";
@@ -211,5 +212,31 @@ describe("read-only grid and option card", () => {
     expect(screen.getByText("published")).toBeInTheDocument();
     expect(screen.getByText("reportStale")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "open" })).toHaveAttribute("href", `/timetable/${BOARD}/generate/${RUN}/${SOL}`);
+  });
+});
+
+describe("PrintSheets", () => {
+  it("renders one table per class in grade/number order with its heading", () => {
+    const grid = makeGrid({ names: { ...makeGrid().names, classes: { c2: { grade: 7, number: 2 }, c1: { grade: 7, number: 1 } } } });
+    const { container } = render(<PrintSheets grid={grid} kind="class" />);
+    expect(container.querySelectorAll("table")).toHaveLength(2);
+    expect(container.querySelectorAll("section.print-timetable")).toHaveLength(2);
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent ?? "");
+    expect(headings[0]).toContain("1");
+    expect(headings[1]).toContain("2");
+  });
+
+  it("shows clash and pin markers as text", () => {
+    const grid = makeGrid({
+      lessons: [
+        { blockId: "b1", subjectId: "s1", classIds: ["c1"], teacherIds: ["t1"], day: 0, period: 1, pinned: true },
+        { blockId: "b2", subjectId: "s2", classIds: ["c1"], teacherIds: ["t2"], day: 0, period: 1, pinned: false },
+      ],
+    });
+    render(<PrintSheets grid={grid} kind="class" />);
+    const first = within(screen.getAllByTestId("cell-0-1")[0]);
+    expect(first.getByText("clash")).toBeInTheDocument();
+    expect(first.getByText("pinned")).toBeInTheDocument();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 });

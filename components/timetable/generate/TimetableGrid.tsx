@@ -60,8 +60,8 @@ export function TimetableGrid({ boardId, runId, grid, view, editable, cardNames 
 
   return (
     <div className="space-y-4">
-      <Link href={`/timetable/${boardId}/generate`} className="text-sm text-violet-700 hover:underline">{t("backToOptions")}</Link>
-      <div className="flex flex-wrap items-center gap-2">
+      <Link href={`/timetable/${boardId}/generate`} className="text-sm text-violet-700 hover:underline print:hidden">{t("backToOptions")}</Link>
+      <div className="flex flex-wrap items-center gap-2 print:hidden">
         {(["class", "teacher"] as const).map((kind) => (
           <button key={kind} type="button" aria-pressed={view.kind === kind} onClick={() => switchTo(kind)}
             className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm aria-pressed:border-violet-700 aria-pressed:bg-violet-700 aria-pressed:text-white">

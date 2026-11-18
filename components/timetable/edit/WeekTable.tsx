@@ -21,7 +21,7 @@ export function WeekTable({ week, cells, renderCell }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[40rem] border-collapse text-sm">
+      <table className="w-full min-w-[40rem] border-collapse text-sm print:min-w-0 print:text-[10pt]">
         <thead>
           <tr>
             <th scope="col" className="border border-neutral-200 p-2"><span className="sr-only">{t("cornerLabel")}</span></th>

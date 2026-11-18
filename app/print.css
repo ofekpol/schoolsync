@@ -118,3 +118,32 @@
     border-style: dotted solid !important;
   }
 }
+
+/* Timetable option: one class or teacher per A4 landscape page, plain black on white. */
+@page timetable {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
+.print-timetable {
+  page: timetable;
+}
+
+@media print {
+  .print-timetable {
+    break-after: page;
+  }
+  .print-timetable:last-child {
+    break-after: auto;
+  }
+  .print-timetable table {
+    min-width: 0 !important;
+    font-size: 10pt;
+  }
+  .print-timetable th,
+  .print-timetable td {
+    background: none !important;
+    border: 1px solid #000 !important;
+    color: #000 !important;
+  }
+}

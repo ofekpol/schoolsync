@@ -1172,6 +1172,7 @@
       "print": "הדפסה",
       "printAllClasses": "הדפסת כל הכיתות",
       "printAllTeachers": "הדפסת כל המורים",
+      "printTitle": "מערכת שעות: {profile}",
       "error": {
         "not_in_week": "המשבצת הזו לא קיימת בשבוע של הלוח",
         "slot_taken": "השיעור כבר נמצא במשבצת הזו",

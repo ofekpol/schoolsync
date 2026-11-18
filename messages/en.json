@@ -1172,6 +1172,7 @@
       "print": "Print",
       "printAllClasses": "Print all classes",
       "printAllTeachers": "Print all teachers",
+      "printTitle": "Timetable: {profile}",
       "error": {
         "not_in_week": "This slot is not in the board's week",
         "slot_taken": "The lesson is already in this slot",

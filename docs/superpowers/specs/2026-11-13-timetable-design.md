@@ -336,6 +336,13 @@ shortfall is reported as `unplaced`, never as an infeasible run). No constraint 
 | synthetic | local | 300 s | 1 | 12.4 s | optimal | 170 MB | 0 |
 | synthetic | Vercel preview | 60 s | default (2 CPUs seen) | 22.8 s (22.1 s solve) | ok | 324 MB | 0 |
 | Kfar Galim | local, preview | 60 s, 300 s | - | pending | - | - | - |
+| `הדגמה` board, full run (3 profiles) | Vercel preview, plan 7 | app default | - | 63 s (start to done) | done | - | 14 / 18 / 18 |
+| `הדגמה` board, full run (3 profiles) | Vercel staging, plan 7 | app default | - | 63 s (start to done) | done | - | 18 / 72 / 0 |
+
+The two plan 7 rows (2026-11-18) are whole Generate runs from the app, three solves each, on the
+seeded board; unplaced is per profile (teachers / classes / balanced). Unlike
+the synthetic input, the time limit binds here: lessons stay unplaced and the profiles differ although
+the solver does not read them yet. Per-solve times and memory were not captured.
 
 Both limits gave the same result because the model proves optimal in seconds; with only the
 built-in rules the time limit never binds.

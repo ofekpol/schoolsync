@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { withSchool } from "@/lib/db/client";
-import { ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
+import { ttBoards, ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
 import type { PlacementEdit } from "@/lib/validations/timetable-runs";
 import { TimetableError, mapPgError, type Tx } from "./errors";
 import { slotInWeek, type Slot } from "./grid";
@@ -15,13 +15,14 @@ export interface SolutionRef {
   solutionId: string;
 }
 
-/** The solution (id, run and board must all match) with its status and its run's stored input; null when none. */
-export async function findSolution(tx: Tx, ref: SolutionRef): Promise<{ status: string; input: StoredInput } | null> {
-  const [row] = await tx
+/** The solution (id, run and board must all match) with its status and its run's stored input; null when none. `lock` row-locks the solution until the transaction ends. */
+export async function findSolution(tx: Tx, ref: SolutionRef, lock = false): Promise<{ status: string; input: StoredInput } | null> {
+  const query = tx
     .select({ status: ttSolutions.status, input: ttRuns.input })
     .from(ttSolutions)
     .innerJoin(ttRuns, eq(ttRuns.id, ttSolutions.runId))
     .where(and(eq(ttSolutions.id, ref.solutionId), eq(ttSolutions.runId, ref.runId), eq(ttSolutions.boardId, ref.boardId)));
+  const [row] = await (lock ? query.for("update", { of: ttSolutions }) : query);
   return row ? { status: row.status, input: row.input as StoredInput } : null;
 }
 
@@ -62,7 +63,7 @@ async function moveRow(tx: Tx, solutionId: string, blockId: string, from: Slot, 
 /** Throws TimetableError; returns false when the solution or the source row is not found (route → 404). */
 export function editPlacement(schoolId: string, ref: SolutionRef, edit: PlacementEdit): Promise<boolean> {
   return withSchool(schoolId, async (tx) => {
-    const solution = await findSolution(tx, ref);
+    const solution = await findSolution(tx, ref, true);
     if (!solution) return false;
     if (solution.status !== "ok") throw new TimetableError("solution_failed");
     const block = solution.input.blocks.find((b) => b.id === edit.blockId);
@@ -87,5 +88,16 @@ export function editPlacement(schoolId: string, ref: SolutionRef, edit: Placemen
     } else if (edit.to) await placeFromTray(tx, schoolId, solutionId, edit.blockId, block.weeklyPeriods, edit.to);
     if (found) await markStale(tx, solutionId);
     return found;
+  });
+}
+
+/** Makes the solution the board's timetable. False = not found; throws solution_failed. */
+export function publishSolution(schoolId: string, ref: SolutionRef): Promise<boolean> {
+  return withSchool(schoolId, async (tx) => {
+    const solution = await findSolution(tx, ref, true);
+    if (!solution) return false;
+    if (solution.status !== "ok") throw new TimetableError("solution_failed");
+    await tx.update(ttBoards).set({ publishedSolutionId: ref.solutionId, status: "published" }).where(eq(ttBoards.id, ref.boardId));
+    return true;
   });
 }

@@ -71,3 +71,5 @@ export const PlacementEditSchema = z
   ])
   .refine((edit) => edit.action !== "move" || edit.from !== null || edit.to !== null);
 export type PlacementEdit = z.infer<typeof PlacementEditSchema>;
+
+export const PublishResponseSchema = z.object({ publishedSolutionId: z.string().uuid() });

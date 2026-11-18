@@ -2,11 +2,11 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "@/lib/db/schema";
-import { ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
+import { ttBoards, ttPlacements, ttRuns, ttSolutions } from "@/lib/db/schema-timetable";
 import { createBoard, deleteBoard, type Board } from "@/lib/timetable/boards";
 import { createBlock } from "@/lib/timetable/blocks";
 import { setGradeClassCount } from "@/lib/timetable/classes";
-import { editPlacement, type SolutionRef } from "@/lib/timetable/edit";
+import { editPlacement, publishSolution, type SolutionRef } from "@/lib/timetable/edit";
 import { executeRun, getRun, startRun, type SolveFn } from "@/lib/timetable/runs";
 import type { Slot } from "@/lib/timetable/grid";
 import type { PlacementEdit } from "@/lib/validations/timetable-runs";
@@ -172,5 +172,38 @@ describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
     await expect(editPlacement(testSchoolA, failedRef, move(blockX, null, { day: 1, period: 1 }))).rejects.toMatchObject({
       code: "solution_failed",
     });
+  });
+
+  const published = async (target: Board) =>
+    (await testDb!.select().from(ttBoards).where(eq(ttBoards.id, target.id)))[0];
+
+  it("publishSetsBoardPublished", async () => {
+    await freshRef();
+    expect(await publishSolution(testSchoolA, ref)).toBe(true);
+    expect(await published(board)).toMatchObject({ publishedSolutionId: ref.solutionId, status: "published" });
+  });
+
+  it("publishingAnotherReplacesIt", async () => {
+    await freshRef();
+    await publishSolution(testSchoolA, ref);
+    const first = ref.solutionId;
+    await freshRef();
+    expect(await publishSolution(testSchoolA, ref)).toBe(true);
+    expect((await published(board)).publishedSolutionId).toBe(ref.solutionId);
+    expect(ref.solutionId).not.toBe(first);
+  });
+
+  it("publishFailedIsRefused", async () => {
+    const failing: SolveFn = async () => ({ version: 1, status: "failed", error: "boom", score: 0, placements: [], violations: [] });
+    const failedRef = await solutionFor(board, failing);
+    await expect(publishSolution(testSchoolA, failedRef)).rejects.toMatchObject({ code: "solution_failed" });
+  });
+
+  it("publishOtherBoardsSolutionIsNotFound", async () => {
+    await freshRef();
+    const crossed = { ...otherRef, boardId: board.id };
+    await testDb!.update(ttBoards).set({ publishedSolutionId: null, status: "review" }).where(eq(ttBoards.id, board.id));
+    expect(await publishSolution(testSchoolA, crossed)).toBe(false);
+    expect(await published(board)).toMatchObject({ publishedSolutionId: null, status: "review" });
   });
 });

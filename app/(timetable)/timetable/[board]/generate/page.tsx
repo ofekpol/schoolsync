@@ -41,7 +41,7 @@ export default async function BoardGeneratePage({ params }: Params) {
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
         <p className="mt-1 max-w-2xl text-sm text-neutral-600">{t("subtitle")}</p>
       </div>
-      <GeneratePanel boardId={board.id} problemCount={exported?.problems.length ?? 0} runs={runs} constraints={constraints}
+      <GeneratePanel boardId={board.id} problemCount={exported?.problems.length ?? 0} runs={runs} publishedSolutionId={board.publishedSolutionId} constraints={constraints}
         teacherNames={Object.fromEntries(teachers.map((x) => [x.id, x.fullName]))}
         classNames={Object.fromEntries(classes.map((c) => [c.id, className(c.grade, c.number, (g) => tGrades(`label_${g}`))]))}
         optionNames={Object.fromEntries(categories.flatMap((c) => c.options.map((o) => [o.id, o.label])))} />

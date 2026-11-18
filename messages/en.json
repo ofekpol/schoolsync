@@ -1047,7 +1047,8 @@
         "class_clash": "{count, plural, one {# class clash} other {# class clashes}}",
         "unplaced": "{count, plural, one {# lesson not placed} other {# lessons not placed}}",
         "constraint": "{text} ({count})",
-        "removedConstraint": "Removed constraint"
+        "removedConstraint": "Removed constraint",
+        "pin_moved": "{count, plural, one {1 pinned lesson was moved} other {# pinned lessons were moved}}"
       },
       "profileFailed": "This option failed",
       "error": {
@@ -1142,6 +1143,53 @@
       "answered": "You answered on {when}",
       "filledByManagement": "Management answered for you on {when}",
       "saveFailed": "Saving failed, try again"
+    },
+    "edit": {
+      "open": "Open and edit",
+      "published": "Published",
+      "publishedBanner": "This is the published timetable. Changes are visible at once.",
+      "publish": "Publish timetable",
+      "publishConfirm": "Publish this option as the board's timetable? It replaces any timetable published before.",
+      "regenerate": "Regenerate",
+      "regenerateHint": "Pinned lessons stay, the rest is rebuilt.",
+      "check": "Check constraints",
+      "checking": "Checking constraints...",
+      "reportStale": "The timetable changed since the last check",
+      "reportFresh": "The report is up to date",
+      "pinned": "Pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "toTray": "Back to tray",
+      "tray": "Unplaced lessons",
+      "trayEmpty": "Every lesson is placed",
+      "missing": "{count, plural, one {1 period missing} other {# periods missing}}",
+      "select": "Pick a cell for the lesson",
+      "cancel": "Cancel",
+      "target": {
+        "free": "Move here",
+        "clash": "Move here (busy: {names})"
+      },
+      "print": "Print",
+      "printAllClasses": "Print all classes",
+      "printAllTeachers": "Print all teachers",
+      "error": {
+        "not_in_week": "This slot is not in the board's week",
+        "slot_taken": "The lesson is already in this slot",
+        "fully_placed": "Every period of this lesson is already placed",
+        "solution_failed": "A failed option cannot be edited",
+        "moved_elsewhere": "The lesson was moved in another window. The timetable was reloaded.",
+        "evaluate_unsupported": "The solver cannot check an edited timetable yet",
+        "solver_failed": "The solver found no solution",
+        "solver_not_configured": "The solver is not configured",
+        "solver_unreachable": "The solver is unavailable right now",
+        "solver_http_error": "The solver returned an error",
+        "solver_bad_output": "The solver returned an invalid answer",
+        "internal_error": "Internal error",
+        "placements_changed": "The timetable changed while checking. Check again.",
+        "unknown_id": "This option no longer exists",
+        "run_in_progress": "A run is already in progress for this board",
+        "input_problems": "The board data has problems"
+      }
     }
   }
 }

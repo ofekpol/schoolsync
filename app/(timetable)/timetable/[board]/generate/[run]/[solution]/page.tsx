@@ -2,9 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { requireActiveStaffPage } from "@/lib/auth/require-staff";
+import { isDemoUser } from "@/lib/auth/demo-guard";
+import { listCategories } from "@/lib/profile/categories";
 import { getBoard } from "@/lib/timetable/boards";
+import { listConstraints } from "@/lib/timetable/constraints/crud";
 import { getSolutionGrid } from "@/lib/timetable/solutions";
 import type { GridView } from "@/lib/timetable/grid";
+import { className } from "@/components/timetable/setup/className";
 import { TimetableGrid } from "@/components/timetable/generate/TimetableGrid";
 
 type Props = {
@@ -14,7 +18,7 @@ type Props = {
 
 const uuid = z.string().uuid();
 
-/** One generated option as a read-only week grid, by class or teacher (admins only). */
+/** One generated option as a week grid by class or teacher; editable unless it failed or this is a demo (admins only). */
 export default async function SolutionGridPage({ params, searchParams }: Props) {
   const user = await requireActiveStaffPage();
   if (user.role !== "admin" || !user.schoolId) redirect("/timetable");
@@ -29,12 +33,24 @@ export default async function SolutionGridPage({ params, searchParams }: Props) 
   const kind: GridView["kind"] = query.view === "teacher" ? "teacher" : "class";
   const pool = Object.keys(kind === "class" ? grid.names.classes : grid.names.teachers);
   const id = query.id && pool.includes(query.id) ? query.id : pool[0] ?? "";
-  const t = await getTranslations("timetable.generate");
+  const [t, tGrades, constraints, categories] = await Promise.all([
+    getTranslations("timetable.generate"),
+    getTranslations("grades"),
+    listConstraints(user.schoolId, board.id),
+    listCategories(user.schoolId),
+  ]);
+  const cardNames = {
+    constraints,
+    teacherNames: grid.names.teachers,
+    classNames: Object.fromEntries(Object.entries(grid.names.classes).map(([cid, c]) => [cid, className(c.grade, c.number, (g) => tGrades(`label_${g}`))])),
+    optionNames: Object.fromEntries(categories.flatMap((c) => c.options.map((o) => [o.id, o.label]))),
+  };
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 p-4 text-neutral-950 md:p-8">
       <h1 className="text-2xl font-bold tracking-tight">{t("gridTitle", { profile: t(`profile.${grid.solution.profile}`) })}</h1>
-      <TimetableGrid boardId={board.id} grid={grid} view={{ kind, id }} />
+      <TimetableGrid boardId={board.id} runId={ids.data.run} grid={grid} view={{ kind, id }}
+        editable={!isDemoUser(user) && grid.solution.status === "ok"} cardNames={cardNames} />
     </main>
   );
 }

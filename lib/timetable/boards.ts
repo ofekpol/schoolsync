@@ -15,6 +15,7 @@ export interface Board {
   status: BoardStatus;
   week: Week;
   academicYearId: string;
+  publishedSolutionId: string | null;
 }
 
 function toBoard(row: typeof ttBoards.$inferSelect): Board {
@@ -24,6 +25,7 @@ function toBoard(row: typeof ttBoards.$inferSelect): Board {
     status: row.status,
     week: WeekSchema.parse(row.week),
     academicYearId: row.academicYearId,
+    publishedSolutionId: row.publishedSolutionId,
   };
 }
 

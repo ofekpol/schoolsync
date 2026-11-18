@@ -4,20 +4,29 @@ import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { AlertTriangle } from "lucide-react";
 import { cellsFor, type GridLesson, type GridView, type SolutionGrid } from "@/lib/timetable/grid";
 import { className } from "@/components/timetable/setup/className";
+import { WeekTable } from "@/components/timetable/edit/WeekTable";
+import { LessonEditor, type LessonText } from "@/components/timetable/edit/LessonEditor";
+import type { CardNames } from "./ViolationList";
 
 interface Props {
   boardId: string;
+  runId: string;
   grid: SolutionGrid;
   view: GridView;
+  editable: boolean;
+  cardNames: CardNames;
 }
 
-/** A read-only week table of one class or teacher in one generated option. */
-export function TimetableGrid({ boardId, grid, view }: Props) {
+/** Remounts the editor (dropping its local copy) only when the server's placements really changed. */
+const signature = (grid: SolutionGrid) =>
+  [grid.solution.reportStale, grid.published, ...grid.lessons.map((l) => `${l.blockId}@${l.day}.${l.period}${l.pinned ? "p" : ""}`),
+    ...grid.unplaced.map((u) => `${u.blockId}x${u.missing}`)].join("|");
+
+/** One class or teacher of one generated option: read-only, or the editor when `editable`. */
+export function TimetableGrid({ boardId, runId, grid, view, editable, cardNames }: Props) {
   const t = useTranslations("timetable.generate");
-  const tc = useTranslations("timetable.constraints");
   const tGrades = useTranslations("grades");
   const router = useRouter();
   const pathname = usePathname();
@@ -39,16 +48,12 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
     if (first) go(kind, first);
   };
 
-  const cells = cellsFor(grid, view);
-  const periods = Math.max(...week.days.map((d) => d.periods.length));
-  const startOf = (period: number) => week.days.flatMap((d) => d.periods).find((p) => p.period === period)?.start ?? "";
-
   const subjectOf = (l: GridLesson) =>
     l.subjectId === null ? t("meeting") : names.subjects[l.subjectId] ?? t("removedSubject");
+  const teacherName = (id: string) => names.teachers[id] ?? t("removedTeacher");
   const otherOf = (l: GridLesson) =>
-    view.kind === "class"
-      ? l.teacherIds.map((id) => names.teachers[id] ?? t("removedTeacher")).join(", ")
-      : l.classIds.map(classLabel).join(", ");
+    view.kind === "class" ? l.teacherIds.map(teacherName).join(", ") : l.classIds.map(classLabel).join(", ");
+  const text: LessonText = { subjectOf, otherOf, classLabel, teacherName };
 
   return (
     <div className="space-y-4">
@@ -65,47 +70,16 @@ export function TimetableGrid({ boardId, grid, view }: Props) {
           {options.map((id) => <option key={id} value={id}>{label(id)}</option>)}
         </select>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[40rem] border-collapse text-sm">
-          <thead>
-            <tr>
-              <th scope="col" className="border border-neutral-200 p-2"><span className="sr-only">{t("cornerLabel")}</span></th>
-              {week.days.map((d) => <th key={d.day} scope="col" className="border border-neutral-200 bg-neutral-50 p-2">{tc(`days.${d.day}`)}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: periods }, (_, i) => i + 1).map((period) => (
-              <tr key={period}>
-                <th scope="row" className="border border-neutral-200 bg-neutral-50 p-2 text-start font-medium">
-                  {t("periodLabel", { period })}
-                  <span className="block text-xs font-normal text-neutral-600">{startOf(period)}</span>
-                </th>
-                {week.days.map((d) => {
-                  const lessons = cells.get(`${d.day}:${period}`) ?? [];
-                  const exists = d.periods.some((x) => x.period === period);
-                  return (
-                    <td key={d.day} data-testid={`cell-${d.day}-${period}`}
-                      className={`border border-neutral-200 p-2 align-top ${exists ? "" : "bg-neutral-100 text-neutral-600"}`}>
-                      {!exists && <p className="text-xs">{t("noPeriod")}</p>}
-                      {lessons.length > 1 && (
-                        <p className="mb-1 inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-900">
-                          <AlertTriangle aria-hidden className="size-3.5" />{t("clash")}
-                        </p>
-                      )}
-                      {lessons.map((l) => (
-                        <div key={l.blockId} className="mb-1">
-                          <p className="font-medium">{subjectOf(l)}</p>
-                          <p className="text-xs text-neutral-600">{otherOf(l)}</p>
-                        </div>
-                      ))}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {editable ? (
+        <LessonEditor key={signature(grid)} boardId={boardId} runId={runId} grid={grid} view={view} text={text} cardNames={cardNames} />
+      ) : (
+        <WeekTable week={week} cells={cellsFor(grid, view)} renderCell={(_slot, lessons) => lessons.map((l) => (
+          <div key={l.blockId} className="mb-1">
+            <p className="font-medium">{text.subjectOf(l)}</p>
+            <p className="text-xs text-neutral-600">{text.otherOf(l)}</p>
+          </div>
+        ))} />
+      )}
     </div>
   );
 }

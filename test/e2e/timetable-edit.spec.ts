@@ -11,7 +11,7 @@ import { Pool } from "pg";
  *
  * Needs ADMIN_E2E=1 and DATABASE_URL (a local stack with TEST_LOGIN_ENABLED on
  * the seed's demo-school). No solver: beforeAll inserts a tiny board, a done
- * run and one solution by SQL. Restores the school's services and deletes its
+ * run and one solution by SQL. Turns the timetable service off again only if it turned it on, and deletes its
  * board when done.
  */
 const skip = process.env.ADMIN_E2E !== "1" || !process.env.DATABASE_URL;
@@ -107,17 +107,18 @@ async function seed(pool: Pool): Promise<string> {
   }
 }
 
-let savedServices: string[] | null = null;
+// Only the spec that turned the service on turns it off: other specs may toggle it in parallel.
+let addedTimetable = false;
 let optionUrl = "";
 
 test.beforeAll(async () => {
   if (skip) return;
   await deleteBoard();
   await withPool(async (pool) => {
-    const { rows: [school] } = await pool.query<{ services: string[] }>("SELECT services FROM schools WHERE slug = $1", [SCHOOL_SLUG]);
-    savedServices = school.services;
-    await pool.query("UPDATE schools SET services = $1 WHERE slug = $2",
-      [[...new Set([...school.services, "timetable"])], SCHOOL_SLUG]);
+    const added = await pool.query(
+      "UPDATE schools SET services = array_append(services, 'timetable') WHERE slug = $1 AND NOT ('timetable' = ANY(services)) RETURNING id",
+      [SCHOOL_SLUG]);
+    addedTimetable = (added.rowCount ?? 0) > 0;
     optionUrl = await seed(pool);
   });
 });
@@ -125,9 +126,9 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (skip) return;
   await deleteBoard();
-  if (savedServices) {
-    const services = savedServices;
-    await withPool((pool) => pool.query("UPDATE schools SET services = $1 WHERE slug = $2", [services, SCHOOL_SLUG]));
+  if (addedTimetable) {
+    await withPool((pool) =>
+      pool.query("UPDATE schools SET services = array_remove(services, 'timetable') WHERE slug = $1", [SCHOOL_SLUG]));
   }
 });
 

@@ -29,7 +29,7 @@ Both guards stay useful after plan 4 as checks on the solver.
 
 - Contract v1 (`lib/timetable/solver-contract.ts`) is not changed. `solver/` and `api/solve.py` are not touched.
 - Every school-data query runs inside `withSchool(schoolId, fn)`. Every write that takes a solution id checks it belongs to the route's board (and run) inside the same transaction; RLS alone does not stop a same-school id from another board.
-- Never edit an existing migration. Add `0027_timetable_edit.sql` and its `_journal.json` entry.
+- Never edit an existing migration. Add `0027_timetable_edit.sql` (plain SQL run by `scripts/migrate.ts`; there is no journal file).
 - Zod on every route's request and response. Admin only (`requireBoard`); writes refused for demo users (`requireBoard(true, ...)`).
 - All UI strings through `t()`, `he.json` first, `en.json` mirrored. Logical CSS properties only. `lucide-react` icons. State is never shown by color alone (icon + text). Functions < 50 lines, files < 400 lines, no `any`.
 - Polling and effects compare ids and statuses, never object identity (CLAUDE.md "Views and polling").
@@ -66,7 +66,6 @@ Both guards stay useful after plan 4 as checks on the solver.
 
 **Files:**
 - Create: `db/migrations/0027_timetable_edit.sql` (`ALTER TABLE tt_solutions ADD COLUMN report_stale boolean NOT NULL DEFAULT false;`)
-- Modify: `db/migrations/meta/_journal.json` (append, shape of 0026's entry)
 - Modify: `lib/db/schema-timetable.ts` (`reportStale: boolean("report_stale").notNull().default(false)` on `ttSolutions`)
 - Modify: `lib/timetable/runs.ts` (`SolutionSummary` gains `reportStale: boolean`; `toSolutionSummary` maps it)
 - Modify: `lib/validations/timetable-runs.ts` (`SolutionSummarySchema` gains `reportStale`)

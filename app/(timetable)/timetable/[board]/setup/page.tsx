@@ -37,9 +37,10 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
   if (!board) notFound();
   const tab = parseSetupTab(tabParam);
   const schoolId = user.schoolId;
-  const [t, tCollect, data, exported] = await Promise.all([
+  const [t, tCollect, tGenerate, data, exported] = await Promise.all([
     getTranslations("timetable.setup"),
     getTranslations("timetable.collect.link"),
+    getTranslations("timetable.generate"),
     loadBoardData(schoolId, board.id),
     buildSolverInput(schoolId, board.id),
   ]);
@@ -50,10 +51,16 @@ export default async function BoardSetupPage({ params, searchParams }: Params) {
         <Link href="/timetable" className="text-sm text-violet-700 hover:underline">{t("back")}</Link>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{t("title", { name: board.name })}</h1>
-          <Link href={`/timetable/${board.id}/collect`}
-            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50">
-            {tCollect("open")}
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/timetable/${board.id}/collect`}
+              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50">
+              {tCollect("open")}
+            </Link>
+            <Link href={`/timetable/${board.id}/generate`}
+              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50">
+              {tGenerate("link")}
+            </Link>
+          </div>
         </div>
       </div>
       <ReadinessPanel boardId={board.id} problems={exported?.problems ?? []} {...data} />

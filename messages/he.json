@@ -1024,6 +1024,71 @@
         "teacher_few_gaps": "כמה שפחות חלונות למורים"
       }
     },
+    "generate": {
+      "link": "יצירת מערכת",
+      "title": "יצירת מערכת: {name}",
+      "subtitle": "המערכת תחשב שלוש אפשרויות במקביל. בחרו את זו שמתאימה לבית הספר.",
+      "back": "חזרה להקמת הלוח",
+      "generate": "יצירת מערכת",
+      "running": "מחשב את שלוש האפשרויות...",
+      "elapsed": "{seconds} שניות",
+      "failed": "החישוב נכשל.",
+      "problems": "{count} בעיות בנתונים מונעות יצירת מערכת.",
+      "fixProblems": "לתיקון בהקמת הלוח",
+      "profile": {
+        "teachers": "המורים קודם",
+        "classes": "הכיתות קודם",
+        "balanced": "מאוזן"
+      },
+      "score": "ציון: {score}",
+      "noViolations": "בלי הפרות",
+      "violation": {
+        "teacher_clash": "{count, plural, one {התנגשות אחת של מורים} other {# התנגשויות של מורים}}",
+        "class_clash": "{count, plural, one {התנגשות אחת של כיתות} other {# התנגשויות של כיתות}}",
+        "unplaced": "{count, plural, one {שיעור אחד לא שובץ} other {# שיעורים לא שובצו}}",
+        "constraint": "{text} ({count})",
+        "removedConstraint": "אילוץ שהוסר"
+      },
+      "profileFailed": "האפשרות הזו נכשלה",
+      "error": {
+        "solver_not_configured": "מנוע השיבוץ לא מוגדר",
+        "solver_unreachable": "מנוע השיבוץ לא זמין כרגע",
+        "solver_http_error": "מנוע השיבוץ החזיר שגיאה",
+        "solver_bad_output": "מנוע השיבוץ החזיר תשובה לא תקינה",
+        "timed_out": "החישוב ארך יותר מדי זמן",
+        "solver_failed": "מנוע השיבוץ לא מצא פתרון",
+        "internal_error": "שגיאה פנימית",
+        "run_in_progress": "חישוב כבר רץ ללוח הזה",
+        "input_problems": "יש בעיות בנתוני הלוח",
+        "demo": "לא זמין בגרסת הדגמה",
+        "start": "לא הצלחנו להתחיל את החישוב",
+        "all_profiles_failed": "כל שלוש האפשרויות נכשלו"
+      },
+      "status": {
+        "queued": "ממתין",
+        "running": "רץ",
+        "done": "הסתיים",
+        "failed": "נכשל"
+      },
+      "open": "פתיחה",
+      "history": "חישובים קודמים",
+      "removedSubject": "מקצוע שהוסר",
+      "removedTeacher": "מורה שהוסר",
+      "meeting": "ישיבה",
+      "byClass": "כיתות: {names}",
+      "byTeacher": "מורים: {names}",
+      "viewClass": "לפי כיתה",
+      "viewTeacher": "לפי מורה",
+      "pickClass": "כיתה",
+      "pickTeacher": "מורה",
+      "clash": "התנגשות",
+      "backToOptions": "חזרה לאפשרויות",
+      "gridTitle": "{profile}: מערכת שבועית",
+      "periodLabel": "שעה {period}",
+      "noPeriod": "אין שעה כזו",
+      "removedClass": "כיתה שהוסרה",
+      "cornerLabel": "שעה / יום"
+    },
     "collect": {
       "link": {
         "open": "איסוף אילוצים"

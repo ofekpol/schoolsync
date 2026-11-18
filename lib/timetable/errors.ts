@@ -11,11 +11,16 @@ export type TimetableErrorCode =
   | "unknown_id"
   | "mixed_grades"
   | "duplicate_lesson"
-  | "already_linked";
+  | "already_linked"
+  | "run_in_progress"
+  | "input_problems";
 
 /** A timetable write the caller can explain to the user. */
 export class TimetableError extends Error {
-  constructor(readonly code: TimetableErrorCode) {
+  constructor(
+    readonly code: TimetableErrorCode,
+    readonly details?: unknown,
+  ) {
     super(code);
     this.name = "TimetableError";
   }

@@ -75,6 +75,8 @@ const STATUS: Record<TimetableErrorCode, number> = {
   unknown_id: 400,
   mixed_grades: 400,
   duplicate_lesson: 400,
+  run_in_progress: 409,
+  input_problems: 422,
 };
 
 const CONSTRAINT_STATUS: Record<ConstraintErrorCode, number> = {
@@ -90,7 +92,10 @@ const CONSTRAINT_STATUS: Record<ConstraintErrorCode, number> = {
 
 /** The response for a TimetableError or ConstraintError, `{ error: code }`; null for anything else. */
 export function timetableErrorResponse(error: unknown): NextResponse | null {
-  if (error instanceof TimetableError) return NextResponse.json({ error: error.code }, { status: STATUS[error.code] });
+  if (error instanceof TimetableError) {
+    const body = error.details === undefined ? { error: error.code } : { error: error.code, problems: error.details };
+    return NextResponse.json(body, { status: STATUS[error.code] });
+  }
   if (error instanceof ConstraintError) {
     return NextResponse.json({ error: error.code }, { status: CONSTRAINT_STATUS[error.code] });
   }

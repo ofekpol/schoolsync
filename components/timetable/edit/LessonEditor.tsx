@@ -26,6 +26,8 @@ interface Props {
   view: GridView;
   text: LessonText;
   cardNames: CardNames;
+  error: EditErrorKey | null; // owned by the parent: a refresh after moved_elsewhere remounts this editor
+  onError: (error: EditErrorKey | null) => void;
 }
 
 interface Selection {
@@ -50,13 +52,14 @@ function moved({ lessons, unplaced }: Placement, lesson: GridLesson, from: Slot 
 }
 
 /** The option's week grid with click-to-move, the unplaced tray, pins and the toolbar. */
-export function LessonEditor({ boardId, runId, grid, view, text, cardNames }: Props) {
+export function LessonEditor({ boardId, runId, grid, view, text, cardNames, error, onError }: Props) {
   const t = useTranslations("timetable.edit");
   const router = useRouter();
   const [placement, setPlacement] = useState<Placement>({ lessons: grid.lessons, unplaced: grid.unplaced });
   const [report, setReport] = useState(grid.solution);
   const [selected, setSelected] = useState<Selection | null>(null);
-  const [error, setError] = useState<EditErrorKey | null>(null);
+  // One edit at a time: a rollback restores a snapshot that must not hide another edit's result.
+  const [pending, setPending] = useState(false);
   const selecting = selected !== null;
 
   useEffect(() => {
@@ -70,14 +73,16 @@ export function LessonEditor({ boardId, runId, grid, view, text, cardNames }: Pr
     const previous = placement;
     setPlacement(next);
     setSelected(null);
-    setError(null);
+    onError(null);
+    setPending(true);
     const res = await editPlacement(boardId, runId, grid.solution.id, edit);
+    setPending(false);
     if (res.ok) {
       if (edit.action === "move") setReport((r) => ({ ...r, reportStale: true }));
       return;
     }
     setPlacement(previous);
-    setError(res.error);
+    onError(res.error);
     if (res.error === "moved_elsewhere") router.refresh();
   }
 
@@ -93,12 +98,12 @@ export function LessonEditor({ boardId, runId, grid, view, text, cardNames }: Pr
   const pick = (lesson: GridLesson, from: Slot | null) =>
     setSelected(selected?.lesson.blockId === lesson.blockId && (sameSlot(selected.from, from) || selected.from === from) ? null : { lesson, from });
 
-  function target(slot: Slot) {
-    if (!selected || sameSlot(selected.from, slot)) return null;
+  function target(slot: Slot, lessons: CellLessons) {
+    if (!selected || lessons.some((l) => l.blockId === selected.lesson.blockId)) return null;
     const busy = conflictsAt(placement.lessons, selected.lesson, slot, selected.from ?? undefined);
     const names = [...busy.teacherIds.map(text.teacherName), ...busy.classIds.map(text.classLabel)];
     return (
-      <button type="button" onClick={() => move(selected.lesson, selected.from, slot)}
+      <button type="button" disabled={pending} onClick={() => move(selected.lesson, selected.from, slot)}
         className={`mt-1 flex w-full items-center justify-center gap-1 rounded border border-dashed px-2 py-1 text-xs ${
           names.length > 0 ? "border-red-400 bg-red-50 text-red-900" : "border-violet-400 bg-violet-50 text-violet-900"}`}>
         {names.length > 0 && <AlertTriangle aria-hidden className="size-3.5 shrink-0" />}
@@ -113,23 +118,23 @@ export function LessonEditor({ boardId, runId, grid, view, text, cardNames }: Pr
         {lessons.map((l) => (
           <div key={l.blockId} className="mb-1 flex items-start gap-1">
             <button type="button" aria-pressed={selected?.lesson.blockId === l.blockId && sameSlot(selected.from, slot)}
-              onClick={() => pick(l, slot)}
+              disabled={pending} onClick={() => pick(l, slot)}
               className="flex-1 rounded px-1 py-0.5 text-start hover:bg-violet-50 aria-pressed:bg-violet-100 aria-pressed:ring-2 aria-pressed:ring-violet-700">
               <span className="block font-medium">{text.subjectOf(l)}</span>
               <span className="block text-xs text-neutral-600">{text.otherOf(l)}</span>
               {l.pinned && <span className="inline-flex items-center gap-1 text-xs text-violet-900"><Pin aria-hidden className="size-3" />{t("pinned")}</span>}
             </button>
             <button type="button" aria-label={t(l.pinned ? "unpin" : "pin")} title={t(l.pinned ? "unpin" : "pin")}
-              onClick={() => togglePin(l, slot, !l.pinned)} className="rounded p-1 text-neutral-600 hover:bg-neutral-100 print:hidden">
+              disabled={pending} onClick={() => togglePin(l, slot, !l.pinned)} className="rounded p-1 text-neutral-600 hover:bg-neutral-100 print:hidden">
               {l.pinned ? <PinOff aria-hidden className="size-3.5" /> : <Pin aria-hidden className="size-3.5" />}
             </button>
-            <button type="button" aria-label={t("toTray")} title={t("toTray")} onClick={() => move(l, slot, null)}
+            <button type="button" aria-label={t("toTray")} title={t("toTray")} disabled={pending} onClick={() => move(l, slot, null)}
               className="rounded p-1 text-neutral-600 hover:bg-neutral-100 print:hidden">
               <ArrowDownToLine aria-hidden className="size-3.5" />
             </button>
           </div>
         ))}
-        {exists && target(slot)}
+        {exists && target(slot, lessons)}
       </>
     );
   }
@@ -144,8 +149,10 @@ export function LessonEditor({ boardId, runId, grid, view, text, cardNames }: Pr
           <button type="button" onClick={() => setSelected(null)} className="rounded border border-neutral-300 px-2 py-0.5 text-neutral-800">{t("cancel")}</button>
         </p>
       )}
-      <WeekTable week={grid.week} cells={cellsFor(placement, view)} renderCell={renderCell} />
-      <UnplacedTray lessons={placement.unplaced.filter(inView)} selectedBlockId={selected?.from === null ? selected.lesson.blockId : null}
+      <div aria-busy={pending}>
+        <WeekTable week={grid.week} cells={cellsFor(placement, view)} renderCell={renderCell} />
+      </div>
+      <UnplacedTray disabled={pending} lessons={placement.unplaced.filter(inView)} selectedBlockId={selected?.from === null ? selected.lesson.blockId : null}
         text={text} onSelect={(l) => pick(l, null)} />
     </div>
   );

@@ -2,12 +2,14 @@
 
 import type { Route } from "next";
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cellsFor, type GridLesson, type GridView, type SolutionGrid } from "@/lib/timetable/grid";
 import { className } from "@/components/timetable/setup/className";
 import { WeekTable } from "@/components/timetable/edit/WeekTable";
 import { LessonEditor, type LessonText } from "@/components/timetable/edit/LessonEditor";
+import type { EditErrorKey } from "@/components/timetable/edit/api";
 import type { CardNames } from "./ViolationList";
 
 interface Props {
@@ -29,6 +31,7 @@ export function TimetableGrid({ boardId, runId, grid, view, editable, cardNames 
   const t = useTranslations("timetable.generate");
   const tGrades = useTranslations("grades");
   const router = useRouter();
+  const [editError, setEditError] = useState<EditErrorKey | null>(null);
   const pathname = usePathname();
   const { names, week } = grid;
 
@@ -71,7 +74,8 @@ export function TimetableGrid({ boardId, runId, grid, view, editable, cardNames 
         </select>
       </div>
       {editable ? (
-        <LessonEditor key={signature(grid)} boardId={boardId} runId={runId} grid={grid} view={view} text={text} cardNames={cardNames} />
+        <LessonEditor key={signature(grid)} boardId={boardId} runId={runId} grid={grid} view={view} text={text} cardNames={cardNames}
+          error={editError} onError={setEditError} />
       ) : (
         <WeekTable week={week} cells={cellsFor(grid, view)} renderCell={(_slot, lessons) => lessons.map((l) => (
           <div key={l.blockId} className="mb-1">

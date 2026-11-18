@@ -93,6 +93,37 @@ describe("LessonEditor", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("keeps the moved_elsewhere message when the refreshed grid remounts the editor", async () => {
+    api.editPlacement.mockResolvedValue({ ok: false, error: "moved_elsewhere" });
+    const { rerender } = renderEditor();
+    fireEvent.click(cell(0, 1).getByRole("button", { name: /Math/ }));
+    await act(async () => { fireEvent.click(cell(0, 2).getByRole("button", { name: "target.free" })); });
+    const fresh = makeGrid();
+    const refreshed = { ...fresh, lessons: fresh.lessons.map((l) => (l.blockId === "b1" ? { ...l, period: 2 } : l)) };
+    rerender(<TimetableGrid boardId={BOARD} runId={RUN} grid={refreshed} view={{ kind: "class", id: "c1" }} editable cardNames={cardNames} />);
+    expect(screen.getByTestId("cell-0-2")).toHaveTextContent("Math");
+    expect(screen.getByRole("alert")).toHaveTextContent("error.moved_elsewhere");
+  });
+
+  it("disables edit controls while a request is pending", async () => {
+    let finish: (value: { ok: true }) => void = () => {};
+    api.editPlacement.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    renderEditor();
+    fireEvent.click(cell(0, 1).getByRole("button", { name: "pin" }));
+    expect(cell(0, 1).getByRole("button", { name: /Math/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Bible/ })).toBeDisabled();
+    expect(screen.getByRole("table").closest("[aria-busy]")).toHaveAttribute("aria-busy", "true");
+    await act(async () => { finish({ ok: true }); });
+    expect(cell(0, 1).getByRole("button", { name: /Math/ })).toBeEnabled();
+  });
+
+  it("offers no target in a cell that already holds the selected block", () => {
+    const grid = makeGrid();
+    renderEditor({ ...grid, lessons: [...grid.lessons, { ...grid.lessons[0], period: 2 }] });
+    fireEvent.click(cell(0, 1).getByRole("button", { name: /Math/ }));
+    expect(cell(0, 2).queryAllByRole("button", { name: /target\./ })).toHaveLength(0);
+  });
+
   it("places a tray lesson with from: null and lowers its missing count", async () => {
     renderEditor();
     fireEvent.click(screen.getByRole("button", { name: /Bible/ }));

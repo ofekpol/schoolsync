@@ -48,6 +48,7 @@ const RUN = {
       error: null,
       score: 12,
       violations: [],
+      reportStale: false,
     },
   ],
 };
@@ -132,7 +133,9 @@ describe("/api/v1/timetable/boards/[board]/runs", () => {
     const GRID = {
       solution: RUN.solutions[0],
       week: { days: [{ day: 0, periods: [{ period: 1, start: "08:00", end: "08:45" }] }] },
-      lessons: [{ blockId: SOLUTION_ID, subjectId: null, classIds: [], teacherIds: [], day: 0, period: 1 }],
+      lessons: [{ blockId: SOLUTION_ID, subjectId: null, classIds: [], teacherIds: [], day: 0, period: 1, pinned: false }],
+      unplaced: [],
+      published: false,
       names: { classes: {}, teachers: {}, subjects: {} },
     };
 

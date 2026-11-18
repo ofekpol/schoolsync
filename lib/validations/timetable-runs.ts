@@ -9,6 +9,7 @@ export const SolutionSummarySchema = z.object({
   error: z.string().nullable(),
   score: z.number(),
   violations: z.array(SolverViolationSchema),
+  reportStale: z.boolean(),
 });
 
 export const RunSchema = z.object({
@@ -35,8 +36,19 @@ export const SolutionGridResponseSchema = z.object({
       teacherIds: z.array(z.string().uuid()),
       day: z.number().int(),
       period: z.number().int(),
+      pinned: z.boolean(),
     }),
   ),
+  unplaced: z.array(
+    z.object({
+      blockId: z.string().uuid(),
+      subjectId: z.string().uuid().nullable(),
+      classIds: z.array(z.string().uuid()),
+      teacherIds: z.array(z.string().uuid()),
+      missing: z.number().int().min(1),
+    }),
+  ),
+  published: z.boolean(),
   names: z.object({
     classes: z.record(z.string(), z.object({ grade: z.number().int(), number: z.number().int() })),
     teachers: z.record(z.string(), z.string()),

@@ -20,6 +20,7 @@ export interface SolutionSummary {
   error: string | null;
   score: number;
   violations: SolverViolation[];
+  reportStale: boolean;
 }
 export interface Run {
   id: string;
@@ -53,6 +54,7 @@ export function toSolutionSummary(s: SolutionRow): SolutionSummary {
     error: s.error,
     score: s.score,
     violations: s.violations as SolverViolation[],
+    reportStale: s.reportStale,
   };
 }
 

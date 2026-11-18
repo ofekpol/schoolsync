@@ -25,7 +25,7 @@ const doneRun = (overrides: Partial<Run["solutions"][number]>[] = []): Run => ({
   createdAt: "2026-11-18T08:00:00.000Z",
   finishedAt: "2026-11-18T08:01:00.000Z",
   solutions: profiles.map((profile, i) => ({
-    id: uuid(60 + i), profile, status: "ok", error: null, score: 10 + i, violations: [], ...overrides[i],
+    id: uuid(60 + i), profile, status: "ok", error: null, score: 10 + i, violations: [], reportStale: false, ...overrides[i],
   })),
 });
 

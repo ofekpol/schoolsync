@@ -243,6 +243,7 @@ export const ttSolutions = pgTable(
     error: text(),
     score: doublePrecision().notNull().default(0),
     violations: jsonb().notNull().default(sql`'[]'::jsonb`),
+    reportStale: boolean("report_stale").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

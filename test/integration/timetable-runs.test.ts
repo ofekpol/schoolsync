@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "@/lib/db/schema";
-import { ttPlacements, ttRuns } from "@/lib/db/schema-timetable";
+import { ttBoards, ttPlacements, ttRuns } from "@/lib/db/schema-timetable";
 import { createBoard, deleteBoard, type Board } from "@/lib/timetable/boards";
 import { createBlock, deleteBlock, listBlocks } from "@/lib/timetable/blocks";
 import { listClasses, setGradeClassCount } from "@/lib/timetable/classes";
@@ -183,5 +183,43 @@ describe.skipIf(skipIfNoTestDb)("timetable runs", () => {
     expect(Object.values(grid!.names.teachers)).toContain("א");
     expect(await getSolutionGrid(testSchoolB, board.id, runId, solution.id)).toBeNull();
     expect(await getSolutionGrid(testSchoolA, board.id, randomUUID(), solution.id)).toBeNull();
+  });
+
+  async function firstSolution(solve: SolveFn) {
+    await reset();
+    const { runId } = await startRun(testSchoolA, board.id, staffId);
+    await executeRun(testSchoolA, runId, solve);
+    const run = await getRun(testSchoolA, board.id, runId);
+    return { runId, solution: run!.solutions[0] };
+  }
+
+  it("gridListsUnplacedLessons", async () => {
+    const solveShort: SolveFn = async (input) => ({
+      version: 1,
+      status: "ok",
+      score: 1,
+      placements: input.blocks.filter((block) => block.weeklyPeriods === 3).map((block) => ({ blockId: block.id, day: 0, period: 1 })),
+      violations: [],
+    });
+    const { runId, solution } = await firstSolution(solveShort);
+    const grid = await getSolutionGrid(testSchoolA, board.id, runId, solution.id);
+    expect(grid!.lessons).toHaveLength(1);
+    expect(grid!.unplaced.map((u) => u.missing).sort()).toEqual([2, 2]);
+  });
+
+  it("gridMarksPublished", async () => {
+    const { runId, solution } = await firstSolution(solveOk);
+    expect((await getSolutionGrid(testSchoolA, board.id, runId, solution.id))!.published).toBe(false);
+    await testDb!.update(ttBoards).set({ publishedSolutionId: solution.id }).where(eq(ttBoards.id, board.id));
+    try {
+      expect((await getSolutionGrid(testSchoolA, board.id, runId, solution.id))!.published).toBe(true);
+    } finally {
+      await testDb!.update(ttBoards).set({ publishedSolutionId: null }).where(eq(ttBoards.id, board.id));
+    }
+  });
+
+  it("newSolutionReportIsFresh", async () => {
+    const { solution } = await firstSolution(solveOk);
+    expect(solution.reportStale).toBe(false);
   });
 });

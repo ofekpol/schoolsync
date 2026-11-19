@@ -71,6 +71,7 @@ describe("LessonEditor", () => {
     renderEditor();
     fireEvent.click(cell(0, 1).getByRole("button", { name: /Math/ }));
     expect(cell(1, 1).getByRole("button", { name: 'target.clash:{"names":"Dana"}' })).toBeInTheDocument();
+    expect(cell(1, 1).getByRole("button", { name: /target.clash/ })).toHaveClass("print:hidden");
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryAllByRole("button", { name: /target\./ })).toHaveLength(0);
   });

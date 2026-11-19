@@ -104,7 +104,7 @@ export function LessonEditor({ boardId, runId, grid, view, text, cardNames, erro
     const names = [...busy.teacherIds.map(text.teacherName), ...busy.classIds.map(text.classLabel)];
     return (
       <button type="button" disabled={pending} onClick={() => move(selected.lesson, selected.from, slot)}
-        className={`mt-1 flex w-full items-center justify-center gap-1 rounded border border-dashed px-2 py-1 text-xs ${
+        className={`mt-1 flex w-full items-center justify-center gap-1 rounded border border-dashed px-2 py-1 text-xs print:hidden ${
           names.length > 0 ? "border-red-400 bg-red-50 text-red-900" : "border-violet-400 bg-violet-50 text-violet-900"}`}>
         {names.length > 0 && <AlertTriangle aria-hidden className="size-3.5 shrink-0" />}
         {names.length > 0 ? t("target.clash", { names: names.join(", ") }) : t("target.free")}

@@ -14,7 +14,7 @@ import type { PlacementEdit } from "@/lib/validations/timetable-runs";
 import { addSubjects } from "@/lib/timetable/subjects";
 import { addTeachers } from "@/lib/timetable/teachers";
 import { boardName, ensureActiveYear } from "./timetable-helpers";
-import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA } from "./setup";
+import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
 
 const move = (blockId: string, from: Slot | null, to: Slot | null): PlacementEdit => ({ action: "move", blockId, from, to });
 
@@ -52,6 +52,8 @@ describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
   };
   const rows = (solutionId: string) => testDb!.select().from(ttPlacements).where(eq(ttPlacements.solutionId, solutionId));
   const rowsOf = async (blockId: string) => (await rows(ref.solutionId)).filter((r) => r.blockId === blockId);
+  const storedRow = async (solutionId: string) =>
+    (await testDb!.select().from(ttSolutions).where(eq(ttSolutions.id, solutionId)))[0];
   const stale = async (solutionId: string) =>
     (await testDb!.select().from(ttSolutions).where(eq(ttSolutions.id, solutionId)))[0].reportStale;
 
@@ -271,6 +273,28 @@ describe.skipIf(skipIfNoTestDb)("timetable edit", () => {
 
     it("evaluateOtherBoardsSolutionIsNotFound", async () => {
       expect(await evaluateSolution(testSchoolA, { ...otherRef, boardId: board.id }, echo())).toBeNull();
+    });
+  });
+
+  describe("cross-school denial", () => {
+    it("school B cannot edit, publish or evaluate school A's solution, nor regenerate from it", async () => {
+      await freshRef();
+      const runsBefore = await testDb!.select().from(ttRuns).where(eq(ttRuns.boardId, board.id));
+      const before = await rows(ref.solutionId);
+      const reportBefore = await storedRow(ref.solutionId);
+
+      expect(await editPlacement(testSchoolB, ref, move(blockX, { day: 0, period: 1 }, { day: 1, period: 4 }))).toBe(false);
+      expect(await publishSolution(testSchoolB, ref)).toBe(false);
+      expect(await evaluateSolution(testSchoolB, ref, async () => {
+        throw new Error("solver must not be called");
+      })).toBeNull();
+      await expect(startRun(testSchoolB, board.id, staffId, new Date(), ref.solutionId)).rejects.toThrow();
+
+      expect(await rows(ref.solutionId)).toEqual(before);
+      expect(await storedRow(ref.solutionId)).toEqual(reportBefore);
+      const [boardRow] = await testDb!.select().from(ttBoards).where(eq(ttBoards.id, board.id));
+      expect(boardRow.publishedSolutionId).not.toBe(ref.solutionId);
+      expect(await testDb!.select().from(ttRuns).where(eq(ttRuns.boardId, board.id))).toHaveLength(runsBefore.length);
     });
   });
 });

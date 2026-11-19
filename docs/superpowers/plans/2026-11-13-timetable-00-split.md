@@ -42,7 +42,8 @@ is met.
 | 5b | The principal browses and edits Kfar Galim's classes, subjects, teachers, lessons and Plata on staging. |
 | 7 | **First real demo.** Press Generate on staging, wait, see three timetables side by side, open one as a grid by class or by teacher. |
 | 6 | The named constraints (math teachers' two-hour meeting, management meeting, a teacher off on a day, free days) are entered or seeded, and each option lists which ones it had to break. |
-| 8 | **Full flow.** Drag a lesson, pin, regenerate, publish, print; a teacher sees their own week. |
+| 8 | **Principal flow.** Move a lesson by click (clashes shown at once), place unplaced lessons, pin, publish, print every class on A4. Regenerate keeps pins and "check constraints" reports violations only once plan 4 teaches the solver pins and `evaluate`; until then the app says so. |
+| 9 | A teacher sees their own published week on `/timetable/me`. |
 
 ## Rules that keep the two tracks from colliding
 

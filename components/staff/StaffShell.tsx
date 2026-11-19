@@ -37,6 +37,7 @@ export async function StaffShell({ user, withChat, children }: StaffShellProps) 
   return (
     <>
       {user.demoExpiresAt && <DemoBanner expiresAt={user.demoExpiresAt} />}
+      <div className="print:hidden">
       <AppHeader
         title={school?.name ?? user.fullName}
         subtitle={isDemoUser(user) ? undefined : user.email}
@@ -52,6 +53,7 @@ export async function StaffShell({ user, withChat, children }: StaffShellProps) 
           </>
         }
       />
+      </div>
       {children}
       {withChat && isAiEnabled() && !isDemoUser(user) && <StaffChatPanel />}
     </>

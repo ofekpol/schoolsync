@@ -54,7 +54,7 @@ Both guards stay useful after plan 4 as checks on the solver.
 
 ## Review Focus
 
-1. **Another board's solution id, same school.** `PATCH`, `evaluate`, `publish` and `fromSolutionId` with a solution of board B on board A's URL → 404, nothing written. Tests in Tasks 2, 3 and 6.
+1. **Another board's solution id, same school.** `PATCH`, `evaluate` and `publish` with a solution of board B on board A's URL → 404; `fromSolutionId` → 400 `unknown_id`; nothing written. Tests in Tasks 2, 3, 4 and 5.
 2. **The 21st run while a published option exists.** The published run survives and the board stays published. Test in Task 5 (`publishedRunIsNotPruned`).
 3. **The board changed after the run** (a block deleted, the week shortened). Regenerating from an old option must not send pins for missing blocks or slots (the contract's `superRefine` would not catch a pin on an unknown block, the solver would). Test in Task 5 (`stalePinsAreDropped`).
 4. **The solver of today on evaluate.** Returns a different timetable: the app answers `evaluate_unsupported` and keeps the old report and `report_stale: true`. Test in Task 4.

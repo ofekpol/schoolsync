@@ -500,7 +500,13 @@
     "errorDemo": "Labels cannot be saved in the demo.",
     "errorTooMany": "One of the categories allows a single option only.",
     "errorRequiredMissing": "A required category has no choice.",
-    "errorUnknownOption": "One of the options no longer exists. Refresh the page and try again."
+    "errorUnknownOption": "One of the options no longer exists. Refresh the page and try again.",
+    "labelsTitle": "My labels",
+    "firstRunTitle": "Before you start",
+    "selectedCount": "{count, plural, one {1 selected} other {# selected}}",
+    "saved": "Changes saved",
+    "saveContinue": "Save and continue",
+    "back": "Back"
   },
   "wizard": {
     "step1": {

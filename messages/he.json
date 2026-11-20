@@ -500,7 +500,13 @@
     "errorDemo": "אי אפשר לשמור תיוגים בהדגמה.",
     "errorTooMany": "באחת הקטגוריות אפשר לבחור אפשרות אחת בלבד.",
     "errorRequiredMissing": "חסרה בחירה בקטגוריית חובה.",
-    "errorUnknownOption": "אחת האפשרויות כבר לא קיימת. רעננו את הדף ונסו שוב."
+    "errorUnknownOption": "אחת האפשרויות כבר לא קיימת. רעננו את הדף ונסו שוב.",
+    "labelsTitle": "התיוגים שלי",
+    "firstRunTitle": "רגע לפני שמתחילים",
+    "selectedCount": "{count, plural, one {נבחרה אפשרות אחת} other {נבחרו # אפשרויות}}",
+    "saved": "השינויים נשמרו",
+    "saveContinue": "שמירה והמשך",
+    "back": "חזרה"
   },
   "wizard": {
     "step1": {

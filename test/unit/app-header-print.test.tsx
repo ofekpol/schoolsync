@@ -15,6 +15,7 @@ vi.mock("@/lib/ai/model", () => ({ isAiEnabled: () => false }));
 vi.mock("@/lib/auth/demo-guard", () => ({ isDemoUser: () => false }));
 vi.mock("@/components/auth/LogoutButton", () => ({ LogoutButton: () => null }));
 vi.mock("@/components/support/SupportLink", () => ({ SupportLink: () => null }));
+vi.mock("@/components/profile/ProfileLink", () => ({ ProfileLink: () => null }));
 vi.mock("@/components/demo/DemoBanner", () => ({ DemoBanner: () => null }));
 vi.mock("@/components/ai/StaffChatPanel", () => ({ StaffChatPanel: () => null }));
 

@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getStaffUser } from "@/lib/auth/session";
@@ -39,6 +41,11 @@ export default async function ProfilePage() {
         </div>
         <ProfileForm categories={categories} selected={selected} submitUrl="/api/v1/profile"
           savedHref={home} />
+        {user.profileCompletedAt && (
+          <Link href={home as Route} className="inline-block text-sm text-neutral-600 underline hover:text-neutral-900">
+            {t("cancel")}
+          </Link>
+        )}
       </div>
     </main>
   );

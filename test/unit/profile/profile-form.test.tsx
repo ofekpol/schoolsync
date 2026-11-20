@@ -80,6 +80,23 @@ describe("ProfileForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("errorRequiredMissing");
   });
 
+  it("stays on the page and confirms the save when there is no savedHref", async () => {
+    render(<ProfileForm categories={[SUBJECT]} selected={[]} submitUrl="/x" variant="page" />);
+    fireEvent.click(screen.getByRole("button", { name: "save" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("saved");
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("checkbox", { name: "אנגלית" }));
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("explains why Save is disabled and offers a back link", () => {
+    render(<ProfileForm categories={[GRADE]} selected={[]} submitUrl="/x" backHref="/dashboard"
+      saveLabel="saveContinue" />);
+    expect(screen.getByRole("button", { name: "saveContinue" })).toBeDisabled();
+    expect(screen.getByText("errorRequiredMissing")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "back" })).toHaveAttribute("href", "/dashboard");
+  });
+
   it("goes to savedHref after saving", async () => {
     render(<ProfileForm categories={[SUBJECT]} selected={[]} submitUrl="/x" savedHref="/dashboard" />);
     fireEvent.click(screen.getByRole("button", { name: "save" }));

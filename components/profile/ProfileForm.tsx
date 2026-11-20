@@ -1,10 +1,14 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { CircleCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CategoryFieldset } from "@/components/profile/CategoryFieldset";
+import { cn } from "@/lib/utils";
 import type { ProfileCategory } from "@/lib/validations/profile";
 
 interface Props {
@@ -13,8 +17,14 @@ interface Props {
   /** PUT { optionIds } goes here: the caller's own profile, or a staff member's (admin). */
   submitUrl: string;
   onSaved?: () => void;
-  /** Where to go after a successful save (the standalone /profile page). */
+  /** Where to go after a successful save (the first-login profile prompt). */
   savedHref?: string;
+  /** A "back" link beside Save (the in-app profile page). */
+  backHref?: string;
+  /** "page": full-width sections with a sticky save bar; "dialog": compact, inside a modal. */
+  variant?: "page" | "dialog";
+  /** Label key for the Save button. */
+  saveLabel?: "save" | "saveContinue";
 }
 
 type ErrorKey =
@@ -42,12 +52,24 @@ async function save(url: string, optionIds: string[]): Promise<ErrorKey | null> 
   return SERVER_ERRORS[payload?.error ?? ""] ?? "errorSave";
 }
 
-/** One fieldset per category: checkboxes for multi-select, radios for single-select. */
-export function ProfileForm({ categories, selected, submitUrl, onSaved, savedHref }: Props) {
+function nextPicked(current: Set<string>, category: ProfileCategory, optionId: string | null) {
+  const next = new Set(current);
+  if (!category.multiSelect) category.options.forEach((o) => next.delete(o.id));
+  if (optionId === null) return next;
+  if (category.multiSelect && next.has(optionId)) next.delete(optionId);
+  else next.add(optionId);
+  return next;
+}
+
+/** The school's categories as pill groups (checkboxes for multi-select, radios for single). */
+export function ProfileForm({
+  categories, selected, submitUrl, onSaved, savedHref, backHref, variant = "dialog", saveLabel = "save",
+}: Props) {
   const t = useTranslations("profile");
   const router = useRouter();
   const [picked, setPicked] = useState(() => new Set(selected));
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<ErrorKey | null>(null);
 
   const missing = categories.some(
@@ -55,14 +77,8 @@ export function ProfileForm({ categories, selected, submitUrl, onSaved, savedHre
   );
 
   function toggle(category: ProfileCategory, optionId: string | null) {
-    setPicked((current) => {
-      const next = new Set(current);
-      if (!category.multiSelect) category.options.forEach((o) => next.delete(o.id));
-      if (optionId === null) return next;
-      if (category.multiSelect && next.has(optionId)) next.delete(optionId);
-      else next.add(optionId);
-      return next;
-    });
+    setSaved(false);
+    setPicked((current) => nextPicked(current, category, optionId));
   }
 
   async function submit(e: React.FormEvent) {
@@ -73,68 +89,52 @@ export function ProfileForm({ categories, selected, submitUrl, onSaved, savedHre
     setSaving(false);
     if (failure) return setError(failure);
     onSaved?.();
-    if (savedHref) {
-      router.push(savedHref as Route);
-      router.refresh();
-    }
+    if (savedHref) router.push(savedHref as Route);
+    else setSaved(true);
+    router.refresh();
   }
 
+  const page = variant === "page";
   return (
-    <form onSubmit={submit} className="space-y-5">
-      {categories.map((category) => (
-        <CategoryFieldset key={category.id} category={category} picked={picked}
-          onToggle={(optionId) => toggle(category, optionId)} />
-      ))}
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={saving || missing}>
-          {saving ? t("saving") : t("save")}
+    <form onSubmit={submit} className={page ? "" : "space-y-5"}>
+      <div className={page ? "divide-y divide-[var(--sg-hairline-2)]" : "space-y-5"}>
+        {categories.map((category) => (
+          <CategoryFieldset key={category.id} category={category} picked={picked}
+            className={page ? "px-5 py-6 sm:px-7" : undefined}
+            onToggle={(optionId) => toggle(category, optionId)} />
+        ))}
+      </div>
+      <div className={cn(
+        "flex flex-wrap items-center gap-x-4 gap-y-2",
+        page && "sticky bottom-0 rounded-b-2xl border-t border-[var(--sg-hairline)] bg-[var(--sg-surface-raised)]/95 px-5 py-4 shadow-[0_-10px_18px_-14px_rgb(37_99_235_/_22%)] backdrop-blur-sm sm:px-7",
+      )}>
+        <Button type="submit" disabled={saving || missing}
+          className="sg-button-primary h-10 rounded-full px-6 text-sm font-semibold">
+          {saving ? t("saving") : t(saveLabel)}
         </Button>
-        {error && <span role="alert" className="text-sm text-destructive">{t(error)}</span>}
+        {backHref && (
+          <Link href={backHref as Route}
+            className="rounded-full px-3 py-2 text-sm text-[var(--sg-ink-mute)] hover:bg-[var(--sg-hairline-2)] hover:text-[var(--sg-ink)]">
+            {t("back")}
+          </Link>
+        )}
+        <FormStatus error={error} saved={saved} missing={missing} />
       </div>
     </form>
   );
 }
 
-const OPTION =
-  "flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm has-checked:border-primary has-checked:bg-primary/5 has-focus-visible:ring-2 has-focus-visible:ring-ring";
-
-function CategoryFieldset({ category, picked, onToggle }: {
-  category: ProfileCategory;
-  picked: Set<string>;
-  onToggle: (optionId: string | null) => void;
-}) {
+function FormStatus({ error, saved, missing }: { error: ErrorKey | null; saved: boolean; missing: boolean }) {
   const t = useTranslations("profile");
-  const name = useId();
-  const type = category.multiSelect ? "checkbox" : "radio";
-  const none = !category.options.some((o) => picked.has(o.id));
-  return (
-    <fieldset>
-      <legend className="mb-1.5 text-sm font-semibold text-neutral-900">
-        {category.name}
-        {category.required && (
-          <span className="ms-1.5 text-xs font-normal text-destructive">{t("required")}</span>
-        )}
-        {category.multiSelect && (
-          <span className="ms-1.5 text-xs font-normal text-neutral-500">{t("multiHint")}</span>
-        )}
-      </legend>
-      {category.options.length === 0 && <p className="text-xs text-neutral-500">{t("noOptions")}</p>}
-      <div className="flex flex-wrap gap-2">
-        {category.options.map((option) => (
-          <label key={option.id} className={OPTION}>
-            <input type={type} name={name} checked={picked.has(option.id)}
-              onChange={() => onToggle(option.id)} className="accent-primary" />
-            {option.label}
-          </label>
-        ))}
-        {!category.multiSelect && !category.required && category.options.length > 0 && (
-          <label className={`${OPTION} text-neutral-500`}>
-            <input type="radio" name={name} checked={none} onChange={() => onToggle(null)}
-              className="accent-primary" />
-            {t("none")}
-          </label>
-        )}
-      </div>
-    </fieldset>
-  );
+  if (error) return <span role="alert" className="text-sm text-rose-700">{t(error)}</span>;
+  if (saved) {
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-800">
+        <CircleCheck aria-hidden className="size-4" />
+        {t("saved")}
+      </span>
+    );
+  }
+  if (missing) return <span className="text-sm text-[var(--sg-ink-soft)]">{t("errorRequiredMissing")}</span>;
+  return null;
 }

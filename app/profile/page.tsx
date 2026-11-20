@@ -1,5 +1,3 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getStaffUser } from "@/lib/auth/session";
@@ -9,10 +7,14 @@ import { getStaffOptionIds } from "@/lib/profile/staff-labels";
 import { getSchoolById } from "@/lib/db/schools";
 import { homePathFor } from "@/lib/services";
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { ProfileIdentity } from "@/components/profile/ProfileIdentity";
+import { StaffShell } from "@/components/staff/StaffShell";
 
 /**
  * A staff member's own profile labels. Lives outside the (staff) group, like
- * /auth/change-password, so the profile gate can send people here without a loop.
+ * /auth/change-password, so the profile gate can send people here without a loop:
+ * the first visit is a focused standalone screen; once the profile has been saved,
+ * the page opens inside the normal staff header (the "פרופיל" link).
  */
 export default async function ProfilePage() {
   const user = await getStaffUser();
@@ -31,22 +33,28 @@ export default async function ProfilePage() {
     getTranslations("profile"),
   ]);
   if (categories.length === 0) redirect(home);
+  const firstRun = !user.profileCompletedAt;
 
-  return (
-    <main className="flex min-h-screen items-start justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-lg space-y-6 rounded-lg border p-6 shadow-sm sm:p-8">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("intro")}</p>
+  const content = (
+    <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-8 sm:pt-12">
+      <ProfileIdentity user={user} schoolName={school?.name} />
+      <section aria-labelledby="profile-labels" className="mt-10 sm:mt-12">
+        <h2 id="profile-labels"
+          className="font-[family-name:var(--sg-font-display)] text-xl font-semibold text-[var(--sg-ink)] sm:text-2xl">
+          {t(firstRun ? "firstRunTitle" : "labelsTitle")}
+        </h2>
+        <p className="mt-1.5 max-w-[60ch] text-sm leading-relaxed text-[var(--sg-ink-mute)]">{t("intro")}</p>
+        <div className="sg-card mt-5 rounded-2xl">
+          <ProfileForm categories={categories} selected={selected} submitUrl="/api/v1/profile"
+            variant="page"
+            savedHref={firstRun ? home : undefined}
+            backHref={firstRun ? undefined : home}
+            saveLabel={firstRun ? "saveContinue" : "save"} />
         </div>
-        <ProfileForm categories={categories} selected={selected} submitUrl="/api/v1/profile"
-          savedHref={home} />
-        {user.profileCompletedAt && (
-          <Link href={home as Route} className="inline-block text-sm text-neutral-600 underline hover:text-neutral-900">
-            {t("cancel")}
-          </Link>
-        )}
-      </div>
+      </section>
     </main>
   );
+
+  if (firstRun) return <div className="min-h-[100dvh]">{content}</div>;
+  return <StaffShell user={user} withChat={false}>{content}</StaffShell>;
 }

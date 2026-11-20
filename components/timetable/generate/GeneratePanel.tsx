@@ -18,6 +18,7 @@ interface Props extends CardNames {
   boardId: string;
   problemCount: number;
   runs: Run[];
+  publishedSolutionId: string | null;
 }
 
 const inProgress = (run: Run | undefined) => run?.status === "queued" || run?.status === "running";
@@ -25,7 +26,7 @@ const upsert = (runs: Run[], run: Run) =>
   [run, ...runs.filter((r) => r.id !== run.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 /** Generate button, the polled latest run, its three option cards and earlier runs. */
-export function GeneratePanel({ boardId, problemCount, runs: initialRuns, ...names }: Props) {
+export function GeneratePanel({ boardId, problemCount, runs: initialRuns, publishedSolutionId, ...names }: Props) {
   const t = useTranslations("timetable.generate");
   const [runs, setRuns] = useState(initialRuns);
   const [selectedId, setSelectedId] = useState(initialRuns[0]?.id ?? null);
@@ -98,7 +99,7 @@ export function GeneratePanel({ boardId, problemCount, runs: initialRuns, ...nam
       {selected && selected.solutions.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3">
           {PROFILE_ORDER.flatMap((profile) => selected.solutions.filter((s) => s.profile === profile)).map((solution) => (
-            <OptionCard key={solution.id} boardId={boardId} runId={selected.id} solution={solution} {...names} />
+            <OptionCard key={solution.id} boardId={boardId} runId={selected.id} solution={solution} publishedSolutionId={publishedSolutionId} {...names} />
           ))}
         </div>
       )}

@@ -1047,7 +1047,8 @@
         "class_clash": "{count, plural, one {התנגשות אחת של כיתות} other {# התנגשויות של כיתות}}",
         "unplaced": "{count, plural, one {שיעור אחד לא שובץ} other {# שיעורים לא שובצו}}",
         "constraint": "{text} ({count})",
-        "removedConstraint": "אילוץ שהוסר"
+        "removedConstraint": "אילוץ שהוסר",
+        "pin_moved": "{count, plural, one {שיעור נעוץ אחד הוזז} other {# שיעורים נעוצים הוזזו}}"
       },
       "profileFailed": "האפשרות הזו נכשלה",
       "error": {
@@ -1142,6 +1143,54 @@
       "answered": "ענית ב־{when}",
       "filledByManagement": "ההנהלה מילאה עבורך ב־{when}",
       "saveFailed": "השמירה נכשלה, נסו שוב"
+    },
+    "edit": {
+      "open": "פתיחה ועריכה",
+      "published": "פורסמה",
+      "publishedBanner": "זו המערכת שפורסמה. שינויים בה גלויים מיד.",
+      "publish": "פרסום המערכת",
+      "publishConfirm": "לפרסם את האפשרות הזו כמערכת של הלוח? היא תחליף מערכת שפורסמה קודם.",
+      "regenerate": "חישוב מחדש",
+      "regenerateHint": "שיעורים נעוצים נשארים במקומם, כל השאר נבנה מחדש.",
+      "check": "בדיקת אילוצים",
+      "checking": "בודק את האילוצים...",
+      "reportStale": "המערכת השתנתה מאז הבדיקה האחרונה",
+      "reportFresh": "הדוח מעודכן",
+      "pinned": "נעוץ",
+      "pin": "נעיצה",
+      "unpin": "ביטול נעיצה",
+      "toTray": "החזרה למגש",
+      "tray": "שיעורים שלא שובצו",
+      "trayEmpty": "כל השיעורים שובצו",
+      "missing": "{count, plural, one {חסרה שעה אחת} other {חסרות # שעות}}",
+      "select": "בחרו משבצת לשיעור",
+      "cancel": "ביטול",
+      "target": {
+        "free": "העברה לכאן",
+        "clash": "העברה לכאן (תפוס: {names})"
+      },
+      "print": "הדפסה",
+      "printAllClasses": "הדפסת כל הכיתות",
+      "printAllTeachers": "הדפסת כל המורים",
+      "printTitle": "מערכת שעות: {profile}",
+      "error": {
+        "not_in_week": "המשבצת הזו לא קיימת בשבוע של הלוח",
+        "slot_taken": "השיעור כבר נמצא במשבצת הזו",
+        "fully_placed": "כל השעות של השיעור הזה כבר שובצו",
+        "solution_failed": "אי אפשר לערוך אפשרות שנכשלה",
+        "moved_elsewhere": "השיעור הוזז בחלון אחר. המערכת נטענה מחדש.",
+        "evaluate_unsupported": "מנוע השיבוץ עוד לא יודע לבדוק מערכת ערוכה",
+        "solver_failed": "מנוע השיבוץ לא מצא פתרון",
+        "solver_not_configured": "מנוע השיבוץ לא מוגדר",
+        "solver_unreachable": "מנוע השיבוץ לא זמין כרגע",
+        "solver_http_error": "מנוע השיבוץ החזיר שגיאה",
+        "solver_bad_output": "מנוע השיבוץ החזיר תשובה לא תקינה",
+        "internal_error": "שגיאה פנימית",
+        "placements_changed": "המערכת השתנתה בזמן הבדיקה. בדקו שוב.",
+        "unknown_id": "האפשרות הזו כבר לא קיימת",
+        "run_in_progress": "חישוב כבר רץ ללוח הזה",
+        "input_problems": "יש בעיות בנתוני הלוח"
+      }
     }
   }
 }

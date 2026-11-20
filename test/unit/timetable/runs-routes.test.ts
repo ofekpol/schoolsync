@@ -48,6 +48,7 @@ const RUN = {
       error: null,
       score: 12,
       violations: [],
+      reportStale: false,
     },
   ],
 };
@@ -68,8 +69,28 @@ describe("/api/v1/timetable/boards/[board]/runs", () => {
     const res = await POST_RUN(req("POST"), boardCtx);
     expect(res.status).toBe(202);
     expect(StartRunResponseSchema.parse(await res.json())).toEqual({ runId: RUN_ID });
-    expect(runs.startRun).toHaveBeenCalledWith(SCHOOL, BOARD_ID, ADMIN.id);
+    expect(runs.startRun).toHaveBeenCalledWith(SCHOOL, BOARD_ID, ADMIN.id, undefined, undefined);
     expect(runs.executeRun).toHaveBeenCalledWith(SCHOOL, RUN_ID);
+  });
+
+  const post = (body: string) => new NextRequest("http://localhost/api/v1/timetable/boards/x/runs", { method: "POST", body });
+
+  it("202 on POST with fromSolutionId passes it to startRun", async () => {
+    runs.startRun.mockResolvedValue({ runId: RUN_ID });
+    const res = await POST_RUN(post(JSON.stringify({ fromSolutionId: RUN_ID })), boardCtx);
+    expect(res.status).toBe(202);
+    expect(runs.startRun).toHaveBeenCalledWith(SCHOOL, BOARD_ID, ADMIN.id, undefined, RUN_ID);
+  });
+
+  it("400 on POST with a bad fromSolutionId or invalid JSON", async () => {
+    expect((await POST_RUN(post(JSON.stringify({ fromSolutionId: "x" })), boardCtx)).status).toBe(400);
+    expect((await POST_RUN(post("{nope"), boardCtx)).status).toBe(400);
+    expect(runs.startRun).not.toHaveBeenCalled();
+  });
+
+  it("400 on POST for an unknown source solution", async () => {
+    runs.startRun.mockRejectedValue(new TimetableError("unknown_id"));
+    expect((await POST_RUN(post(JSON.stringify({ fromSolutionId: RUN_ID })), boardCtx)).status).toBe(400);
   });
 
   it("403 on POST for a viewer", async () => {
@@ -132,7 +153,9 @@ describe("/api/v1/timetable/boards/[board]/runs", () => {
     const GRID = {
       solution: RUN.solutions[0],
       week: { days: [{ day: 0, periods: [{ period: 1, start: "08:00", end: "08:45" }] }] },
-      lessons: [{ blockId: SOLUTION_ID, subjectId: null, classIds: [], teacherIds: [], day: 0, period: 1 }],
+      lessons: [{ blockId: SOLUTION_ID, subjectId: null, classIds: [], teacherIds: [], day: 0, period: 1, pinned: false }],
+      unplaced: [],
+      published: false,
       names: { classes: {}, teachers: {}, subjects: {} },
     };
 

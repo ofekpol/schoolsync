@@ -27,12 +27,12 @@ const ERRORS: Record<string, SetupErrorKey> = {
   demo_disabled: "demo",
 };
 
-/** A JSON request; on failure, the server's `error` code (or "" when there is none). */
+/** A JSON request; on failure, the server's `error` code (or "" when there is none) and the HTTP status (0 = network). */
 export async function sendJson<T>(
   url: string,
   method: "POST" | "PATCH" | "PUT" | "DELETE",
   body?: unknown,
-): Promise<{ ok: true; data: T } | { ok: false; code: string }> {
+): Promise<{ ok: true; data: T } | { ok: false; code: string; status: number }> {
   const res = await fetch(url, {
     method,
     headers: body === undefined ? undefined : { "Content-Type": "application/json" },
@@ -40,7 +40,7 @@ export async function sendJson<T>(
   }).catch(() => null);
   if (res?.ok) return { ok: true, data: (await res.json().catch(() => undefined)) as T };
   const payload = (await res?.json().catch(() => null)) as { error?: string } | null;
-  return { ok: false, code: payload?.error ?? "" };
+  return { ok: false, code: payload?.error ?? "", status: res?.status ?? 0 };
 }
 
 async function send<T>(url: string, method: "POST" | "PATCH" | "PUT" | "DELETE", body?: unknown): Promise<ApiResult<T>> {

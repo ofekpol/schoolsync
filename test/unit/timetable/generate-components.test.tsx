@@ -25,13 +25,13 @@ const doneRun = (overrides: Partial<Run["solutions"][number]>[] = []): Run => ({
   createdAt: "2026-11-18T08:00:00.000Z",
   finishedAt: "2026-11-18T08:01:00.000Z",
   solutions: profiles.map((profile, i) => ({
-    id: uuid(60 + i), profile, status: "ok", error: null, score: 10 + i, violations: [], ...overrides[i],
+    id: uuid(60 + i), profile, status: "ok", error: null, score: 10 + i, violations: [], reportStale: false, ...overrides[i],
   })),
 });
 
 const respond = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
 const fetchMock = vi.fn();
-const baseProps = { boardId: BOARD, problemCount: 0, runs: [] as Run[], constraints: [], teacherNames: {}, classNames: {}, optionNames: {} };
+const baseProps = { boardId: BOARD, problemCount: 0, runs: [] as Run[], publishedSolutionId: null, constraints: [], teacherNames: {}, classNames: {}, optionNames: {} };
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -122,6 +122,7 @@ describe("GeneratePanel", () => {
 });
 
 describe("TimetableGrid", () => {
+  const cardNames = { constraints: [], teacherNames: {}, classNames: {}, optionNames: {} };
   const week = { days: [0, 1].map((day) => ({ day, periods: [1, 2].map((period) => ({ period, start: `0${7 + period}:00`, end: `0${8 + period}:00` })) })) };
   const lesson = (day: number, period: number, o: Partial<{ subjectId: string | null; classIds: string[]; teacherIds: string[] }> = {}) =>
     ({ day, period, blockId: `b${day}${period}`, subjectId: "s1", classIds: ["c1"], teacherIds: ["t1"], ...o });
@@ -139,7 +140,7 @@ describe("TimetableGrid", () => {
 
   it("shows a class's lessons in their day and period cells, with clash and removed names", async () => {
     const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
-    render(<TimetableGrid boardId="b" grid={grid} view={{ kind: "class", id: "c1" }} />);
+    render(<TimetableGrid boardId="b" runId="r" editable={false} cardNames={cardNames} grid={grid} view={{ kind: "class", id: "c1" }} />);
     const cell = (day: number, period: number) => screen.getByTestId(`cell-${day}-${period}`);
     expect(cell(0, 1)).toHaveTextContent("Math");
     expect(cell(0, 1)).toHaveTextContent("Dana");
@@ -152,7 +153,7 @@ describe("TimetableGrid", () => {
 
   it("shows a teacher's week including a meeting, and replaces the URL on switch", async () => {
     const { TimetableGrid } = await import("@/components/timetable/generate/TimetableGrid");
-    render(<TimetableGrid boardId="b" grid={grid} view={{ kind: "teacher", id: "t1" }} />);
+    render(<TimetableGrid boardId="b" runId="r" editable={false} cardNames={cardNames} grid={grid} view={{ kind: "teacher", id: "t1" }} />);
     expect(screen.getByTestId("cell-1-2")).toHaveTextContent("meeting");
     expect(screen.getByTestId("cell-0-1")).toHaveTextContent("label_71");
     fireEvent.click(screen.getByRole("button", { name: "viewClass" }));
@@ -166,7 +167,7 @@ describe("TimetableGrid", () => {
       week: { days: [week.days[0], { day: 1, periods: [week.days[1].periods[0]] }] },
       lessons: [...grid.lessons, lesson(1, 2, { classIds: ["c1", "gone"], teacherIds: ["t1"] })],
     } as unknown as import("@/lib/timetable/grid").SolutionGrid;
-    render(<TimetableGrid boardId="b" grid={short} view={{ kind: "teacher", id: "t1" }} />);
+    render(<TimetableGrid boardId="b" runId="r" editable={false} cardNames={cardNames} grid={short} view={{ kind: "teacher", id: "t1" }} />);
     expect(screen.getByTestId("cell-1-2")).toHaveTextContent("noPeriod");
     expect(screen.getByTestId("cell-0-2")).not.toHaveTextContent("noPeriod");
     expect(screen.getByTestId("cell-1-2")).toHaveTextContent("removedClass");

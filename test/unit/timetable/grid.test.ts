@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { cellsFor, type GridLesson } from "@/lib/timetable/grid";
+import { cellsFor, conflictsAt, slotInWeek, type GridLesson, type PlacedLesson } from "@/lib/timetable/grid";
+import { DEFAULT_WEEK } from "@/lib/timetable/week";
 
-const lesson = (blockId: string, classIds: string[], teacherIds: string[], day = 0, period = 1): GridLesson & { day: number; period: number } => ({
+const lesson = (blockId: string, classIds: string[], teacherIds: string[], day = 0, period = 1): PlacedLesson => ({
   blockId,
   subjectId: classIds.length > 0 ? "s" : null,
   classIds,
   teacherIds,
   day,
   period,
+  pinned: false,
 });
 
 describe("cellsFor", () => {
@@ -43,5 +45,32 @@ describe("cellsFor", () => {
   it("keeps both lessons of a teacher clash in one cell", () => {
     const clash = [lesson("x", ["c1"], ["t1"], 3, 2), lesson("y", ["c2"], ["t1"], 3, 2)];
     expect(cellsFor({ lessons: clash }, { kind: "teacher", id: "t1" }).get("3:2")?.map((l) => l.blockId)).toEqual(["x", "y"]);
+  });
+});
+
+describe("conflictsAt", () => {
+  const placed = [lesson("a", ["c1"], ["t1"], 0, 1), lesson("meeting", [], ["t2"], 1, 2)];
+  const moving = (classIds: string[], teacherIds: string[]): GridLesson => ({ blockId: "m", subjectId: null, classIds, teacherIds });
+
+  it("reports a shared teacher and a shared class", () => {
+    expect(conflictsAt(placed, moving(["c1"], ["t1"]), { day: 0, period: 1 })).toEqual({ teacherIds: ["t1"], classIds: ["c1"] });
+  });
+  it("ignores the lesson's own row at ignore", () => {
+    const slot = { day: 0, period: 1 };
+    expect(conflictsAt(placed, { ...moving(["c1"], ["t1"]), blockId: "a" }, slot, slot)).toEqual({ teacherIds: [], classIds: [] });
+  });
+  it("a meeting conflicts only by teacher", () => {
+    expect(conflictsAt(placed, moving([], ["t2"]), { day: 1, period: 2 })).toEqual({ teacherIds: ["t2"], classIds: [] });
+  });
+  it("an empty slot has no conflicts", () => {
+    expect(conflictsAt(placed, moving(["c1"], ["t1"]), { day: 3, period: 3 })).toEqual({ teacherIds: [], classIds: [] });
+  });
+});
+
+describe("slotInWeek", () => {
+  it("is false for a period the day lacks or a day not in the week", () => {
+    expect(slotInWeek(DEFAULT_WEEK, { day: 5, period: 6 })).toBe(false);
+    expect(slotInWeek(DEFAULT_WEEK, { day: 6, period: 1 })).toBe(false);
+    expect(slotInWeek(DEFAULT_WEEK, { day: 0, period: 1 })).toBe(true);
   });
 });

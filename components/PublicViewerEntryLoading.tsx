@@ -19,7 +19,7 @@ export function PublicViewerEntryLoading() {
         </div>
         <div className="space-y-1.5">
           <p className="text-base font-semibold text-neutral-900">{t("title")}</p>
-          <p className="text-sm text-neutral-500">{t("detail")}</p>
+          <p className="text-sm text-neutral-600">{t("detail")}</p>
         </div>
         <span aria-hidden="true" className="h-1 w-28 overflow-hidden rounded-full bg-blue-100">
           <span className="block h-full w-1/2 rounded-full bg-blue-600 motion-safe:animate-[sg-route-progress_1.1s_ease-in-out_infinite]" />

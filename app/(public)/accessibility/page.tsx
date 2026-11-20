@@ -36,7 +36,7 @@ export default async function AccessibilityPage() {
           <dd dir="auto">{LEGAL.a11yCoordinator.email}</dd>
         </dl>
       </LegalSection>
-      <p className="text-sm text-muted-foreground">{t("checked", { date: LEGAL.lastChecked })}</p>
+      <p className="text-sm text-neutral-600">{t("checked", { date: LEGAL.lastChecked })}</p>
     </LegalPage>
   );
 }

@@ -11,7 +11,7 @@ export function LoadingPanel({ compact = false }: { compact?: boolean }) {
   const tc = useTranslations("common");
   return (
     <main className={`${compact ? "min-h-[18rem]" : "min-h-screen"} flex items-center justify-center p-6`}>
-      <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 text-sm text-neutral-500">
+      <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 text-sm text-neutral-600">
         <span
           data-testid="loading-indicator"
           aria-hidden="true"

@@ -22,7 +22,7 @@ export default async function PrivacyPage() {
       <p>
         {t("contactLabel")} <span dir="auto">{LEGAL.contactEmail}</span>
       </p>
-      <p className="text-sm text-muted-foreground">{t("updated", { date: LEGAL.updated })}</p>
+      <p className="text-sm text-neutral-600">{t("updated", { date: LEGAL.updated })}</p>
     </LegalPage>
   );
 }

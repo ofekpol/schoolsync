@@ -12,7 +12,7 @@ export function ViewSwitchStatus({ pending }: { pending: boolean }) {
     <span
       role="status"
       aria-live="polite"
-      className={`inline-flex items-center gap-1.5 text-[13px] text-neutral-500 transition-opacity delay-200 duration-150 ${
+      className={`inline-flex items-center gap-1.5 text-[13px] text-neutral-600 transition-opacity delay-200 duration-150 ${
         pending ? "opacity-100" : "opacity-0"
       }`}
     >

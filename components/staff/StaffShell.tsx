@@ -13,6 +13,7 @@ import { buildNavLinks, getCurrentPath } from "@/lib/nav";
 import { StaffChatPanel } from "@/components/ai/StaffChatPanel";
 import { isAiEnabled } from "@/lib/ai/model";
 import { needsProfile } from "@/lib/profile/gate";
+import { ProfileLink } from "@/components/profile/ProfileLink";
 
 interface StaffShellProps {
   user: StaffUserRecord;
@@ -49,6 +50,7 @@ export async function StaffShell({ user, withChat, children }: StaffShellProps) 
             <span className="max-w-48 truncate text-sm font-medium text-neutral-900">
               {user.fullName}
             </span>
+            <ProfileLink user={user} />
             <LogoutButton label={t("logout")} />
           </>
         }

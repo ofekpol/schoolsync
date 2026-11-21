@@ -37,7 +37,7 @@ export function TimetableGrid({ boardId, runId, grid, view, editable, cardNames 
 
   const classLabel = (id: string) => {
     const c = names.classes[id];
-    return c ? className(c.grade, c.number, (g) => tGrades(`label_${g}`)) : t("removedClass");
+    return c ? className(c, (g) => tGrades(`label_${g}`)) : t("removedClass");
   };
   const classIds = Object.keys(names.classes).sort(
     (a, b) => names.classes[a].grade - names.classes[b].grade || names.classes[a].number - names.classes[b].number);

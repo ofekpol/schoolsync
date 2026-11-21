@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteSubject, renameSubject } from "@/lib/timetable/subjects";
+import { deleteSubject, updateSubject } from "@/lib/timetable/subjects";
 import {
   invalidInput,
   itemId,
@@ -8,20 +8,20 @@ import {
   requireBoard,
   withTimetableErrors,
 } from "@/lib/timetable/api-guard";
-import { SubjectRenameInputSchema, SubjectResponseSchema } from "@/lib/validations/timetable-api";
+import { SubjectPatchInputSchema, SubjectResponseSchema } from "@/lib/validations/timetable-api";
 
 type RouteContext = { params: Promise<{ board: string; id: string }> };
 
-/** PATCH — renames a subject (admin). */
+/** PATCH — renames a subject and/or sets the grades it is taught in groups (admin). */
 export async function PATCH(request: NextRequest, { params }: RouteContext): Promise<NextResponse> {
   const guard = await requireBoard(true, params);
   if (!guard.ok) return guard.response;
   const id = await itemId(params);
   if (!id) return invalidInput();
-  const body = await readBody(request, SubjectRenameInputSchema);
+  const body = await readBody(request, SubjectPatchInputSchema);
   if (!body.ok) return body.response;
   return withTimetableErrors(async () => {
-    const subject = await renameSubject(guard.value.user.schoolId, id, body.value.name);
+    const subject = await updateSubject(guard.value.user.schoolId, id, body.value);
     if (!subject) return notFoundResponse();
     return NextResponse.json(SubjectResponseSchema.parse({ subject }));
   });

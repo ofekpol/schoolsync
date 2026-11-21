@@ -836,7 +836,7 @@
         "subjects": "Subjects",
         "teachers": "Teachers",
         "lessons": "Lessons",
-        "plata": "Plata",
+        "plata": "Groups and majors",
         "constraints": "Constraints"
       },
       "close": "Close",
@@ -853,26 +853,43 @@
         "tooMany": "You can paste up to {max} names at a time"
       },
       "classes": {
-        "hint": "How many classes each grade has. Classes are numbered from 1.",
+        "hint": "How many classes each grade has, and each class's name and type. Empty name = the default.",
         "grade": "Grade {grade}",
         "count": "Number of classes in grade {grade}",
         "none": "No classes",
-        "inUse": "This class has lessons"
+        "inUse": "This class has lessons",
+        "name": "Name of {class}",
+        "kind": "Type of {class}",
+        "kindPlaceholder": "Regular",
+        "kinds": [
+          "Mabar",
+          "Etgar",
+          "Mofet",
+          "Excellence",
+          "Special education"
+        ]
       },
       "subjects": {
         "count": "{count, plural, one {# subject} other {# subjects}}",
-        "empty": "No subjects yet. Paste a list to start.",
-        "rename": "Subject name {name}"
+        "empty": "No subjects yet. Add one or paste a list.",
+        "rename": "Subject name {name}",
+        "add": "Add",
+        "addLabel": "New subject",
+        "addPlaceholder": "Subject name",
+        "groupGrades": "Taught in groups in grades:",
+        "groupGradesHint": "A checked grade = the subject is taught there in groups or majors (Groups and majors tab). Unchecked = in the homeroom class.",
+        "groupGradeFor": "{subject} in groups in grade {grade}"
       },
       "teachers": {
         "count": "{count, plural, one {# teacher} other {# teachers}}",
         "empty": "No teachers yet.",
         "name": "Name",
         "staffUser": "User",
-        "freeDay": "Free day",
-        "freeDayFor": "{name} is entitled to a free day",
         "rename": "Teacher name {name}",
-        "linked": "Linked"
+        "linked": "Linked",
+        "filter": "Filter by group",
+        "all": "All teachers",
+        "shown": "{shown} of {count}"
       },
       "fromStaff": {
         "open": "Add from staff",
@@ -912,20 +929,24 @@
         "detachHint": "Take the class out of the Plata: it gets its own lesson, with its own number of periods"
       },
       "plata": {
-        "hint": "A Plata: several classes of one grade learn the same subject at the same periods.",
+        "hint": "A group cluster or major: several classes of one grade take a subject at the same time, split into groups. Each teacher teaches a group.",
         "empty": "No Plata yet.",
-        "new": "New Plata",
+        "new": "New cluster",
         "edit": "Edit",
         "grade": "Grade",
         "subject": "Subject",
         "periods": "Weekly periods",
         "classes": "Classes in the Plata",
-        "teachers": "Teachers",
+        "teachers": "Teachers and groups",
         "save": "Save",
         "needTwoClasses": "Choose at least two classes.",
         "summary": "{periods} periods · {classes}",
         "filterTeachers": "Find a teacher",
-        "tooManyTeachers": "A Plata can have up to {max} teachers"
+        "tooManyTeachers": "A Plata can have up to {max} teachers",
+        "groupName": "Group name for {teacher}",
+        "groupPlaceholder": "e.g. Level 1",
+        "noGroupSubjects": "No subject is taught in groups in this grade. Mark grades for a subject on the Subjects tab.",
+        "autoPicked": "Teachers whose profile lists the subject were checked automatically."
       },
       "readiness": {
         "title": "Ready to generate",
@@ -946,6 +967,11 @@
         "alreadyLinked": "This staff member is already linked to another teacher on the board",
         "demo": "Not available in the demo",
         "save": "Saving failed, try again"
+      },
+      "lessonViews": {
+        "label": "Lessons view",
+        "homeroom": "Homeroom classes",
+        "groups": "Groups and majors"
       }
     },
     "constraints": {

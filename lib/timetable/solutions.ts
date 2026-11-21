@@ -53,7 +53,7 @@ export async function getSolutionGrid(schoolId: string, boardId: string, runId: 
     unplaced,
     published: found.publishedSolutionId === solutionId,
     names: {
-      classes: Object.fromEntries(classes.map((c) => [c.id, { grade: c.grade, number: c.number }])),
+      classes: Object.fromEntries(classes.map((c) => [c.id, { grade: c.grade, number: c.number, name: c.name }])),
       teachers: Object.fromEntries(teachers.map((t) => [t.id, t.fullName])),
       subjects: Object.fromEntries(subjects.map((s) => [s.id, s.name])),
     },

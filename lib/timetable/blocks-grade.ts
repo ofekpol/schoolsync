@@ -86,6 +86,6 @@ export function detachClassFromPlata(
       .values({ schoolId, boardId, subjectId: block.subjectId, weeklyPeriods: block.weeklyPeriods })
       .returning({ id: ttLessonBlocks.id });
     await tx.insert(ttBlockClasses).values({ blockId: row.id, classId, schoolId });
-    return { id: row.id, subjectId: block.subjectId, weeklyPeriods: block.weeklyPeriods, classIds: [classId], teacherIds: [] };
+    return { id: row.id, subjectId: block.subjectId, weeklyPeriods: block.weeklyPeriods, classIds: [classId], teacherIds: [], groupNames: {} };
   });
 }

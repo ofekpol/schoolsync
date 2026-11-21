@@ -6,7 +6,7 @@ import { TimetableError } from "@/lib/timetable/errors";
 const { getStaffUserMock, getSchoolByIdMock, domain, call } = vi.hoisted(() => {
   const domain: Record<string, ReturnType<typeof vi.fn<(...a: unknown[]) => unknown>>> = {};
   for (const name of [
-    "listBoards", "createBoard", "getBoard", "listSubjects", "addSubjects", "renameSubject",
+    "listBoards", "createBoard", "getBoard", "listSubjects", "addSubjects", "updateSubject",
     "deleteSubject", "listTeachers", "addTeachers", "addTeachersFromStaff", "listBlocks",
     "createBlock", "replaceBlock",
   ]) {
@@ -32,7 +32,7 @@ vi.mock("@/lib/timetable/boards", () => ({
 vi.mock("@/lib/timetable/subjects", () => ({
   listSubjects: call("listSubjects"),
   addSubjects: call("addSubjects"),
-  renameSubject: call("renameSubject"),
+  renameSubject: call("updateSubject"),
   deleteSubject: call("deleteSubject"),
 }));
 vi.mock("@/lib/timetable/teachers", () => ({
@@ -164,7 +164,7 @@ describe("/api/v1/timetable", () => {
   });
 
   it("201 with the created block", async () => {
-    domain.createBlock.mockResolvedValue({ id: "00000000-0000-0000-0000-0000000000f1", ...BLOCK_INPUT });
+    domain.createBlock.mockResolvedValue({ id: "00000000-0000-0000-0000-0000000000f1", ...BLOCK_INPUT, groupNames: {} });
     const res = await POST_BLOCK(request("POST", BLOCK_INPUT), boardCtx);
     expect(res.status).toBe(201);
     const body = BlockResponseSchema.parse(await res.json());

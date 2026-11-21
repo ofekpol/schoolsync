@@ -5,7 +5,7 @@ import * as schema from "@/lib/db/schema";
 import { ttBlockClasses, ttBlockTeachers, ttLessonBlocks } from "@/lib/db/schema-timetable";
 import { createBoard, deleteBoard, listBoards, type Board } from "@/lib/timetable/boards";
 import { listClasses, setGradeClassCount } from "@/lib/timetable/classes";
-import { addSubjects, deleteSubject, listSubjects, renameSubject } from "@/lib/timetable/subjects";
+import { addSubjects, deleteSubject, listSubjects, updateSubject } from "@/lib/timetable/subjects";
 import {
   addTeachers,
   addTeachersFromStaff,
@@ -65,9 +65,9 @@ describe.skipIf(skipIfNoTestDb)("timetable setup domain", () => {
     expect(first.map((s) => s.name).sort()).toEqual(["אנגלית", "מתמטיקה"]);
     const second = await addSubjects(testSchoolA, board.id, ["אנגלית", "ספרות"]);
     expect(second.map((s) => s.name)).toEqual(["ספרות"]);
-    const renamed = await renameSubject(testSchoolA, second[0].id, "ספרות עברית");
+    const renamed = await updateSubject(testSchoolA, second[0].id, { name: "ספרות עברית" });
     expect(renamed?.name).toBe("ספרות עברית");
-    await expect(renameSubject(testSchoolA, second[0].id, "אנגלית")).rejects.toMatchObject({ code: "duplicate_name" });
+    await expect(updateSubject(testSchoolA, second[0].id, { name: "אנגלית" })).rejects.toMatchObject({ code: "duplicate_name" });
   });
 
   it("links a staff user once and rejects another school's staff", async () => {

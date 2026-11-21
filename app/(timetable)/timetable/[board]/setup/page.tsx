@@ -23,7 +23,7 @@ import { ReadinessPanel } from "@/components/timetable/setup/ReadinessPanel";
 import { ConstraintsTab } from "@/components/timetable/constraints/ConstraintsTab";
 import { listConstraints } from "@/lib/timetable/constraints/crud";
 import { exportConstraints } from "@/lib/timetable/constraints/export";
-import { parseSetupTab, SetupTabs, type SetupTab } from "@/components/timetable/setup/SetupTabs";
+import { LessonViews, parseSetupTab, SetupTabs, type SetupTab } from "@/components/timetable/setup/SetupTabs";
 
 type Params = { params: Promise<{ board: string }>; searchParams: Promise<{ tab?: string }> };
 
@@ -89,9 +89,14 @@ async function renderPanel(schoolId: string, board: Board, tab: SetupTab, data: 
     case "teachers":
       return loadTeachers(schoolId, board.id, data.teachers);
     case "lessons":
-      return <LessonsTab boardId={board.id} slots={slotCount(board.week)} {...data} />;
+      return (
+        <div className="space-y-3">
+          <LessonViews boardId={board.id} active="lessons" />
+          <LessonsTab boardId={board.id} slots={slotCount(board.week)} {...data} />
+        </div>
+      );
     case "plata":
-      return <PlataTab boardId={board.id} {...data} />;
+      return loadPlata(schoolId, board.id, data);
     case "constraints":
       return loadConstraints(schoolId, board, data.teachers);
     default:
@@ -109,6 +114,16 @@ async function loadTeachers(schoolId: string, boardId: string, teachers: TtTeach
     .filter((member) => member.status === "active")
     .map(({ id, fullName, email }) => ({ id, fullName, email }));
   return <TeachersTab boardId={boardId} teachers={teachers} staff={active} categories={categories} labels={labels} />;
+}
+
+async function loadPlata(schoolId: string, boardId: string, data: BoardData): Promise<ReactNode> {
+  const [categories, labels] = await Promise.all([listCategories(schoolId), listStaffLabels(schoolId)]);
+  return (
+    <div className="space-y-3">
+      <LessonViews boardId={boardId} active="plata" />
+      <PlataTab boardId={boardId} {...data} options={categories.flatMap((c) => c.options)} labels={labels} />
+    </div>
+  );
 }
 
 async function loadConstraints(schoolId: string, board: Board, teachers: TtTeacher[]): Promise<ReactNode> {

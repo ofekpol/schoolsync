@@ -43,7 +43,7 @@ export default async function BoardGeneratePage({ params }: Params) {
       </div>
       <GeneratePanel boardId={board.id} problemCount={exported?.problems.length ?? 0} runs={runs} publishedSolutionId={board.publishedSolutionId} constraints={constraints}
         teacherNames={Object.fromEntries(teachers.map((x) => [x.id, x.fullName]))}
-        classNames={Object.fromEntries(classes.map((c) => [c.id, className(c.grade, c.number, (g) => tGrades(`label_${g}`))]))}
+        classNames={Object.fromEntries(classes.map((c) => [c.id, className(c, (g) => tGrades(`label_${g}`))]))}
         optionNames={Object.fromEntries(categories.flatMap((c) => c.options.map((o) => [o.id, o.label])))} />
     </main>
   );

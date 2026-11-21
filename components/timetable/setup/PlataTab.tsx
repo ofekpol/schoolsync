@@ -13,6 +13,7 @@ import type { BlockInput } from "@/lib/validations/timetable";
 import * as api from "./api";
 import type { SetupErrorKey } from "./api";
 import { className } from "./className";
+import { teachersForSubject } from "./lessons-grid";
 import { PlataEditor } from "./PlataEditor";
 
 interface Props {
@@ -21,12 +22,15 @@ interface Props {
   subjects: TtSubject[];
   blocks: TtBlock[];
   teachers: TtTeacher[];
+  /** Every profile option of the school, and each staff user's option ids (to match teachers to a subject). */
+  options: Array<{ id: string; label: string }>;
+  labels: Record<string, string[]>;
 }
 
 type Editing = { kind: "new" } | { kind: "block"; id: string } | null;
 
-/** The board's Plata (blocks with two or more classes), grouped by grade, with add, edit and delete. */
-export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props) {
+/** The board's clusters (blocks with two or more classes), grouped by grade, with add, edit and delete. */
+export function PlataTab({ boardId, classes, subjects, blocks, teachers, options, labels }: Props) {
   const t = useTranslations("timetable.setup");
   const tGrades = useTranslations("grades");
   const router = useRouter();
@@ -41,7 +45,7 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
   const gradeOf = (b: TtBlock) => classById.get(b.classIds[0])?.grade ?? 0;
   const grades = [...new Set(plata.map(gradeOf))].sort((a, b) => a - b);
   const names = (b: TtBlock) =>
-    b.classIds.flatMap((id) => { const c = classById.get(id); return c ? [className(c.grade, c.number, label)] : []; }).join(", ");
+    b.classIds.flatMap((id) => { const c = classById.get(id); return c ? [className(c, label)] : []; }).join(", ");
 
   async function save(id: string | null, input: BlockInput): Promise<SetupErrorKey | null> {
     const res = id ? await api.replaceBlock(boardId, id, input) : await api.createBlock(boardId, input);
@@ -60,6 +64,7 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
 
   const editor = (block: TtBlock | null) => (
     <PlataEditor block={block} classes={classes} subjects={subjects} teachers={teachers}
+      teachersFor={(name) => teachersForSubject(name, teachers, options, labels)}
       onSave={(input) => save(block?.id ?? null, input)} onCancel={() => setEditing(null)} />
   );
 
@@ -88,7 +93,9 @@ export function PlataTab({ boardId, classes, subjects, blocks, teachers }: Props
                     <span className="font-medium">{subjectName.get(b.subjectId)}</span>
                     <span className="text-sm text-neutral-600">{t("plata.summary", { periods: b.weeklyPeriods, classes: names(b) })}</span>
                     <span className="flex-1 truncate text-sm text-neutral-500">
-                      {b.teacherIds.map((id) => teacherName.get(id)).join(", ") || t("lessons.noTeacher")}
+                      {b.teacherIds
+                        .map((id) => (b.groupNames[id] ? `${b.groupNames[id]}: ${teacherName.get(id)}` : teacherName.get(id)))
+                        .join(" · ") || t("lessons.noTeacher")}
                     </span>
                     <Button type="button" size="icon" variant="ghost" aria-label={t("plata.edit")}
                       onClick={() => setEditing({ kind: "block", id: b.id })}>

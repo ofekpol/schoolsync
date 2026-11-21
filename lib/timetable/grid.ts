@@ -19,7 +19,7 @@ export interface SolutionGrid {
   unplaced: Array<GridLesson & { missing: number }>; // blocks with fewer rows than weeklyPeriods
   published: boolean; // this solution is the board's published one
   names: {
-    classes: Record<string, { grade: number; number: number }>;
+    classes: Record<string, { grade: number; number: number; name: string | null }>;
     teachers: Record<string, string>;
     subjects: Record<string, string>;
   };

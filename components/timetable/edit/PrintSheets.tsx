@@ -17,7 +17,7 @@ export function PrintSheets({ grid, kind }: Props) {
   const { names } = grid;
   const classLabel = (id: string) => {
     const c = names.classes[id];
-    return c ? className(c.grade, c.number, (g) => tGrades(`label_${g}`)) : t("removedClass");
+    return c ? className(c, (g) => tGrades(`label_${g}`)) : t("removedClass");
   };
   const teacherName = (id: string) => names.teachers[id] ?? t("removedTeacher");
   const ids = kind === "class"

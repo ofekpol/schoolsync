@@ -78,7 +78,7 @@ export function LessonCell({ cell, label, norm, row, col, teachers, datalistId, 
       <input list={datalistId} value={teacher} placeholder={t("lessons.noTeacher")}
         aria-label={`${label} · ${t("lessons.teacher")}`}
         onChange={(e) => setTeacher(e.target.value)} onKeyDown={onKeyDown}
-        className="h-7 w-full min-w-24 rounded border border-neutral-200 px-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500" />
+        className="h-7 w-full min-w-0 rounded border border-neutral-200 px-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500" />
       {error && (
         <span role="alert" className="text-xs text-red-700">
           {error === "unknownTeacher" ? t("lessons.unknownTeacher") : t(`errors.${error}`)}

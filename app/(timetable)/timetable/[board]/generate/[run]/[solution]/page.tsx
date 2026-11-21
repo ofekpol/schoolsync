@@ -42,7 +42,7 @@ export default async function SolutionGridPage({ params, searchParams }: Props) 
   const cardNames = {
     constraints,
     teacherNames: grid.names.teachers,
-    classNames: Object.fromEntries(Object.entries(grid.names.classes).map(([cid, c]) => [cid, className(c.grade, c.number, (g) => tGrades(`label_${g}`))])),
+    classNames: Object.fromEntries(Object.entries(grid.names.classes).map(([cid, c]) => [cid, className(c, (g) => tGrades(`label_${g}`))])),
     optionNames: Object.fromEntries(categories.flatMap((c) => c.options.map((o) => [o.id, o.label]))),
   };
 

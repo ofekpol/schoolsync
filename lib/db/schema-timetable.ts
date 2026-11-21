@@ -61,6 +61,9 @@ export const ttClasses = pgTable(
     boardId: boardId(),
     grade: integer().notNull(),
     number: integer().notNull(),
+    // migration 0028: display name (null = "ז1") and a free-text type such as מב"ר.
+    name: text(),
+    kind: text(),
   },
   (t) => [
     uniqueIndex("tt_classes_board_grade_number_key").on(t.boardId, t.grade, t.number),
@@ -77,6 +80,8 @@ export const ttSubjects = pgTable(
     schoolId: schoolId(),
     boardId: boardId(),
     name: text().notNull(),
+    /** Grades where the subject is taught in groups, not the homeroom class (migration 0028). */
+    groupGrades: integer("group_grades").array().notNull().default(sql`'{}'`),
   },
   (t) => [uniqueIndex("tt_subjects_board_name_key").on(t.boardId, t.name), schoolIsolation],
 );
@@ -147,6 +152,8 @@ export const ttBlockTeachers = pgTable(
       .notNull()
       .references(() => ttTeachers.id),
     schoolId: schoolId(),
+    /** The group this teacher teaches in a cluster, e.g. "רמה 1" (migration 0028). */
+    groupName: text("group_name"),
   },
   (t) => [
     primaryKey({ name: "tt_block_teachers_pk", columns: [t.blockId, t.teacherId] }),

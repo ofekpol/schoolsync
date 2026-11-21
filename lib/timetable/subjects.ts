@@ -9,9 +9,11 @@ import { cleanNames, mapPgError, TimetableError } from "./errors";
 export interface TtSubject {
   id: string;
   name: string;
+  /** Grades where it is taught in groups (clusters), not in the homeroom class. */
+  groupGrades: number[];
 }
 
-const columns = { id: ttSubjects.id, name: ttSubjects.name };
+const columns = { id: ttSubjects.id, name: ttSubjects.name, groupGrades: ttSubjects.groupGrades };
 
 /** The board's subjects, by name. */
 export function listSubjects(schoolId: string, boardId: string): Promise<TtSubject[]> {
@@ -40,11 +42,20 @@ export function addSubjects(schoolId: string, boardId: string, names: string[]):
   });
 }
 
-export function renameSubject(schoolId: string, id: string, name: string): Promise<TtSubject | null> {
+/** Renames a subject and/or sets its group grades. Null when not found. */
+export function updateSubject(
+  schoolId: string,
+  id: string,
+  patch: { name?: string; groupGrades?: number[] },
+): Promise<TtSubject | null> {
+  const set = {
+    ...(patch.name === undefined ? {} : { name: patch.name.trim() }),
+    ...(patch.groupGrades === undefined ? {} : { groupGrades: [...new Set(patch.groupGrades)].sort((a, b) => a - b) }),
+  };
   return withSchool(schoolId, async (tx) => {
     const [row] = await tx
       .update(ttSubjects)
-      .set({ name: name.trim() })
+      .set(set)
       .where(eq(ttSubjects.id, id))
       .returning(columns);
     return row ?? null;

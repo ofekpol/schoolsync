@@ -10,11 +10,23 @@ export interface TtClass {
   id: string;
   grade: number;
   number: number;
+  /** Null = the default name ("ז1"). */
+  name: string | null;
+  /** Free-text type such as מב"ר; null = a regular class. */
+  kind: string | null;
 }
+
+const columns = {
+  id: ttClasses.id,
+  grade: ttClasses.grade,
+  number: ttClasses.number,
+  name: ttClasses.name,
+  kind: ttClasses.kind,
+};
 
 function loadClasses(tx: Tx, boardId: string): Promise<TtClass[]> {
   return tx
-    .select({ id: ttClasses.id, grade: ttClasses.grade, number: ttClasses.number })
+    .select(columns)
     .from(ttClasses)
     .where(eq(ttClasses.boardId, boardId))
     .orderBy(asc(ttClasses.grade), asc(ttClasses.number));
@@ -23,6 +35,19 @@ function loadClasses(tx: Tx, boardId: string): Promise<TtClass[]> {
 /** The board's classes, by grade then number. */
 export function listClasses(schoolId: string, boardId: string): Promise<TtClass[]> {
   return withSchool(schoolId, (tx) => loadClasses(tx, boardId));
+}
+
+/** Sets a class's name and type (null clears either). Null when not found. */
+export function updateClass(
+  schoolId: string,
+  boardId: string,
+  id: string,
+  patch: { name?: string | null; kind?: string | null },
+): Promise<TtClass | null> {
+  return withSchool(schoolId, async (tx) => {
+    const [row] = await tx.update(ttClasses).set(patch).where(and(eq(ttClasses.id, id), eq(ttClasses.boardId, boardId))).returning(columns);
+    return row ?? null;
+  });
 }
 
 /**

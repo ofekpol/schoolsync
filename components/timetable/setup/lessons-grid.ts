@@ -65,3 +65,38 @@ export function gradeNorms(classes: TtClass[], subjects: TtSubject[], grid: Map<
   }
   return norms;
 }
+
+const touchesGrade = (block: TtBlock, classIds: Set<string>) => block.classIds.some((id) => classIds.has(id));
+
+/**
+ * Rows of the homeroom view for a grade: subjects taught in the homeroom class there,
+ * plus any subject that already has a lesson or cluster in the grade. So a class left
+ * out of a cluster still gets its own cell (the exception), and old data stays visible.
+ */
+export function homeroomSubjects(subjects: TtSubject[], grade: number, classes: TtClass[], blocks: TtBlock[]): TtSubject[] {
+  const ids = new Set(classes.filter((c) => c.grade === grade).map((c) => c.id));
+  const used = new Set(blocks.filter((b) => touchesGrade(b, ids)).map((b) => b.subjectId));
+  return subjects.filter((s) => !s.groupGrades.includes(grade) || used.has(s.id));
+}
+
+/** Subjects a cluster in this grade may use: those taught in groups there, plus `keepId` (the block's own). */
+export function groupSubjects(subjects: TtSubject[], grade: number, keepId?: string): TtSubject[] {
+  return subjects.filter((s) => s.groupGrades.includes(grade) || s.id === keepId);
+}
+
+/**
+ * Teachers who teach a subject by their staff profile: linked to a staff user who has
+ * a profile option with the subject's name (trimmed, exact).
+ */
+export function teachersForSubject(
+  subjectName: string,
+  teachers: Array<{ id: string; staffUserId: string | null }>,
+  options: Array<{ id: string; label: string }>,
+  labels: Record<string, string[]>,
+): string[] {
+  const wanted = new Set(options.filter((o) => o.label.trim() === subjectName.trim()).map((o) => o.id));
+  if (wanted.size === 0) return [];
+  return teachers.flatMap((t) =>
+    t.staffUserId && labels[t.staffUserId]?.some((option) => wanted.has(option)) ? [t.id] : [],
+  );
+}

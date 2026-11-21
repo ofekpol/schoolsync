@@ -13,10 +13,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push: vi.fn() }
 
 const uuid = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
 const [C1, C2, C3, MATH, ENG, T1, BOARD] = [1, 2, 3, 10, 11, 20, 99].map(uuid);
-const classes = [C1, C2, C3].map((id, i) => ({ id, grade: 7, number: i + 1 }));
-const subjects = [{ id: MATH, name: "מתמטיקה" }, { id: ENG, name: "אנגלית" }];
+const classes = [C1, C2, C3].map((id, i) => ({ id, grade: 7, number: i + 1, name: null, kind: null }));
+const subjects = [{ id: MATH, name: "מתמטיקה", groupGrades: [] }, { id: ENG, name: "אנגלית", groupGrades: [] }];
 const teachers = [{ id: T1, fullName: "דנה", staffUserId: null, freeDayEntitled: false }];
-const plata = { id: uuid(30), subjectId: ENG, weeklyPeriods: 30, classIds: [C1, C2], teacherIds: [] };
+const plata = { id: uuid(30), subjectId: ENG, weeklyPeriods: 30, classIds: [C1, C2], teacherIds: [], groupNames: {} };
 
 const fetchMock = vi.fn();
 beforeEach(() => {
@@ -91,7 +91,7 @@ describe("LessonsTab", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe(`/api/v1/timetable/boards/${BOARD}/blocks/${plata.id}`);
-    expect(JSON.parse(init.body)).toEqual({ subjectId: ENG, weeklyPeriods: 4, classIds: [C1, C2], teacherIds: [] });
+    expect(JSON.parse(init.body)).toEqual({ subjectId: ENG, weeklyPeriods: 4, classIds: [C1, C2], teacherIds: [], groupNames: {} });
   });
 
   it("refuses a teacher name that is not on the board", async () => {
@@ -105,9 +105,12 @@ describe("LessonsTab", () => {
 });
 
 describe("PlataEditor", () => {
+  const grouped = subjects.map((s) => ({ ...s, groupGrades: [7] }));
+  const none = () => [];
+
   it("asks for two classes before saving", () => {
     const onSave = vi.fn();
-    render(<PlataEditor block={null} classes={classes} subjects={subjects} teachers={teachers} onSave={onSave} onCancel={vi.fn()} />);
+    render(<PlataEditor block={null} classes={classes} subjects={grouped} teachers={teachers} teachersFor={none} onSave={onSave} onCancel={vi.fn()} />);
     fireEvent.click(screen.getByLabelText("ז1"));
     fireEvent.click(screen.getByRole("button", { name: "plata.save" }));
     expect(screen.getByRole("alert")).toHaveTextContent("plata.needTwoClasses");
@@ -116,12 +119,33 @@ describe("PlataEditor", () => {
 
   it("shows the server's mixed_grades answer in words", async () => {
     const onSave = vi.fn().mockResolvedValue("mixedGrades");
-    render(<PlataEditor block={null} classes={classes} subjects={subjects} teachers={teachers} onSave={onSave} onCancel={vi.fn()} />);
+    render(<PlataEditor block={null} classes={classes} subjects={grouped} teachers={teachers} teachersFor={none} onSave={onSave} onCancel={vi.fn()} />);
     fireEvent.click(screen.getByLabelText("ז1"));
     fireEvent.click(screen.getByLabelText("ז2"));
     fireEvent.click(screen.getByRole("button", { name: "plata.save" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("errors.mixedGrades");
-    expect(onSave).toHaveBeenCalledWith({ subjectId: MATH, weeklyPeriods: 1, classIds: [C1, C2], teacherIds: [] });
+    expect(onSave).toHaveBeenCalledWith({ subjectId: MATH, weeklyPeriods: 1, classIds: [C1, C2], teacherIds: [], groupNames: {} });
+  });
+
+  it("offers only subjects taught in groups in the grade", () => {
+    const onlyEnglish = [{ ...subjects[0], groupGrades: [] }, { ...subjects[1], groupGrades: [7] }];
+    render(<PlataEditor block={null} classes={classes} subjects={onlyEnglish} teachers={teachers} teachersFor={none} onSave={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["ז", "אנגלית"]);
+  });
+
+  it("checks the subject's teachers and saves their group names", async () => {
+    const onSave = vi.fn().mockResolvedValue(null);
+    const teachersFor = (name: string) => (name === "מתמטיקה" ? [T1] : []);
+    render(<PlataEditor block={null} classes={classes} subjects={grouped} teachers={teachers} teachersFor={teachersFor} onSave={onSave} onCancel={vi.fn()} />);
+    expect(screen.getByText("plata.autoPicked")).toBeInTheDocument();
+    const [name] = screen.getAllByPlaceholderText("plata.groupPlaceholder");
+    fireEvent.change(name, { target: { value: " רמה 1 " } });
+    fireEvent.click(screen.getByLabelText("ז1"));
+    fireEvent.click(screen.getByLabelText("ז2"));
+    fireEvent.click(screen.getByRole("button", { name: "plata.save" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({
+      subjectId: MATH, weeklyPeriods: 1, classIds: [C1, C2], teacherIds: [T1], groupNames: { [T1]: "רמה 1" },
+    }));
   });
 });
 

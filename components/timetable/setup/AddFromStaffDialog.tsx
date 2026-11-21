@@ -4,6 +4,7 @@ import { useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LabelFilter } from "./LabelFilter";
 import { StaffDialog } from "@/components/admin/staff-ui";
 import type { ProfileCategory } from "@/lib/validations/profile";
 
@@ -83,17 +84,7 @@ export function AddFromStaffDialog({ staff, categories, labels, onSubmit }: Prop
       {open && (
         <StaffDialog titleId={titleId} title={t("title")} subtitle={t("hint")} closeLabel={t("close")} onClose={close}>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {categories.length > 0 && (
-              <select value={option} onChange={(e) => setOption(e.target.value)} aria-label={t("filter")}
-                className="h-9 rounded-lg border border-neutral-300 px-2 text-sm">
-                <option value="all">{t("all")}</option>
-                {categories.map((category) => (
-                  <optgroup key={category.id} label={category.name}>
-                    {category.options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-            )}
+            <LabelFilter categories={categories} value={option} onChange={setOption} label={t("filter")} allLabel={t("all")} />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={allShownChosen} onChange={toggleShown} disabled={shown.length === 0}
                 className="size-4 accent-violet-600" />

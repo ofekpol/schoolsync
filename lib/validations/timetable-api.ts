@@ -5,7 +5,9 @@ import {
   DetachClassInputSchema,
   GradePeriodsInputSchema,
   MAX_CLASSES_PER_GRADE,
+  MAX_CLASS_KIND_LENGTH,
   MAX_GRADE,
+  MAX_NAME_LENGTH,
   MAX_TEACHERS,
   MIN_GRADE,
   TimetableNameSchema,
@@ -24,8 +26,14 @@ export const BoardSchema = z.object({
   week: WeekSchema,
   academicYearId: id,
 });
-export const TtClassSchema = z.object({ id, grade: z.number().int(), number: z.number().int() });
-export const TtSubjectSchema = z.object({ id, name: z.string() });
+export const TtClassSchema = z.object({
+  id,
+  grade: z.number().int(),
+  number: z.number().int(),
+  name: z.string().nullable(),
+  kind: z.string().nullable(),
+});
+export const TtSubjectSchema = z.object({ id, name: z.string(), groupGrades: z.array(z.number().int()) });
 export const TtTeacherSchema = z.object({
   id,
   fullName: z.string(),
@@ -38,6 +46,7 @@ export const TtBlockSchema = z.object({
   weeklyPeriods: z.number().int(),
   classIds: z.array(id),
   teacherIds: z.array(id),
+  groupNames: z.record(id, z.string()),
 });
 export const InputProblemSchema = z.discriminatedUnion("code", [
   z.object({ code: z.literal("block_without_teacher"), blockId: id }),
@@ -49,6 +58,7 @@ export const BoardsResponseSchema = z.object({ boards: z.array(BoardSchema) });
 export const BoardResponseSchema = z.object({ board: BoardSchema });
 export const BoardDetailResponseSchema = z.object({ board: BoardSchema, problems: z.array(InputProblemSchema) });
 export const ClassesResponseSchema = z.object({ classes: z.array(TtClassSchema) });
+export const ClassResponseSchema = z.object({ class: TtClassSchema });
 export const SubjectsResponseSchema = z.object({ subjects: z.array(TtSubjectSchema) });
 export const SubjectResponseSchema = z.object({ subject: TtSubjectSchema });
 export const CreatedSubjectsSchema = z.object({ created: z.array(TtSubjectSchema) });
@@ -65,7 +75,24 @@ export const ClassCountInputSchema = z.object({
 });
 const pastedNames = z.array(TimetableNameSchema).min(1).max(MAX_PASTED_NAMES);
 export const SubjectNamesInputSchema = z.object({ names: pastedNames });
-export const SubjectRenameInputSchema = z.object({ name: TimetableNameSchema });
+/** A class's name and type; null (or "") goes back to the default name / a regular class. */
+export const ClassPatchInputSchema = z
+  .object({
+    name: z.string().trim().max(MAX_NAME_LENGTH).nullable().optional(),
+    kind: z.string().trim().max(MAX_CLASS_KIND_LENGTH).nullable().optional(),
+  })
+  .strict()
+  .transform(({ name, kind }) => ({
+    ...(name === undefined ? {} : { name: name || null }),
+    ...(kind === undefined ? {} : { kind: kind || null }),
+  }));
+export const SubjectPatchInputSchema = z
+  .object({
+    name: TimetableNameSchema.optional(),
+    groupGrades: z.array(z.number().int().min(MIN_GRADE).max(MAX_GRADE)).max(MAX_GRADE - MIN_GRADE + 1).optional(),
+  })
+  .strict()
+  .refine((patch) => patch.name !== undefined || patch.groupGrades !== undefined, { message: "empty_patch" });
 /** Exactly one of the two: pasted names, or staff users to link. */
 export const TeachersInputSchema = z.union([
   z.object({ names: pastedNames }).strict(),

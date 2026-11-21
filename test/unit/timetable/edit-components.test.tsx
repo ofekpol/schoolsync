@@ -33,7 +33,7 @@ const makeGrid = (overrides: Partial<SolutionGrid> = {}): SolutionGrid => ({
   unplaced: [{ blockId: "b3", subjectId: "s3", classIds: ["c1"], teacherIds: ["t2"], missing: 2 }],
   published: false,
   names: {
-    classes: { c1: { grade: 7, number: 1 }, c2: { grade: 7, number: 2 } },
+    classes: { c1: { grade: 7, number: 1, name: null }, c2: { grade: 7, number: 2, name: null } },
     teachers: { t1: "Dana", t2: "Eli" },
     subjects: { s1: "Math", s2: "Art", s3: "Bible" },
   },
@@ -218,7 +218,7 @@ describe("read-only grid and option card", () => {
 
 describe("PrintSheets", () => {
   it("renders one table per class in grade/number order with its heading", () => {
-    const grid = makeGrid({ names: { ...makeGrid().names, classes: { c2: { grade: 7, number: 2 }, c1: { grade: 7, number: 1 } } } });
+    const grid = makeGrid({ names: { ...makeGrid().names, classes: { c2: { grade: 7, number: 2, name: null }, c1: { grade: 7, number: 1, name: null } } } });
     const { container } = render(<PrintSheets grid={grid} kind="class" />);
     expect(container.querySelectorAll("table")).toHaveLength(2);
     expect(container.querySelectorAll("section.print-timetable")).toHaveLength(2);

@@ -22,6 +22,8 @@ export interface TtBlock {
   weeklyPeriods: number;
   classIds: string[];
   teacherIds: string[];
+  /** A cluster's group name per teacher id ("רמה 1"); teachers without one are absent. */
+  groupNames: Record<string, string>;
 }
 
 async function loadBlocks(tx: Tx, boardId: string): Promise<TtBlock[]> {
@@ -38,6 +40,9 @@ async function loadBlocks(tx: Tx, boardId: string): Promise<TtBlock[]> {
     ...row,
     classIds: classes.filter((c) => c.blockId === row.id).map((c) => c.classId),
     teacherIds: teachers.filter((t) => t.blockId === row.id).map((t) => t.teacherId),
+    groupNames: Object.fromEntries(
+      teachers.flatMap((t) => (t.blockId === row.id && t.groupName ? [[t.teacherId, t.groupName]] : [])),
+    ),
   }));
 }
 
@@ -80,8 +85,17 @@ async function validateBlock(tx: Tx, boardId: string, input: BlockInput, exceptB
 async function writeMembers(tx: Tx, schoolId: string, blockId: string, input: BlockInput): Promise<void> {
   await tx.insert(ttBlockClasses).values(input.classIds.map((classId) => ({ blockId, classId, schoolId })));
   if (input.teacherIds.length > 0) {
-    await tx.insert(ttBlockTeachers).values(input.teacherIds.map((teacherId) => ({ blockId, teacherId, schoolId })));
+    await tx.insert(ttBlockTeachers).values(
+      input.teacherIds.map((teacherId) => ({ blockId, teacherId, schoolId, groupName: input.groupNames?.[teacherId] || null })),
+    );
   }
+}
+
+/** The saved block as the API returns it: group names only for its teachers, blanks dropped. */
+function toBlock(id: string, input: BlockInput): TtBlock {
+  const { groupNames = {}, ...rest } = input;
+  const named = input.teacherIds.flatMap((teacherId) => (groupNames[teacherId] ? [[teacherId, groupNames[teacherId]]] : []));
+  return { id, ...rest, groupNames: Object.fromEntries(named) };
 }
 
 export function listBlocks(schoolId: string, boardId: string): Promise<TtBlock[]> {
@@ -97,7 +111,7 @@ export function createBlock(schoolId: string, boardId: string, input: BlockInput
       .values({ schoolId, boardId, subjectId: input.subjectId, weeklyPeriods: input.weeklyPeriods })
       .returning({ id: ttLessonBlocks.id });
     await writeMembers(tx, schoolId, row.id, input);
-    return { id: row.id, ...input };
+    return toBlock(row.id, input);
   });
 }
 
@@ -117,7 +131,7 @@ export function replaceBlock(schoolId: string, id: string, input: BlockInput): P
     await tx.delete(ttBlockClasses).where(eq(ttBlockClasses.blockId, id));
     await tx.delete(ttBlockTeachers).where(eq(ttBlockTeachers.blockId, id));
     await writeMembers(tx, schoolId, id, input);
-    return { id, ...input };
+    return toBlock(id, input);
   });
 }
 

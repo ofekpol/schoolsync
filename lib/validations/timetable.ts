@@ -6,6 +6,7 @@ export const MAX_SUBJECTS = 80;
 export const MAX_TEACHERS = 400;
 export const MAX_WEEKLY_PERIODS = 12;
 export const MAX_NAME_LENGTH = 60;
+export const MAX_CLASS_KIND_LENGTH = 30;
 
 export const MIN_GRADE = 7;
 export const MAX_GRADE = 12;
@@ -25,6 +26,11 @@ export const BlockInputSchema = z.object({
   weeklyPeriods: z.number().int().min(1).max(MAX_WEEKLY_PERIODS),
   classIds: uniqueIds(MAX_CLASSES_PER_GRADE, 1),
   teacherIds: uniqueIds(MAX_CLASSES_PER_GRADE, 0),
+  /** A cluster's group name per teacher id; "" = no name. Names of teachers not in the block are ignored. */
+  groupNames: z
+    .record(z.string().uuid(), z.string().trim().max(MAX_NAME_LENGTH))
+    .refine((names) => Object.keys(names).length <= MAX_CLASSES_PER_GRADE, { message: "too_many" })
+    .optional(),
 });
 export type BlockInput = z.infer<typeof BlockInputSchema>;
 

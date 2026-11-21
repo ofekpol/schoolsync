@@ -31,7 +31,7 @@ export async function ReadinessPanel({ boardId, problems, classes, subjects, tea
     );
   }
   const label = (g: number) => tGrades(`label_${g}`);
-  const classById = new Map(classes.map((c) => [c.id, className(c.grade, c.number, label)]));
+  const classById = new Map(classes.map((c) => [c.id, className(c, label)]));
   const subjectById = new Map(subjects.map((s) => [s.id, s.name]));
   const teacherById = new Map(teachers.map((x) => [x.id, x.fullName]));
   const blockById = new Map(blocks.map((b) => [b.id, b]));

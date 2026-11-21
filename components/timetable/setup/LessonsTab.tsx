@@ -14,7 +14,16 @@ import { className } from "./className";
 import { GradeNormControl } from "./GradeNormControl";
 import { LessonCell, type CellDraft } from "./LessonCell";
 import { PlataCell } from "./PlataCell";
-import { buildLessonsGrid, cellKey, cellPeriods, classTotals, gradeNorms, teacherOptions, type Cell } from "./lessons-grid";
+import {
+  buildLessonsGrid,
+  cellKey,
+  cellPeriods,
+  classTotals,
+  gradeNorms,
+  homeroomSubjects,
+  teacherOptions,
+  type Cell,
+} from "./lessons-grid";
 
 interface Props {
   boardId: string;
@@ -52,7 +61,10 @@ function moveFocus(event: KeyboardEvent<HTMLDivElement>) {
   next.focus();
 }
 
-/** A grade's classes as columns, subjects as rows; each cell is that class's lesson in that subject. */
+/**
+ * A grade's classes as columns, its homeroom subjects as rows; each cell is that class's
+ * lesson in that subject, or the cluster it is in. Columns share the width (no side scroll).
+ */
 export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots }: Props) {
   const t = useTranslations("timetable.setup");
   const tGrades = useTranslations("grades");
@@ -61,9 +73,10 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
   const grades = [...new Set(classes.map((c) => c.grade))];
   const [grade, setGrade] = useState(grades[0] ?? 7);
   const gradeClasses = classes.filter((c) => c.grade === grade);
-  const grid = useMemo(() => buildLessonsGrid(gradeClasses, subjects, blocks), [gradeClasses, subjects, blocks]);
+  const rows = useMemo(() => homeroomSubjects(subjects, grade, classes, blocks), [subjects, grade, classes, blocks]);
+  const grid = useMemo(() => buildLessonsGrid(gradeClasses, rows, blocks), [gradeClasses, rows, blocks]);
   const totals = classTotals(gradeClasses, blocks);
-  const norms = useMemo(() => gradeNorms(gradeClasses, subjects, grid), [gradeClasses, subjects, grid]);
+  const norms = useMemo(() => gradeNorms(gradeClasses, rows, grid), [gradeClasses, rows, grid]);
   const options = useMemo(() => teacherOptions(teachers), [teachers]);
   const label = (g: number) => tGrades(`label_${g}`);
 
@@ -100,19 +113,19 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
         {options.map((o) => <option key={o.id} value={o.label} />)}
       </datalist>
       <div onKeyDown={moveFocus} className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full table-fixed border-collapse text-sm">
           <thead className="bg-neutral-50 text-xs text-neutral-500">
             <tr>
-              <th scope="col" className="sticky start-0 bg-neutral-50 px-3 py-2 text-start font-medium">{t("lessons.subject")}</th>
+              <th scope="col" className="sticky start-0 w-36 bg-neutral-50 px-3 py-2 text-start font-medium">{t("lessons.subject")}</th>
               {gradeClasses.map((c) => (
-                <th key={c.id} scope="col" className="min-w-28 px-2 py-2 font-semibold text-neutral-800">
-                  {className(c.grade, c.number, label)}
+                <th key={c.id} scope="col" className="px-1 py-2 font-semibold break-words text-neutral-800">
+                  {className(c, label)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
-            {subjects.map((subject, row) => (
+            {rows.map((subject, row) => (
               <tr key={subject.id}>
                 <th scope="row" className="sticky start-0 z-10 bg-white px-3 py-1 text-start align-top font-medium">
                   {subject.name}
@@ -124,7 +137,7 @@ export function LessonsTab({ boardId, classes, subjects, blocks, teachers, slots
                   const key = cellKey(c.id, subject.id);
                   const cell = grid.get(key)!;
                   const norm = norms.get(subject.id) ?? 0;
-                  const cellLabel = t("lessons.cellLabel", { subject: subject.name, class: className(c.grade, c.number, label) });
+                  const cellLabel = t("lessons.cellLabel", { subject: subject.name, class: className(c, label) });
                   return (
                     <td key={`${key}:${cell.kind === "empty" ? "" : `${cell.block.id}:${cell.block.weeklyPeriods}`}`} className="align-top">
                       {cell.kind === "plata" ? (

@@ -55,8 +55,10 @@ export const createBoard = (name: string) =>
 export const setClassCount = (board: string, grade: number, count: number) =>
   send(`${boardUrl(board)}/classes`, "PUT", { grade, count });
 export const addSubjects = (board: string, names: string[]) => send(`${boardUrl(board)}/subjects`, "POST", { names });
-export const renameSubject = (board: string, id: string, name: string) =>
-  send(`${boardUrl(board)}/subjects/${id}`, "PATCH", { name });
+export const updateSubject = (board: string, id: string, patch: { name?: string; groupGrades?: number[] }) =>
+  send(`${boardUrl(board)}/subjects/${id}`, "PATCH", patch);
+export const updateClass = (board: string, id: string, patch: { name?: string | null; kind?: string | null }) =>
+  send(`${boardUrl(board)}/classes/${id}`, "PATCH", patch);
 export const deleteSubject = (board: string, id: string) => send(`${boardUrl(board)}/subjects/${id}`, "DELETE");
 export const addTeachers = (board: string, names: string[]) => send(`${boardUrl(board)}/teachers`, "POST", { names });
 export const addTeachersFromStaff = (board: string, staffUserIds: string[]) =>

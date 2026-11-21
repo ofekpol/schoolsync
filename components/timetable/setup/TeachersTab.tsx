@@ -10,6 +10,7 @@ import { MAX_NAME_LENGTH } from "@/lib/validations/timetable";
 import * as api from "./api";
 import type { SetupErrorKey } from "./api";
 import { AddFromStaffDialog, type StaffChoice } from "./AddFromStaffDialog";
+import { LabelFilter } from "./LabelFilter";
 import { PasteNamesDialog } from "./PasteNamesDialog";
 import type { ProfileCategory } from "@/lib/validations/profile";
 
@@ -22,11 +23,15 @@ interface Props {
   labels: Record<string, string[]>;
 }
 
-/** The board's teachers: name, linked staff user, free-day entitlement; paste or add from staff. */
+/** The board's teachers: name and linked staff user, filterable by a profile option; paste or add from staff. */
 export function TeachersTab({ boardId, teachers, staff, categories, labels }: Props) {
   const t = useTranslations("timetable.setup");
   const router = useRouter();
   const [error, setError] = useState<SetupErrorKey | null>(null);
+  const [option, setOption] = useState("all");
+  const shown = option === "all"
+    ? teachers
+    : teachers.filter((teacher) => teacher.staffUserId && labels[teacher.staffUserId]?.includes(option));
   const linked = new Set(teachers.flatMap((teacher) => (teacher.staffUserId ? [teacher.staffUserId] : [])));
   const staffNames = new Map(staff.map((member) => [member.id, member.fullName]));
 
@@ -43,7 +48,15 @@ export function TeachersTab({ boardId, teachers, staff, categories, labels }: Pr
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-neutral-600">{t("teachers.count", { count: teachers.length })}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-neutral-600">
+            {option === "all"
+              ? t("teachers.count", { count: teachers.length })
+              : t("teachers.shown", { shown: shown.length, count: teachers.length })}
+          </p>
+          <LabelFilter categories={categories} value={option} onChange={setOption}
+            label={t("teachers.filter")} allLabel={t("teachers.all")} />
+        </div>
         <div className="flex flex-wrap gap-2">
           <PasteNamesDialog title={t("paste.open")} onSubmit={(names) => run(api.addTeachers(boardId, names))} />
           <AddFromStaffDialog staff={staff.filter((member) => !linked.has(member.id))}
@@ -58,15 +71,14 @@ export function TeachersTab({ boardId, teachers, staff, categories, labels }: Pr
             <tr>
               <th scope="col" className="px-3 py-2 text-start font-medium">{t("teachers.name")}</th>
               <th scope="col" className="px-3 py-2 text-start font-medium">{t("teachers.staffUser")}</th>
-              <th scope="col" className="px-3 py-2 text-start font-medium">{t("teachers.freeDay")}</th>
               <th scope="col" className="px-3 py-2"><span className="sr-only">{t("delete")}</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
-            {teachers.length === 0 && (
-              <tr><td colSpan={4} className="px-3 py-6 text-center text-neutral-500">{t("teachers.empty")}</td></tr>
+            {shown.length === 0 && (
+              <tr><td colSpan={3} className="px-3 py-6 text-center text-neutral-500">{t("teachers.empty")}</td></tr>
             )}
-            {teachers.map((teacher) => (
+            {shown.map((teacher) => (
               <TeacherRow key={teacher.id} boardId={boardId} teacher={teacher}
                 staffName={teacher.staffUserId ? staffNames.get(teacher.staffUserId) : undefined} />
             ))}
@@ -81,15 +93,13 @@ function TeacherRow({ boardId, teacher, staffName }: { boardId: string; teacher:
   const t = useTranslations("timetable.setup");
   const router = useRouter();
   const [name, setName] = useState(teacher.fullName);
-  const [freeDay, setFreeDay] = useState(teacher.freeDayEntitled);
   const [error, setError] = useState<SetupErrorKey | null>(null);
   const [confirming, setConfirming] = useState(false);
 
-  async function patch(change: { fullName?: string; freeDayEntitled?: boolean }) {
+  async function patch(change: { fullName: string }) {
     const res = await api.updateTeacher(boardId, teacher.id, change);
     if (!res.ok) {
       setName(teacher.fullName);
-      setFreeDay(teacher.freeDayEntitled);
       return setError(res.error);
     }
     setError(null);
@@ -119,12 +129,6 @@ function TeacherRow({ boardId, teacher, staffName }: { boardId: string; teacher:
         {error && <p role="alert" className="ps-2 text-xs text-red-700">{t(`errors.${error}`)}</p>}
       </td>
       <td className="px-3 py-1 text-neutral-600">{staffName ?? (teacher.staffUserId ? t("teachers.linked") : "—")}</td>
-      <td className="px-3 py-1">
-        <input type="checkbox" checked={freeDay}
-          aria-label={t("teachers.freeDayFor", { name: teacher.fullName })}
-          onChange={(e) => { setFreeDay(e.target.checked); void patch({ freeDayEntitled: e.target.checked }); }}
-          className="size-4 accent-violet-600" />
-      </td>
       <td className="px-3 py-1 text-end">
         {confirming ? (
           <span className="inline-flex items-center gap-1">

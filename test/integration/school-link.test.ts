@@ -9,7 +9,6 @@ import {
   resolveGanttSchoolFromParam,
   resolveSchoolFromParam,
   resolveSchoolIdFromParam,
-  updateSchoolServices,
 } from "@/lib/db/schools";
 import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
 
@@ -20,7 +19,6 @@ vi.mock("next/cache", () => ({
 }));
 
 const { GET: getEvents } = await import("@/app/api/v1/public/[school]/events/route");
-const TEST_ACTOR = "00000000-0000-0000-0000-0000000000ac";
 const { GET: getSignature } = await import("@/app/api/v1/public/[school]/events/signature/route");
 const { GET: exportIcs } = await import("@/app/api/v1/export/ics/route");
 
@@ -92,14 +90,7 @@ describe.skipIf(skipIfNoTestDb)("school link token isolation", () => {
     expect((await resolveSchoolFromParam(tokenA))?.accessToken).toBe(tokenA);
   });
 
-  it("hides a timetable-only school from the public Gantt but keeps its sign-up link", async () => {
-    try {
-      await updateSchoolServices(testSchoolA, ["timetable"], TEST_ACTOR);
-      expect(await resolveGanttSchoolFromParam(tokenA)).toBeNull();
-      expect(await resolveSchoolIdFromParam(tokenA)).toBe(testSchoolA);
-    } finally {
-      await updateSchoolServices(testSchoolA, ["gantt"], TEST_ACTOR);
-    }
+  it("resolves a gantt school for the public Gantt", async () => {
     expect((await resolveGanttSchoolFromParam(tokenA))?.id).toBe(testSchoolA);
   });
 

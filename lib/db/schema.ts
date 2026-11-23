@@ -58,7 +58,7 @@ export const schools = pgTable("schools", {
   activeAcademicYearId: uuid("active_academic_year_id"),
   /** Set only on public demo schools (migration 0019); a school is a demo iff this is non-null. */
   demoExpiresAt: timestamp("demo_expires_at", { withTimezone: true }),
-  /** Products the school has: gantt and/or timetable (migration 0021). */
+  /** Products the school has: only "gantt" today (migration 0021). */
   services: text().array().$type<Service[]>().notNull().default(sql`'{gantt}'::text[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

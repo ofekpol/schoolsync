@@ -80,9 +80,9 @@ describe("/api/v1/platform/schools", () => {
 
   it("passes the chosen services to provisionSchool", async () => {
     provisionSchoolMock.mockResolvedValue(PROVISIONED);
-    await POST(makeRequest({ ...VALID_BODY, services: ["timetable"] }));
+    await POST(makeRequest({ ...VALID_BODY, services: ["gantt"] }));
     expect(provisionSchoolMock).toHaveBeenCalledWith(
-      expect.objectContaining({ services: ["timetable"] }),
+      expect.objectContaining({ services: ["gantt"] }),
       expect.anything(),
     );
   });

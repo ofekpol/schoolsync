@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SERVICES = ["gantt", "timetable"] as const;
+export const SERVICES = ["gantt"] as const;
 export type Service = (typeof SERVICES)[number];
 
 /** At least one known service; duplicates removed. */
@@ -13,6 +13,7 @@ export function hasService(school: { services: readonly string[] }, service: Ser
   return school.services.includes(service);
 }
 
-export function homePathFor(services: readonly string[]): "/dashboard" | "/timetable" {
-  return services.includes("gantt") ? "/dashboard" : "/timetable";
+/** The school's landing page. Only the Gantt exists today (timetable is parked on `feature/timetable`). */
+export function homePathFor(_services: readonly string[]): "/dashboard" {
+  return "/dashboard";
 }

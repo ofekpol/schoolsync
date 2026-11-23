@@ -51,9 +51,9 @@ describe("PATCH /api/v1/platform/schools/[id]", () => {
 
   it("updates the services and returns them", async () => {
     updateSchoolServicesMock.mockResolvedValue(true);
-    const res = await call({ services: ["gantt", "timetable"] });
+    const res = await call({ services: ["gantt"] });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ services: ["gantt", "timetable"] });
-    expect(updateSchoolServicesMock).toHaveBeenCalledWith(SCHOOL_ID, ["gantt", "timetable"], "platform-admin");
+    expect(await res.json()).toEqual({ services: ["gantt"] });
+    expect(updateSchoolServicesMock).toHaveBeenCalledWith(SCHOOL_ID, ["gantt"], "platform-admin");
   });
 });

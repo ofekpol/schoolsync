@@ -26,8 +26,8 @@ describe.skipIf(skipIfNoTestDb)("schools.services", () => {
   });
 
   it("updates a school's services and reports unknown schools", async () => {
-    expect(await updateSchoolServices(testSchoolA, ["gantt", "timetable"], ACTOR)).toBe(true);
-    expect((await getSchoolById(testSchoolA))?.services).toEqual(["gantt", "timetable"]);
+    expect(await updateSchoolServices(testSchoolA, ["gantt"], ACTOR)).toBe(true);
+    expect((await getSchoolById(testSchoolA))?.services).toEqual(["gantt"]);
     expect(await updateSchoolServices("00000000-0000-0000-0000-00000000dead", ["gantt"], ACTOR)).toBe(false);
   });
 
@@ -35,6 +35,6 @@ describe.skipIf(skipIfNoTestDb)("schools.services", () => {
     const result = await testDb!.execute(
       sql`SELECT payload FROM audit_log WHERE school_id = ${testSchoolA} AND action = 'school_services_updated' AND payload->>'actorAuthId' = ${ACTOR} ORDER BY at DESC LIMIT 1`,
     );
-    expect(result.rows[0]?.payload).toEqual({ from: ["gantt"], to: ["gantt", "timetable"], actorAuthId: ACTOR });
+    expect(result.rows[0]?.payload).toEqual({ from: ["gantt"], to: ["gantt"], actorAuthId: ACTOR });
   });
 });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-/** Root not-found page in the app's language (e.g. /timetable for a school without timeTable). */
+/** Root not-found page in the app's language. */
 export default async function NotFound() {
   const t = await getTranslations("common");
   return (

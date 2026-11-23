@@ -1,11 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
-  "crons": [{ "path": "/api/cron/demo-cleanup", "schedule": "30 2 * * *" }],
-  "functions": {
-    "api/solve.py": {
-      "maxDuration": 300,
-      "excludeFiles": "{node_modules/**,.next/**,app/**,components/**,lib/**,docs/**,test/**,public/**,db/**,messages/**,scripts/**,solver/.venv/**,solver/bench/**,solver/tests/**,.git/**}"
+  "regions": [
+    "fra1"
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/demo-cleanup",
+      "schedule": "30 2 * * *"
     }
-  }
+  ]
 }

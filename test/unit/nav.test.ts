@@ -26,21 +26,8 @@ describe("buildNavLinks", () => {
     ]);
   });
 
-  it("adds the timeTable link for a school with both services", async () => {
-    expect(await hrefs("admin", false, ["gantt", "timetable"])).toEqual([
-      "/dashboard", "/admin/staff", "/admin/event-types", "/timetable",
-    ]);
-    expect(await hrefs("admin", true, ["gantt", "timetable"])).toEqual([
-      "/dashboard", "/admin/staff", "/admin/event-types", "/timetable", "/platform/schools",
-    ]);
-  });
-
-  it("shows only the timeTable to an editor of a timetable-only school", async () => {
-    expect(await hrefs("editor", false, ["timetable"])).toEqual(["/timetable"]);
-  });
-
-  it("shows the timeTable and staff to an admin of a timetable-only school", async () => {
-    expect(await hrefs("admin", false, ["timetable"])).toEqual(["/timetable", "/admin/staff"]);
+  it("shows no Gantt links to a school without gantt", async () => {
+    expect(await hrefs("admin", false, [])).toEqual(["/admin/staff"]);
   });
 
   it("has no separate categories link (it is a tab of the staff page)", async () => {

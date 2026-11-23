@@ -69,9 +69,9 @@ beforeEach(() => {
 describe("provisionSchool", () => {
   it("stores the chosen services on the school row", async () => {
     listUsersMock.mockResolvedValueOnce(usersPage(1, { index: 0, email: INPUT.adminEmail, id: "a" }));
-    await provisionSchool({ ...INPUT, services: ["gantt", "timetable"] }, "https://app.test");
+    await provisionSchool({ ...INPUT, services: ["gantt"] }, "https://app.test");
     expect(insertValuesMock).toHaveBeenCalledWith(
-      expect.objectContaining({ services: ["gantt", "timetable"] }),
+      expect.objectContaining({ services: ["gantt"] }),
     );
   });
 

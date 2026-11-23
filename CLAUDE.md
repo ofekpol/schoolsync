@@ -8,6 +8,7 @@ Staff editors create events in a single-page event form (`components/wizard/Wiza
 - The app is the first product of **EduSolutions** ("מערכות חכמות לבתי ספר"), founded by Ofek and partner Maor Mesika (a platform admin on staging).
 - Marketing site: https://edusolutions-site.vercel.app/ — source in `C:\Users\ofekp\Projects\Personal\EduSolutions` (separate repo). Its "כניסה למערכת" button goes to `NEXT_PUBLIC_GANTT_URL` (set in that repo).
 - The site promises: Gantt, printable calendar, mobile view and calendar sync; Hebrew-first; contact form; "המוצר הבא / בקרוב" placeholder card.
+- The מערכת שעות (timetable) product is parked on branch `feature/timetable` (staging as of PR #119); it was removed from `staging` in one commit, so reverting that commit brings it back.
 - Go-forward checklist (site + app, one list): Claude Doc "EduSolutions — What's next", https://claude.ai/artifact/XeeDn355VSgnX3Z4PgGe5H (read/tick via the Claude Docs connector).
 
 ## Tech Stack
@@ -213,9 +214,7 @@ GITHUB_SUPPORT_REPO             # private repo for staff Help/bug reports and se
 GITHUB_SUPPORT_TOKEN            # fine-grained token, Issues r/w on that repo only; unset = Help hidden
 TEST_LOGIN_ENABLED              # e2e-only test login route; never on Production
 PLAYWRIGHT_BASE_URL             # run e2e against a deployment
-VERCEL_AUTOMATION_BYPASS_SECRET # kept on: the app sends it to reach /api/solve on previews and staging (also e2e); rotate if it leaks
-SOLVER_URL                      # optional solver endpoint; default https://$VERCEL_URL/api/solve; set locally to use a preview
-SOLVER_TOKEN                    # shared secret for /api/solve; required on Production (unset there = solver refuses)
+VERCEL_AUTOMATION_BYPASS_SECRET # e2e against protected previews; revoke after use
 DEMO_SESSION_SECRET             # demo cookie + IP hashing (>= 32 bytes); unset = demo unavailable
 CRON_SECRET                     # Vercel cron auth for /api/cron/demo-cleanup (daily, vercel.json)
 ```

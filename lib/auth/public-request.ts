@@ -17,7 +17,6 @@ const PUBLIC_PREFIXES = [
   "/api/v1/auth/forgot-password",
   "/api/v1/public/",
   "/api/health",
-  "/api/solve", // Python solver function; it checks its own bearer token
   "/api/v1/export/",
   "/api/v1/ical-subscriptions/personal",
 ];
@@ -27,7 +26,6 @@ const DEMO_PUBLIC_PATHS = new Set(["/demo", "/api/v1/demo", "/api/cron/demo-clea
 const RESERVED_PREFIXES = [
   "/auth", "/invite", "/ical", "/api", "/admin",
   "/dashboard", "/events", "/profile", "/_next", "/schedule", "/platform", "/support", "/demo",
-  "/timetable",
 ];
 
 export function shouldBypassAuthRefresh(pathname: string): boolean {

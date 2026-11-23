@@ -14,11 +14,6 @@ describe("shouldBypassAuthRefresh", () => {
     expect(shouldBypassAuthRefresh("/support")).toBe(false);
   });
 
-  it("keeps the timeTable behind middleware authentication", () => {
-    expect(shouldBypassAuthRefresh("/timetable")).toBe(false);
-    expect(shouldBypassAuthRefresh("/timetable/x")).toBe(false);
-  });
-
   it("bypasses middleware auth refresh for the read-only public schedule", () => {
     expect(shouldBypassAuthRefresh("/schedule")).toBe(true);
     expect(shouldBypassAuthRefresh("/schedule/")).toBe(true);

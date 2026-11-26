@@ -109,7 +109,7 @@ replace it, and nothing that roles control today changes.
 From CLAUDE.md: `withSchool` for every query, RLS + cross-school tests for every new table, Zod at
 every API boundary, i18n keys (he first), logical CSS properties only, dates via `lib/datetime.ts`,
 new migrations only. Migration numbers: staging ends at 0022 and the parked timetable branches hold
-0023–0025, so rooms starts at **0026**.
+0023–0028 (already applied on the staging DB), so rooms starts at **0029**.
 
 ## Calls made (not discussed; change freely)
 

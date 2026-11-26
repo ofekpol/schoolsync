@@ -10,12 +10,12 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
 const GRADE: ProfileCategory = {
-  id: "c1", name: "שכבה", multiSelect: false, required: true, sortOrder: 1,
-  options: [{ id: "g7", label: "ז", sortOrder: 0 }, { id: "g8", label: "ח", sortOrder: 1 }],
+  id: "c1", name: "שכבה", multiSelect: false, required: true, adminAssigned: false, sortOrder: 1,
+  options: [{ id: "g7", label: "ז", sortOrder: 0, permissions: [] }, { id: "g8", label: "ח", sortOrder: 1, permissions: [] }],
 };
 const SUBJECT: ProfileCategory = {
-  id: "c2", name: "מקצוע", multiSelect: true, required: false, sortOrder: 2,
-  options: [{ id: "math", label: "מתמטיקה", sortOrder: 0 }, { id: "eng", label: "אנגלית", sortOrder: 1 }],
+  id: "c2", name: "מקצוע", multiSelect: true, required: false, adminAssigned: false, sortOrder: 2,
+  options: [{ id: "math", label: "מתמטיקה", sortOrder: 0, permissions: [] }, { id: "eng", label: "אנגלית", sortOrder: 1, permissions: [] }],
 };
 
 const fetchMock = vi.fn();

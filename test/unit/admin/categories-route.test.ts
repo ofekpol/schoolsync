@@ -52,8 +52,9 @@ const CATEGORY = {
   name: "מקצוע",
   multiSelect: true,
   required: false,
+  adminAssigned: false,
   sortOrder: 1,
-  options: [{ id: "00000000-0000-0000-0000-0000000000d1", label: "מתמטיקה", sortOrder: 0 }],
+  options: [{ id: "00000000-0000-0000-0000-0000000000d1", label: "מתמטיקה", sortOrder: 0, permissions: [] }],
 };
 
 function request(method: string, body?: unknown, path = "") {
@@ -128,7 +129,11 @@ describe("/api/v1/admin/categories", () => {
     const res = await POST(request("POST", BODY));
     expect(res.status).toBe(201);
     expect(ProfileCategorySchema.parse(await res.json()).id).toBe(ID);
-    expect(domain.createCategory).toHaveBeenCalledWith(SCHOOL, BODY);
+    expect(domain.createCategory).toHaveBeenCalledWith(SCHOOL, {
+      ...BODY,
+      adminAssigned: false,
+      options: [{ label: "מתמטיקה", permissions: [] }],
+    });
   });
 
   it("GET lists the school's categories", async () => {

@@ -326,7 +326,7 @@
       "errorReorder": "Reordering failed. Try again.",
       "errorDemo": "Categories cannot be changed in the demo.",
       "adminAssigned": "Assigned by an admin only",
-      "adminAssignedHint": "Staff see this category on their profile but cannot change it. Assign it from the staff page; each option can carry permissions.",
+      "adminAssignedHint": "Staff see this category on their profile but cannot change it. Assign it from the staff page; each option can carry permissions. When an existing category switches to admin-assigned, the choices staff made in it themselves are cleared.",
       "adminAssignedBadge": "Admin only",
       "errorPermissions": "Permissions can only be attached to an admin-assigned category.",
       "permissions": {

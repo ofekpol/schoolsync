@@ -5,7 +5,7 @@ import * as schema from "@/lib/db/schema";
 import { profileCategories, profileCategoryOptions, staffProfileOptions } from "@/lib/db/schema-profile";
 import type { StaffUserRecord } from "@/lib/db/staff";
 import { getPermissions, hasPermission } from "@/lib/permissions";
-import { archiveCategory, createCategory } from "@/lib/profile/categories";
+import { archiveCategory, createCategory, replaceCategory } from "@/lib/profile/categories";
 import { shouldSkip, skipIfNoTestDb, testDb, testSchoolA, testSchoolB } from "./setup";
 
 const staffIds: string[] = [];
@@ -131,6 +131,31 @@ describe.skipIf(skipIfNoTestDb)("profile permissions", () => {
       .set({ adminAssigned: false })
       .where(eq(profileCategories.id, category.id));
     expect(await hasPermission(viewer, "rooms.book")).toBe(false);
+  });
+
+  it("labels picked while a category was free grant nothing once it becomes admin-assigned", async () => {
+    const free = await createCategory(testSchoolA, {
+      name: "תפקיד חופשי",
+      multiSelect: true,
+      required: false,
+      options: [{ label: "מורה" }],
+    });
+    const viewer = await createStaff(testSchoolA);
+    await giveOption(viewer, free.options[0].id);
+
+    await replaceCategory(testSchoolA, free.id, {
+      name: free.name,
+      multiSelect: true,
+      required: false,
+      adminAssigned: true,
+      options: [{ id: free.options[0].id, label: "מורה", permissions: ["rooms.book"] }],
+    });
+    expect(await hasPermission(viewer, "rooms.book")).toBe(false);
+    const rows = await testDb!
+      .select()
+      .from(staffProfileOptions)
+      .where(eq(staffProfileOptions.staffUserId, viewer.id));
+    expect(rows).toEqual([]);
   });
 
   it("no user holds nothing", async () => {

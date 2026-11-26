@@ -21,5 +21,5 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   if (response) return response;
   const parsed = StaffOptionsSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return invalidInput(parsed.error.flatten());
-  return saveStaffOptions(user.schoolId, user.id, parsed.data.optionIds);
+  return saveStaffOptions(user.schoolId, user.id, parsed.data.optionIds, { kind: "self" });
 }

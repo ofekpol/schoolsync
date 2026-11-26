@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { withSchool } from "@/lib/db/client";
-import { staffUsers } from "@/lib/db/schema";
+import { auditLog, staffUsers } from "@/lib/db/schema";
 import {
   profileCategories,
   profileCategoryOptions,
@@ -12,7 +12,9 @@ type Tx = Parameters<Parameters<typeof withSchool>[1]>[0];
 
 /** A selection the user has to fix (400 at the API). */
 export class ProfileValidationError extends Error {
-  constructor(readonly code: "unknown_option" | "too_many" | "required_missing") {
+  constructor(
+    readonly code: "unknown_option" | "too_many" | "required_missing" | "admin_assigned",
+  ) {
     super(code);
     this.name = "ProfileValidationError";
   }
@@ -28,7 +30,11 @@ interface ActiveOption {
   categoryId: string;
   multiSelect: boolean;
   required: boolean;
+  adminAssigned: boolean;
 }
+
+/** Who is saving: the staff member themself, or an admin of their school. */
+export type LabelsSavedBy = { kind: "self" } | { kind: "admin"; actorStaffId: string };
 
 /** Every active option of every active category of the school in `tx`. */
 function loadActiveOptions(tx: Tx): Promise<ActiveOption[]> {
@@ -38,6 +44,7 @@ function loadActiveOptions(tx: Tx): Promise<ActiveOption[]> {
       categoryId: profileCategories.id,
       multiSelect: profileCategories.multiSelect,
       required: profileCategories.required,
+      adminAssigned: profileCategories.adminAssigned,
     })
     .from(profileCategoryOptions)
     .innerJoin(profileCategories, eq(profileCategoryOptions.categoryId, profileCategories.id))
@@ -74,27 +81,37 @@ export function getStaffOptionIds(schoolId: string, staffUserId: string): Promis
   });
 }
 
+/** The options this save may touch. Self saves never see admin-assigned categories. */
+function editableOptions(options: ActiveOption[], wanted: string[], by: LabelsSavedBy): ActiveOption[] {
+  if (by.kind === "admin") return options;
+  const adminAssigned = new Set(options.filter((o) => o.adminAssigned).map((o) => o.id));
+  if (wanted.some((id) => adminAssigned.has(id))) throw new ProfileValidationError("admin_assigned");
+  return options.filter((o) => !o.adminAssigned);
+}
+
 /**
  * Replaces the staff member's active labels and marks their profile complete.
+ * A self save leaves admin-assigned labels as the admin set them; an admin save is audited.
  * Rows pointing at archived options are left alone (history).
  */
 export function setStaffOptions(
   schoolId: string,
   staffUserId: string,
   optionIds: string[],
+  by: LabelsSavedBy,
 ): Promise<void> {
   const wanted = [...new Set(optionIds)];
   return withSchool(schoolId, async (tx) => {
-    const options = await loadActiveOptions(tx);
+    const options = editableOptions(await loadActiveOptions(tx), wanted, by);
     validateSelection(options, wanted);
-    const activeIds = options.map((option) => option.id);
-    if (activeIds.length > 0) {
+    const editableIds = options.map((option) => option.id);
+    if (editableIds.length > 0) {
       await tx
         .delete(staffProfileOptions)
         .where(
           and(
             eq(staffProfileOptions.staffUserId, staffUserId),
-            inArray(staffProfileOptions.optionId, activeIds),
+            inArray(staffProfileOptions.optionId, editableIds),
           ),
         );
     }
@@ -107,6 +124,16 @@ export function setStaffOptions(
       .update(staffUsers)
       .set({ profileCompletedAt: new Date() })
       .where(eq(staffUsers.id, staffUserId));
+    if (by.kind === "admin") {
+      await tx.insert(auditLog).values({
+        schoolId,
+        actorStaffId: by.actorStaffId,
+        action: "staff.labels_set",
+        targetTable: "staff_users",
+        targetId: staffUserId,
+        payload: { optionIds: wanted },
+      });
+    }
   });
 }
 

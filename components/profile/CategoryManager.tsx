@@ -143,6 +143,7 @@ function CategoryRow(props: RowProps) {
             <span className="text-xs font-normal text-neutral-500">
               {row.multiSelect ? t("multiSelect") : t("singleSelect")}
               {row.required && ` · ${t("required")}`}
+              {row.adminAssigned && ` · ${t("adminAssignedBadge")}`}
             </span>
           </p>
           <p className="truncate text-xs text-neutral-600">

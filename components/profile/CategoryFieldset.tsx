@@ -27,23 +27,30 @@ interface Props {
   picked: Set<string>;
   onToggle: (optionId: string | null) => void;
   className?: string;
+  /** Shown but not editable (an admin-assigned category on the staff member's own profile). */
+  locked?: boolean;
 }
 
 /** One category: its name, whether it is required, and its options as selectable pills. */
-export function CategoryFieldset({ category, picked, onToggle, className }: Props) {
+export function CategoryFieldset({ category, picked, onToggle, className, locked = false }: Props) {
   const t = useTranslations("profile");
   const name = useId();
   const type = category.multiSelect ? "checkbox" : "radio";
   const count = category.options.filter((o) => picked.has(o.id)).length;
-  const missing = category.required && category.options.length > 0 && count === 0;
+  const missing = !locked && category.required && category.options.length > 0 && count === 0;
   return (
-    <fieldset className={className}>
+    <fieldset className={cn(className, locked && "[&_label]:cursor-default")} disabled={locked}>
       <legend className="float-start w-full">
         <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
           <span className="font-[family-name:var(--sg-font-display)] text-lg font-semibold text-[var(--sg-ink)]">
             {category.name}
           </span>
-          {category.required && (
+          {locked && (
+            <span className="rounded-full bg-[var(--sg-hairline-2)] px-2 py-0.5 text-xs font-medium text-[var(--sg-ink-mute)]">
+              {t("adminAssignedNote")}
+            </span>
+          )}
+          {category.required && !locked && (
             <span className={cn(
               "rounded-full px-2 py-0.5 text-xs font-medium",
               missing

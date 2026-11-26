@@ -46,7 +46,7 @@ export default async function ProfilePage() {
         <p className="mt-1.5 max-w-[60ch] text-sm leading-relaxed text-[var(--sg-ink-mute)]">{t("intro")}</p>
         <div className="sg-card mt-5 rounded-2xl">
           <ProfileForm categories={categories} selected={selected} submitUrl="/api/v1/profile"
-            variant="page"
+            variant="page" lockAdminAssigned
             savedHref={firstRun ? home : undefined}
             backHref={firstRun ? undefined : home}
             saveLabel={firstRun ? "saveContinue" : "save"} />

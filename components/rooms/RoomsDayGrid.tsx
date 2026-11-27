@@ -57,8 +57,8 @@ export async function RoomsDayGrid({ day }: { day: DayView }) {
               {day.periods.map((p) => (
                 <th key={p.period} scope="col" className="min-w-24 text-start font-semibold text-neutral-600">
                   {t("period", { number: p.period })}
-                  <span className="block text-xs font-normal text-neutral-500" dir="ltr">
-                    {p.start}–{p.end}
+                  <span className="block text-xs font-normal text-neutral-500">
+                    <bdi dir="ltr">{p.start}–{p.end}</bdi>
                   </span>
                 </th>
               ))}

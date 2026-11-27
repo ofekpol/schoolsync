@@ -85,9 +85,14 @@ export function WeekEditor({ initial }: { initial: Week }) {
                     <input type="time" value={p.start} required aria-label={`${t("manage.periodTimes", { number: index + 1, day: name })} · ${t("manage.start")}`} onChange={(e) => setTime(day, index, "start", e.target.value)} className={TIME} />
                     <span aria-hidden="true">–</span>
                     <input type="time" value={p.end} required aria-label={`${t("manage.periodTimes", { number: index + 1, day: name })} · ${t("manage.end")}`} onChange={(e) => setTime(day, index, "end", e.target.value)} className={TIME} />
-                    <button type="button" aria-label={t("manage.removePeriod", { number: index + 1, day: name })} onClick={() => setDay(day, periods.filter((_, i) => i !== index))} className="rounded p-1 text-neutral-500 hover:bg-red-50 hover:text-red-700">
-                      <X aria-hidden="true" className="size-4" />
-                    </button>
+                    {/* Only the last period can go: removing a middle one would renumber the rest under their weekly use and bookings. */}
+                    {index === periods.length - 1 ? (
+                      <button type="button" aria-label={t("manage.removePeriod", { number: index + 1, day: name })} onClick={() => setDay(day, periods.slice(0, -1))} className="rounded p-1 text-neutral-500 hover:bg-red-50 hover:text-red-700">
+                        <X aria-hidden="true" className="size-4" />
+                      </button>
+                    ) : (
+                      <span aria-hidden="true" className="w-6" />
+                    )}
                   </li>
                 ))}
               </ol>

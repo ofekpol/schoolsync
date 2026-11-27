@@ -104,7 +104,7 @@ function PeriodRow({ period, cell, checked, onToggle, onCancel, canManage, readO
   const heading = (
     <span className="w-24 shrink-0">
       <span className="block font-medium">{t("period", { number: period.period })}</span>
-      <span className="text-xs text-neutral-500" dir="ltr">{period.start}–{period.end}</span>
+      <span className="text-xs text-neutral-500"><bdi dir="ltr">{period.start}–{period.end}</bdi></span>
     </span>
   );
   const row = "flex items-center gap-3 rounded-lg border px-3 py-2 text-sm";

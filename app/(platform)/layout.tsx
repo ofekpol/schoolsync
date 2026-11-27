@@ -4,6 +4,7 @@ import { getSchoolById } from "@/lib/db/schools";
 import { AppHeader } from "@/components/AppHeader";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { buildNavLinks, getCurrentPath } from "@/lib/nav";
+import { hasPermission } from "@/lib/permissions";
 import type { ReactNode } from "react";
 
 /**
@@ -20,12 +21,13 @@ export default async function PlatformLayout({ children }: { children: ReactNode
     getTranslations("nav"),
   ]);
   if (!authUser) return children;
-  const [navLinks, school] = await Promise.all([
-    user
-      ? buildNavLinks(user.role, true)
-      : Promise.resolve([{ href: "/platform/schools", label: t("platform") }]),
+  const [school, canBookRooms] = await Promise.all([
     user?.schoolId ? getSchoolById(user.schoolId) : null,
+    hasPermission(user, "rooms.book"),
   ]);
+  const navLinks = user
+    ? await buildNavLinks(user.role, true, school?.services, canBookRooms)
+    : [{ href: "/platform/schools", label: t("platform") }];
   const name = user?.fullName ?? authUser.email ?? "";
   return (
     <div className="min-h-screen">

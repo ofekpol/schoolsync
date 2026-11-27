@@ -14,6 +14,7 @@ import { StaffChatPanel } from "@/components/ai/StaffChatPanel";
 import { isAiEnabled } from "@/lib/ai/model";
 import { needsProfile } from "@/lib/profile/gate";
 import { ProfileLink } from "@/components/profile/ProfileLink";
+import { hasPermission } from "@/lib/permissions";
 
 interface StaffShellProps {
   user: StaffUserRecord;
@@ -28,13 +29,14 @@ interface StaffShellProps {
  */
 export async function StaffShell({ user, withChat, children }: StaffShellProps) {
   if (await needsProfile(user)) redirect("/profile");
-  const [platform, currentPath, t, school] = await Promise.all([
+  const [platform, currentPath, t, school, canBookRooms] = await Promise.all([
     isPlatformAdmin(user.id),
     getCurrentPath(),
     getTranslations("nav"),
     user.schoolId ? getSchoolById(user.schoolId) : null,
+    hasPermission(user, "rooms.book"),
   ]);
-  const navLinks = await buildNavLinks(user.role, platform, school?.services);
+  const navLinks = await buildNavLinks(user.role, platform, school?.services, canBookRooms);
   return (
     <>
       {user.demoExpiresAt && <DemoBanner expiresAt={user.demoExpiresAt} />}

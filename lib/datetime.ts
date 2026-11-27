@@ -81,3 +81,10 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", {
 export function jerusalemTimeString(instant: Date): string {
   return timeFormatter.format(instant);
 }
+
+/** "יום שלישי, 1 בדצמבר" for a `YYYY-MM-DD` calendar date (no timezone shift). */
+export function formatCalendarDate(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(
+    new Date(`${date}T00:00:00Z`),
+  );
+}

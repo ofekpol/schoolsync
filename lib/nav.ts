@@ -17,16 +17,18 @@ export async function getCurrentPath(): Promise<string> {
  * Builds the in-header nav for a staff or admin user. Admins also see
  * the admin-only sections (Staff, Event Types, Year); platform admins also
  * get a link to /platform/schools. Gantt links show only when the school has
- * `gantt`.
+ * `gantt`; Rooms only when it has `rooms` and the user may book (`rooms.book`).
  */
 export async function buildNavLinks(
   role: "editor" | "admin" | "viewer",
   isPlatformAdmin = false,
   services: readonly Service[] = ["gantt"],
+  canBookRooms = false,
 ): Promise<AppHeaderNavLink[]> {
   const t = await getTranslations("nav");
   const gantt = services.includes("gantt");
   const links: AppHeaderNavLink[] = gantt ? [{ href: "/dashboard", label: t("dashboard") }] : [];
+  if (canBookRooms && services.includes("rooms")) links.push({ href: "/rooms", label: t("rooms") });
   if (role === "admin") {
     links.push({ href: "/admin/staff", label: t("staff") });
   }

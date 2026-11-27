@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { eq, and, like } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
 import { seedDb } from "@/db/seed";
+import { roomWeeklySlots, rooms, roomsWeek } from "@/lib/db/schema-rooms";
+import { getPermissions } from "@/lib/permissions";
 import { testDb, skipIfNoTestDb, shouldSkip } from "./setup";
 
 // Deterministic UUID per email — stable across runs so re-seeding upserts the
@@ -128,5 +130,27 @@ describe.skipIf(skipIfNoTestDb)("DB-06: seed creates canonical bootstrap", () =>
       .from(schema.staffUsers)
       .where(eq(schema.staffUsers.schoolId, school.id));
     expect(afterUsers).toHaveLength(beforeUsers.length);
+  });
+
+  it("sets up demo rooms: service, active year, week, six rooms, fixed use, and a viewer who can book", async () => {
+    const [school] = await testDb!
+      .select()
+      .from(schema.schools)
+      .where(eq(schema.schools.slug, "demo-school"));
+    expect(school.services).toContain("rooms");
+    expect(school.activeAcademicYearId).not.toBeNull();
+    await runSeed();
+    const roomRows = await testDb!.select().from(rooms).where(eq(rooms.schoolId, school.id));
+    expect(roomRows).toHaveLength(6);
+    const slots = await testDb!.select().from(roomWeeklySlots).where(eq(roomWeeklySlots.schoolId, school.id));
+    expect(slots).toHaveLength(7);
+    const [week] = await testDb!.select().from(roomsWeek).where(eq(roomsWeek.schoolId, school.id));
+    expect(week.week.days).toHaveLength(6);
+    const [viewer] = await testDb!
+      .select()
+      .from(schema.staffUsers)
+      .where(eq(schema.staffUsers.email, "viewer@demo-school.test"));
+    const permissions = await getPermissions({ ...viewer, schoolId: school.id, mustChangePassword: false });
+    expect([...permissions]).toEqual(["rooms.book"]);
   });
 });

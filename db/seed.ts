@@ -4,6 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { db, supabaseAdmin, withSchool } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
 import { DEMO_SCHOOL_ACCESS_TOKEN } from "@/db/demo-school";
+import { enableDemoRooms, seedRooms } from "@/db/seed-rooms";
 
 const SCHOOL_SLUG = "demo-school";
 const ADMIN_EMAIL = "admin@demo-school.test";
@@ -108,8 +109,8 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
   const now = new Date();
   const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
 
-  // 3–7. All school-scoped data uses withSchool so RLS FORCE is satisfied
-  await withSchool(school.id, async (tx) => {
+  // 3–8. All school-scoped data uses withSchool so RLS FORCE is satisfied
+  const yearId = await withSchool(school.id, async (tx) => {
     // 2. Academic year
     await tx
       .insert(schema.academicYears)
@@ -122,6 +123,10 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
       .onConflictDoNothing({
         target: [schema.academicYears.schoolId, schema.academicYears.label],
       });
+    const [year] = await tx
+      .select({ id: schema.academicYears.id })
+      .from(schema.academicYears)
+      .where(sql`${schema.academicYears.label} = ${`${startYear}-${startYear + 1}`}`);
 
     // 3. Event types (insert before scopes so counselor scope FK-by-key works)
     for (const et of EVENT_TYPES) {
@@ -142,7 +147,7 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
 
     // 4. Admin staff user
     const adminAuthId = await opts.ensureStaffUserId(ADMIN_EMAIL);
-    await tx
+    const [adminRow] = await tx
       .insert(schema.staffUsers)
       .values({
         id: adminAuthId,
@@ -155,7 +160,8 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
       .onConflictDoUpdate({
         target: schema.staffUsers.email,
         set: { schoolId: school.id, role: "admin" },
-      });
+      })
+      .returning({ id: schema.staffUsers.id });
 
     // 5. Grade editors + scopes
     // RETURNING resolves to the *existing* row's id on email-conflict, so
@@ -219,7 +225,7 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
 
     // 7. Viewer — read-only staff account; no editor_scopes
     const viewerAuthId = await opts.ensureStaffUserId(VIEWER.email);
-    await tx
+    const [viewerRow] = await tx
       .insert(schema.staffUsers)
       .values({
         id: viewerAuthId,
@@ -231,8 +237,14 @@ export async function seedDb(opts: SeedOptions): Promise<{ schoolId: string }> {
       .onConflictDoUpdate({
         target: schema.staffUsers.email,
         set: { schoolId: school.id, fullName: sql`excluded.full_name` },
-      });
+      })
+      .returning({ id: schema.staffUsers.id });
+
+    // 8. Rooms: week, rooms, fixed use, and the admin-assigned role labels (viewer = מורה)
+    await seedRooms(tx, school.id, year.id, adminRow.id, viewerRow.id);
+    return year.id;
   });
+  await enableDemoRooms(database, school.id, yearId);
 
   return { schoolId: school.id };
 }

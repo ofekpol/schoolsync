@@ -353,6 +353,14 @@ Production cutover (one-time, per new Supabase project):
 4. Run `pnpm provision:school …` with prod env loaded.
 5. `vercel --prod` to redeploy with the new env.
 
+### 12a. Turning on rooms (חדרים) for a school
+
+1. On `/platform/schools`, tick **חדרים** for the school and save. If the school has no active academic year, the current one (Sept 1 → Aug 31) is created and made active; bookings run until its end.
+2. The school admin opens `/rooms/manage` (admins hold every room permission): sets the period times, adds rooms, and marks fixed weekly use.
+3. On `/admin/staff?tab=categories`, the admin makes an **admin-assigned** category (e.g. "תפקיד") whose options grant `הזמנת חדרים` / `ניהול חדרים`, then assigns those labels to staff from the staff list. Only staff holding such a label (or admins) see "חדרים" in the menu.
+
+The demo seed (`db/seed-rooms.ts`) does all of this for the demo school: six rooms, a Sun–Thu 8 / Fri 5 week, some fixed use, and `viewer@demo-school.test` as "מורה".
+
 ## 13. Versioning + releases
 
 The repo is single-tenant per Vercel project — production state lives in the linked Supabase project. There is no separate version number. Schema migrations are forward-only.

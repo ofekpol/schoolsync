@@ -7,6 +7,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { Service } from "@/lib/services";
 import { ProvisionSchoolInput } from "@/lib/validations/school";
 import { db, supabaseAdmin, withSchool } from "./client";
+import { ensureActiveAcademicYear } from "./schools";
 import * as schema from "./schema";
 
 /**
@@ -183,6 +184,7 @@ export async function provisionSchool(
     await db.delete(schema.schools).where(eq(schema.schools.id, schoolId));
     throw err;
   }
+  if (input.services.includes("rooms")) await ensureActiveAcademicYear(schoolId);
 
   let magicLink: { magicLinkUrl: string; magicLinkExpiresAt: string };
   try {

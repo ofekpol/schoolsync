@@ -35,4 +35,11 @@ describe("buildNavLinks", () => {
       expect(await hrefs(role)).not.toContain("/admin/categories");
     }
   });
+
+  it("shows rooms only when the school has rooms and the user can book", async () => {
+    expect(await hrefs("viewer", false, ["gantt", "rooms"], true)).toEqual(["/dashboard", "/rooms"]);
+    expect(await hrefs("viewer", false, ["gantt", "rooms"], false)).toEqual(["/dashboard"]);
+    expect(await hrefs("viewer", false, ["gantt"], true)).toEqual(["/dashboard"]);
+    expect(await hrefs("admin", false, ["rooms"], true)).toEqual(["/rooms", "/admin/staff"]);
+  });
 });

@@ -53,3 +53,30 @@ export function periodOf(week: Week, date: string, period: number): { start: str
   const found = day?.periods.find((p) => p.period === period);
   return found ? { start: found.start, end: found.end } : null;
 }
+
+const FIRST_PERIOD_START_MINUTES = 8 * 60;
+const PERIOD_MINUTES = 45;
+
+export function hhmm(minutes: number): string {
+  const h = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const m = String(minutes % 60).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+function dayOf(day: number, count: number): WeekDay {
+  const periods = Array.from({ length: count }, (_, index) => {
+    const start = FIRST_PERIOD_START_MINUTES + index * PERIOD_MINUTES;
+    return { period: index + 1, start: hhmm(start), end: hhmm(start + PERIOD_MINUTES) };
+  });
+  return { day, periods };
+}
+
+/** Sunday to Thursday 8 periods, Friday 5; from 08:00, 45 minutes each, back to back. */
+export const DEFAULT_WEEK: Week = {
+  days: [...[0, 1, 2, 3, 4].map((day) => dayOf(day, 8)), dayOf(5, 5)],
+};
+
+export function minutesOf(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}

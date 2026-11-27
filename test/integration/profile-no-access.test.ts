@@ -23,6 +23,7 @@ describe.skipIf(skipIfNoTestDb)("profile labels grant no access", () => {
   const editorId = randomUUID();
   let eventTypeId: string;
   const categoryIds: string[] = [];
+  const extraStaffIds: string[] = [];
 
   function createEvent(grades: number[]) {
     return POST(
@@ -75,6 +76,7 @@ describe.skipIf(skipIfNoTestDb)("profile labels grant no access", () => {
       testSchoolA,
       editorId,
       [...grade.options, ...role.options].map((option) => option.id),
+      { kind: "self" },
     );
     getStaffUserMock.mockResolvedValue({
       id: editorId,
@@ -91,7 +93,10 @@ describe.skipIf(skipIfNoTestDb)("profile labels grant no access", () => {
     if (shouldSkip()) return;
     await testDb!.delete(schema.events).where(eq(schema.events.createdBy, editorId));
     await testDb!.delete(profileCategories).where(inArray(profileCategories.id, categoryIds));
-    await testDb!.delete(schema.staffUsers).where(eq(schema.staffUsers.id, editorId));
+    await testDb!.delete(schema.auditLog).where(eq(schema.auditLog.actorStaffId, editorId));
+    await testDb!
+      .delete(schema.staffUsers)
+      .where(inArray(schema.staffUsers.id, [editorId, ...extraStaffIds]));
   });
 
   it("still rejects a grade outside the editor's scope", async () => {
@@ -103,5 +108,40 @@ describe.skipIf(skipIfNoTestDb)("profile labels grant no access", () => {
   it("still allows the grade inside the editor's scope", async () => {
     const res = await createEvent([7]);
     expect(res.status).toBe(201);
+  });
+
+  it("a viewer holding a rooms.manage label still cannot create an event", async () => {
+    const viewerId = randomUUID();
+    await testDb!.insert(schema.staffUsers).values({
+      id: viewerId,
+      schoolId: testSchoolA,
+      email: `no-access-${viewerId}@test`,
+      fullName: "Room Manager",
+      role: "viewer",
+      status: "active",
+    });
+    extraStaffIds.push(viewerId);
+    const powers = await createCategory(testSchoolA, {
+      name: `סמכויות ${randomUUID().slice(0, 8)}`,
+      multiSelect: true,
+      required: false,
+      adminAssigned: true,
+      options: [{ label: "ניהול חדרים", permissions: ["rooms.manage"] }],
+    });
+    categoryIds.push(powers.id);
+    await setStaffOptions(testSchoolA, viewerId, [powers.options[0].id], {
+      kind: "admin",
+      actorStaffId: editorId,
+    });
+    getStaffUserMock.mockResolvedValueOnce({
+      id: viewerId,
+      schoolId: testSchoolA,
+      role: "viewer",
+      status: "active",
+      email: `no-access-${viewerId}@test`,
+      fullName: "Room Manager",
+      mustChangePassword: false,
+    });
+    expect((await createEvent([7])).status).toBe(403);
   });
 });

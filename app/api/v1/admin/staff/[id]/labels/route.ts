@@ -17,5 +17,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext): Promi
   if (!(await isActiveStaffOfSchool(user.schoolId, id.data))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return saveStaffOptions(user.schoolId, id.data, parsed.data.optionIds);
+  return saveStaffOptions(user.schoolId, id.data, parsed.data.optionIds, {
+    kind: "admin",
+    actorStaffId: user.id,
+  });
 }

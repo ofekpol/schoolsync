@@ -6,7 +6,8 @@ export type CategoryErrorKey =
   | "errorLimit"
   | "errorArchive"
   | "errorReorder"
-  | "errorDemo";
+  | "errorDemo"
+  | "errorPermissions";
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: CategoryErrorKey };
 
@@ -16,6 +17,7 @@ const SERVER_ERRORS: Record<string, CategoryErrorKey> = {
   duplicate_name: "errorDuplicate",
   limit_reached: "errorLimit",
   demo_disabled: "errorDemo",
+  permissions_need_admin_assigned: "errorPermissions",
 };
 
 async function send<T>(

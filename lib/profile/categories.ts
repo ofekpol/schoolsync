@@ -1,7 +1,11 @@
 import "server-only";
 import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { withSchool } from "@/lib/db/client";
-import { profileCategories, profileCategoryOptions } from "@/lib/db/schema-profile";
+import {
+  profileCategories,
+  profileCategoryOptions,
+  staffProfileOptions,
+} from "@/lib/db/schema-profile";
 import {
   MAX_CATEGORIES,
   type CategoryInput,
@@ -13,7 +17,7 @@ type Tx = Parameters<Parameters<typeof withSchool>[1]>[0];
 
 /** A category write the caller can explain to the user (409 / 422 at the API). */
 export class CategoryError extends Error {
-  constructor(readonly code: "duplicate_name" | "limit_reached") {
+  constructor(readonly code: "duplicate_name" | "limit_reached" | "permissions_need_admin_assigned") {
     super(code);
     this.name = "CategoryError";
   }
@@ -49,7 +53,7 @@ async function loadOptions(tx: Tx, categoryIds: string[]): Promise<Map<string, P
     .orderBy(asc(profileCategoryOptions.sortOrder), asc(profileCategoryOptions.label));
   for (const row of rows) {
     const list = byCategory.get(row.categoryId) ?? [];
-    list.push({ id: row.id, label: row.label, sortOrder: row.sortOrder });
+    list.push({ id: row.id, label: row.label, sortOrder: row.sortOrder, permissions: row.permissions });
     byCategory.set(row.categoryId, list);
   }
   return byCategory;
@@ -67,6 +71,7 @@ async function loadCategories(tx: Tx, id?: string): Promise<ProfileCategory[]> {
     name: row.name,
     multiSelect: row.multiSelect,
     required: row.required,
+    adminAssigned: row.adminAssigned,
     sortOrder: row.sortOrder,
     options: options.get(row.id) ?? [],
   }));
@@ -85,6 +90,14 @@ async function assertNameFree(tx: Tx, name: string, exceptId?: string): Promise<
     )
     .limit(1);
   if (clash.length > 0) throw new CategoryError("duplicate_name");
+}
+
+/** Permissions only ride on admin-assigned categories (the API's Zod refine says the same). */
+function assertPermissionsAllowed(input: CategoryInput): void {
+  if (input.adminAssigned) return;
+  if (input.options.some((o) => (o.permissions ?? []).length > 0)) {
+    throw new CategoryError("permissions_need_admin_assigned");
+  }
 }
 
 /** A school's active categories with their active options, in display order. */
@@ -110,6 +123,7 @@ export function createCategory(schoolId: string, input: CategoryInput): Promise<
       .select({ sortOrder: profileCategories.sortOrder })
       .from(profileCategories)
       .where(activeCategory);
+    assertPermissionsAllowed(input);
     if (existing.length >= MAX_CATEGORIES) throw new CategoryError("limit_reached");
     await assertNameFree(tx, input.name);
     const sortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder), 0) + 1;
@@ -120,6 +134,7 @@ export function createCategory(schoolId: string, input: CategoryInput): Promise<
         name: input.name,
         multiSelect: input.multiSelect,
         required: input.required,
+        adminAssigned: input.adminAssigned ?? false,
         sortOrder,
       })
       .returning({ id: profileCategories.id });
@@ -130,6 +145,7 @@ export function createCategory(schoolId: string, input: CategoryInput): Promise<
           categoryId: row.id,
           label: option.label,
           sortOrder: index,
+          permissions: option.permissions ?? [],
         })),
       );
     }
@@ -173,14 +189,32 @@ async function syncOptions(
     if (option.id && keptIds.has(option.id)) {
       await tx
         .update(profileCategoryOptions)
-        .set({ label: option.label, sortOrder: index })
+        .set({ label: option.label, sortOrder: index, permissions: option.permissions ?? [] })
         .where(eq(profileCategoryOptions.id, option.id));
     } else {
       await tx
         .insert(profileCategoryOptions)
-        .values({ schoolId, categoryId, label: option.label, sortOrder: index });
+        .values({
+          schoolId,
+          categoryId,
+          label: option.label,
+          sortOrder: index,
+          permissions: option.permissions ?? [],
+        });
     }
   }
+}
+
+/**
+ * A category becoming admin-assigned forgets what staff picked themselves while it was free,
+ * so no self-chosen label can carry a permission. The admin assigns it afresh.
+ */
+async function dropSelfPickedLabels(tx: Tx, categoryId: string): Promise<void> {
+  const options = tx
+    .select({ id: profileCategoryOptions.id })
+    .from(profileCategoryOptions)
+    .where(eq(profileCategoryOptions.categoryId, categoryId));
+  await tx.delete(staffProfileOptions).where(inArray(staffProfileOptions.optionId, options));
 }
 
 /** Replaces a category's fields and options. Null when it is not this school's active category. */
@@ -191,14 +225,21 @@ export function replaceCategory(
 ): Promise<ProfileCategory | null> {
   return withSchool(schoolId, async (tx) => {
     const [found] = await tx
-      .select({ id: profileCategories.id })
+      .select({ id: profileCategories.id, adminAssigned: profileCategories.adminAssigned })
       .from(profileCategories)
       .where(and(eq(profileCategories.id, id), activeCategory));
     if (!found) return null;
+    assertPermissionsAllowed(input);
     await assertNameFree(tx, input.name, id);
+    if (input.adminAssigned && !found.adminAssigned) await dropSelfPickedLabels(tx, id);
     await tx
       .update(profileCategories)
-      .set({ name: input.name, multiSelect: input.multiSelect, required: input.required })
+      .set({
+        name: input.name,
+        multiSelect: input.multiSelect,
+        required: input.required,
+        adminAssigned: input.adminAssigned ?? false,
+      })
       .where(eq(profileCategories.id, id));
     await syncOptions(tx, schoolId, id, input.options);
     return (await loadCategories(tx, id))[0];

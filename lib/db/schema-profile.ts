@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
+import type { Permission } from "@/lib/permissions/catalog";
 import {
   boolean,
+  check,
   index,
   integer,
   pgTable,
@@ -13,8 +15,8 @@ import {
 import { schoolIsolation, schools, staffUsers } from "./schema";
 
 /**
- * Profile categories (migration 0022): descriptive labels only.
- * No permission check may read these tables.
+ * Profile categories (migration 0022). Options of admin-assigned categories may carry
+ * permissions (migration 0029). Only `lib/permissions` may read permissions from these tables.
  */
 export const profileCategories = pgTable(
   "profile_categories",
@@ -26,6 +28,7 @@ export const profileCategories = pgTable(
     name: text().notNull(),
     multiSelect: boolean("multi_select").notNull().default(true),
     required: boolean().notNull().default(false),
+    adminAssigned: boolean("admin_assigned").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -50,9 +53,14 @@ export const profileCategoryOptions = pgTable(
       .references(() => profileCategories.id, { onDelete: "cascade" }),
     label: text().notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
+    permissions: text().array().$type<Permission[]>().notNull().default(sql`'{}'::text[]`),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
+    check(
+      "profile_category_options_permissions_check",
+      sql`${t.permissions} <@ ARRAY['rooms.book','rooms.manage']::text[]`,
+    ),
     uniqueIndex("profile_category_options_category_label_active_key")
       .on(t.categoryId, t.label)
       .where(sql`${t.archivedAt} IS NULL`),

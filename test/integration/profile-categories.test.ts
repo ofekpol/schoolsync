@@ -127,6 +127,50 @@ describe.skipIf(skipIfNoTestDb)("profile categories", () => {
     expect((await listCategories(testSchoolA)).map((c) => c.name)).toEqual(["ב", "א"]);
   });
 
+  it("round-trips an admin-assigned category whose options carry permissions", async () => {
+    await createCategory(testSchoolA, {
+      name: "תפקיד",
+      multiSelect: false,
+      required: false,
+      adminAssigned: true,
+      options: [{ label: "מנהל/ת", permissions: ["rooms.manage"] }, { label: "מורה" }],
+    });
+    const [role] = await listCategories(testSchoolA);
+    expect(role.adminAssigned).toBe(true);
+    expect(role.options.map((o) => o.permissions)).toEqual([["rooms.manage"], []]);
+  });
+
+  it("defaults to a free category with no permissions", async () => {
+    const created = await createCategory(testSchoolA, subject);
+    expect(created.adminAssigned).toBe(false);
+    expect(created.options.every((o) => o.permissions.length === 0)).toBe(true);
+  });
+
+  it("refuses to make a category free while its options still carry permissions", async () => {
+    const created = await createCategory(testSchoolA, {
+      ...subject,
+      adminAssigned: true,
+      options: [{ label: "מורה", permissions: ["rooms.book"] }],
+    });
+    await expect(
+      replaceCategory(testSchoolA, created.id, {
+        ...subject,
+        adminAssigned: false,
+        options: [{ id: created.options[0].id, label: "מורה", permissions: ["rooms.book"] }],
+      }),
+    ).rejects.toMatchObject({ code: "permissions_need_admin_assigned" });
+  });
+
+  it("the database refuses an unknown permission", async () => {
+    const created = await createCategory(testSchoolA, subject);
+    await expect(
+      testDb!
+        .update(profileCategoryOptions)
+        .set({ permissions: ["rooms.fly"] as never })
+        .where(eq(profileCategoryOptions.id, created.options[0].id)),
+    ).rejects.toThrow();
+  });
+
   it("keeps schools apart", async () => {
     const created = await createCategory(testSchoolA, subject);
     expect(await listCategories(testSchoolB)).toEqual([]);

@@ -25,6 +25,8 @@ interface Props {
   variant?: "page" | "dialog";
   /** Label key for the Save button. */
   saveLabel?: "save" | "saveContinue";
+  /** The staff member's own profile: admin-assigned categories are read-only and never sent. */
+  lockAdminAssigned?: boolean;
 }
 
 type ErrorKey =
@@ -32,12 +34,14 @@ type ErrorKey =
   | "errorDemo"
   | "errorTooMany"
   | "errorRequiredMissing"
-  | "errorUnknownOption";
+  | "errorUnknownOption"
+  | "errorAdminAssigned";
 
 const SERVER_ERRORS: Record<string, ErrorKey> = {
   too_many: "errorTooMany",
   required_missing: "errorRequiredMissing",
   unknown_option: "errorUnknownOption",
+  admin_assigned: "errorAdminAssigned",
   demo_disabled: "errorDemo",
 };
 
@@ -64,6 +68,7 @@ function nextPicked(current: Set<string>, category: ProfileCategory, optionId: s
 /** The school's categories as pill groups (checkboxes for multi-select, radios for single). */
 export function ProfileForm({
   categories, selected, submitUrl, onSaved, savedHref, backHref, variant = "dialog", saveLabel = "save",
+  lockAdminAssigned = false,
 }: Props) {
   const t = useTranslations("profile");
   const router = useRouter();
@@ -72,9 +77,12 @@ export function ProfileForm({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<ErrorKey | null>(null);
 
+  const isLocked = (c: ProfileCategory) => lockAdminAssigned && c.adminAssigned;
   const missing = categories.some(
-    (c) => c.required && c.options.length > 0 && !c.options.some((o) => picked.has(o.id)),
+    (c) => !isLocked(c) && c.required && c.options.length > 0 && !c.options.some((o) => picked.has(o.id)),
   );
+  // The server keeps admin-assigned labels as they are; sending them would be refused.
+  const lockedIds = new Set(categories.filter(isLocked).flatMap((c) => c.options.map((o) => o.id)));
 
   function toggle(category: ProfileCategory, optionId: string | null) {
     setSaved(false);
@@ -85,7 +93,7 @@ export function ProfileForm({
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const failure = await save(submitUrl, [...picked]);
+    const failure = await save(submitUrl, [...picked].filter((id) => !lockedIds.has(id)));
     setSaving(false);
     if (failure) return setError(failure);
     onSaved?.();
@@ -100,6 +108,7 @@ export function ProfileForm({
       <div className={page ? "divide-y divide-[var(--sg-hairline-2)]" : "space-y-5"}>
         {categories.map((category) => (
           <CategoryFieldset key={category.id} category={category} picked={picked}
+            locked={isLocked(category)}
             className={page ? "px-5 py-6 sm:px-7" : undefined}
             onToggle={(optionId) => toggle(category, optionId)} />
         ))}

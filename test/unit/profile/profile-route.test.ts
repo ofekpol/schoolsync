@@ -93,7 +93,7 @@ describe("/api/v1/profile", () => {
     getStaffUserMock.mockResolvedValue(VIEWER);
     const res = await PUT(put({ optionIds: [OPTION] }));
     expect(res.status).toBe(204);
-    expect(labels.setStaffOptions).toHaveBeenCalledWith(SCHOOL, VIEWER.id, [OPTION]);
+    expect(labels.setStaffOptions).toHaveBeenCalledWith(SCHOOL, VIEWER.id, [OPTION], { kind: "self" });
   });
 
   it("400 with the validation code", async () => {
@@ -141,7 +141,10 @@ describe("PUT /api/v1/admin/staff/[id]/labels", () => {
     getStaffUserMock.mockResolvedValue(ADMIN);
     labels.isActiveStaffOfSchool.mockResolvedValue(true);
     expect((await PUT_ADMIN(put({ optionIds: [OPTION] }, adminPath), ctx)).status).toBe(204);
-    expect(labels.setStaffOptions).toHaveBeenCalledWith(SCHOOL, OTHER, [OPTION]);
+    expect(labels.setStaffOptions).toHaveBeenCalledWith(SCHOOL, OTHER, [OPTION], {
+      kind: "admin",
+      actorStaffId: ADMIN.id,
+    });
     labels.setStaffOptions.mockRejectedValue(new ProfileValidationError("required_missing"));
     const res = await PUT_ADMIN(put({ optionIds: [] }, adminPath), ctx);
     expect(res.status).toBe(400);

@@ -10,12 +10,12 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
 const GRADE: ProfileCategory = {
-  id: "c1", name: "שכבה", multiSelect: false, required: true, sortOrder: 1,
-  options: [{ id: "g7", label: "ז", sortOrder: 0 }, { id: "g8", label: "ח", sortOrder: 1 }],
+  id: "c1", name: "שכבה", multiSelect: false, required: true, adminAssigned: false, sortOrder: 1,
+  options: [{ id: "g7", label: "ז", sortOrder: 0, permissions: [] }, { id: "g8", label: "ח", sortOrder: 1, permissions: [] }],
 };
 const SUBJECT: ProfileCategory = {
-  id: "c2", name: "מקצוע", multiSelect: true, required: false, sortOrder: 2,
-  options: [{ id: "math", label: "מתמטיקה", sortOrder: 0 }, { id: "eng", label: "אנגלית", sortOrder: 1 }],
+  id: "c2", name: "מקצוע", multiSelect: true, required: false, adminAssigned: false, sortOrder: 2,
+  options: [{ id: "math", label: "מתמטיקה", sortOrder: 0, permissions: [] }, { id: "eng", label: "אנגלית", sortOrder: 1, permissions: [] }],
 };
 
 const fetchMock = vi.fn();
@@ -101,5 +101,35 @@ describe("ProfileForm", () => {
     render(<ProfileForm categories={[SUBJECT]} selected={[]} submitUrl="/x" savedHref="/dashboard" />);
     fireEvent.click(screen.getByRole("button", { name: "save" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard"));
+  });
+
+  describe("admin-assigned categories on the staff member's own profile", () => {
+    const ROLE: ProfileCategory = {
+      id: "c9", name: "תפקיד", multiSelect: false, required: true, adminAssigned: true, sortOrder: 3,
+      options: [{ id: "teacher", label: "מורה", sortOrder: 0, permissions: ["rooms.book"] }],
+    };
+
+    it("shows them read-only and never sends them", async () => {
+      const onSaved = vi.fn();
+      render(<ProfileForm categories={[SUBJECT, ROLE]} selected={["teacher"]} submitUrl="/api/v1/profile"
+        lockAdminAssigned onSaved={onSaved} />);
+      expect(screen.getByRole("radio", { name: "מורה" })).toBeDisabled();
+      expect(screen.getByText("adminAssignedNote")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("checkbox", { name: "אנגלית" }));
+      fireEvent.click(screen.getByRole("button", { name: "save" }));
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).optionIds).toEqual(["eng"]);
+    });
+
+    it("a required one the staff member lacks does not block Save", () => {
+      render(<ProfileForm categories={[SUBJECT, ROLE]} selected={[]} submitUrl="/x" lockAdminAssigned />);
+      expect(screen.getByRole("button", { name: "save" })).toBeEnabled();
+    });
+
+    it("stays editable for an admin editing someone's labels", () => {
+      render(<ProfileForm categories={[ROLE]} selected={[]} submitUrl="/x" />);
+      expect(screen.getByRole("radio", { name: "מורה" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "save" })).toBeDisabled();
+    });
   });
 });

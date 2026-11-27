@@ -295,7 +295,7 @@
     },
     "categories": {
       "title": "Profile categories",
-      "description": "Define categories and options (for example subject, grade, role). Staff are asked to pick theirs at their next sign-in. Labels only describe people and never grant permissions.",
+      "description": "Define categories and options (for example subject, grade, role). Staff are asked to pick theirs at their next sign-in. Labels in ordinary categories only describe people; only an admin-assigned category can grant permissions.",
       "demoNote": "In the demo you can view categories but not change them.",
       "listLabel": "Category list",
       "empty": "No categories yet. Until there is one, no staff member is asked to fill in a profile.",
@@ -324,7 +324,18 @@
       "errorLimit": "You have reached the maximum number of categories.",
       "errorArchive": "Archiving failed. Try again.",
       "errorReorder": "Reordering failed. Try again.",
-      "errorDemo": "Categories cannot be changed in the demo."
+      "errorDemo": "Categories cannot be changed in the demo.",
+      "adminAssigned": "Assigned by an admin only",
+      "adminAssignedHint": "Staff see this category on their profile but cannot change it. Assign it from the staff page; each option can carry permissions. When an existing category switches to admin-assigned, the choices staff made in it themselves are cleared.",
+      "adminAssignedBadge": "Admin only",
+      "errorPermissions": "Permissions can only be attached to an admin-assigned category.",
+      "permissions": {
+        "groupLabel": "Permissions of {name}",
+        "rooms": {
+          "book": "Book rooms",
+          "manage": "Manage rooms"
+        }
+      }
     }
   },
   "invite": {
@@ -488,7 +499,7 @@
     "types": "Event types",
     "empty": "No active subscriptions.",
     "errorGeneric": "Something went wrong",
-    "intro": "Tick what describes you. Management uses these labels to find staff; they do not change permissions.",
+    "intro": "Tick what describes you. Management uses these labels to find staff. Categories that management assigns are shown read-only.",
     "required": "Required",
     "multiHint": "You can pick several",
     "none": "None",
@@ -505,7 +516,9 @@
     "selectedCount": "{count, plural, one {1 selected} other {# selected}}",
     "saved": "Changes saved",
     "saveContinue": "Save and continue",
-    "back": "Back"
+    "back": "Back",
+    "adminAssignedNote": "Assigned by management",
+    "errorAdminAssigned": "Management assigns this category. Refresh the page and try again."
   },
   "wizard": {
     "step1": {

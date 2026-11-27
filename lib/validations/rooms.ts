@@ -21,3 +21,21 @@ export const RoomOrderSchema = z.object({ ids: z.array(RoomIdSchema).max(MAX_ROO
 
 export const RoomSchema = z.object({ id: z.string().uuid(), name: z.string(), sortOrder: z.number().int() });
 export type Room = z.infer<typeof RoomSchema>;
+
+export const SlotInputSchema = z.object({
+  day: DaySchema,
+  period: PeriodSchema,
+  label: z.string().trim().min(1).max(MAX_SLOT_LABEL),
+  staffUserId: z.string().uuid().nullable().optional(),
+});
+
+export const WeeklySlotSchema = z.object({
+  id: z.string().uuid(),
+  day: z.number().int(),
+  period: z.number().int(),
+  label: z.string(),
+  staffUserId: z.string().uuid().nullable(),
+  staffName: z.string().nullable(),
+  releasedDates: z.array(z.string()),
+});
+export const SlotsResponseSchema = z.object({ slots: z.array(WeeklySlotSchema) });

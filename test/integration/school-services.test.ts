@@ -22,7 +22,13 @@ describe.skipIf(skipIfNoTestDb)("schools.services", () => {
     const setServices = (value: string) =>
       testDb!.execute(sql`UPDATE schools SET services = ${value}::text[] WHERE id = ${testSchoolA}`);
     await expect(setServices("{}")).rejects.toThrow();
-    await expect(setServices("{rooms}")).rejects.toThrow();
+    await expect(setServices("{chess}")).rejects.toThrow();
+  });
+
+  it("accepts rooms (migration 0030)", async () => {
+    expect(await updateSchoolServices(testSchoolA, ["gantt", "rooms"], ACTOR)).toBe(true);
+    expect((await getSchoolById(testSchoolA))?.services).toEqual(["gantt", "rooms"]);
+    await testDb!.execute(sql`UPDATE schools SET services = '{gantt}' WHERE id = ${testSchoolA}`);
   });
 
   it("updates a school's services and reports unknown schools", async () => {

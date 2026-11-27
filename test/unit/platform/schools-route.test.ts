@@ -74,7 +74,7 @@ describe("/api/v1/platform/schools", () => {
   });
 
   it("rejects an unknown service with 400", async () => {
-    expect((await POST(makeRequest({ ...VALID_BODY, services: ["rooms"] }))).status).toBe(400);
+    expect((await POST(makeRequest({ ...VALID_BODY, services: ["chess"] }))).status).toBe(400);
     expect(provisionSchoolMock).not.toHaveBeenCalled();
   });
 

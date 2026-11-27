@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SERVICES = ["gantt"] as const;
+export const SERVICES = ["gantt", "rooms"] as const;
 export type Service = (typeof SERVICES)[number];
 
 /** At least one known service; duplicates removed. */
@@ -13,7 +13,7 @@ export function hasService(school: { services: readonly string[] }, service: Ser
   return school.services.includes(service);
 }
 
-/** The school's landing page. Only the Gantt exists today (timetable is parked on `feature/timetable`). */
-export function homePathFor(_services: readonly string[]): "/dashboard" {
-  return "/dashboard";
+/** The school's landing page: the Gantt, or rooms for a rooms-only school (timetable is parked on `feature/timetable`). */
+export function homePathFor(services: readonly string[]): "/dashboard" | "/rooms" {
+  return !services.includes("gantt") && services.includes("rooms") ? "/rooms" : "/dashboard";
 }

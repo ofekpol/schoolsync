@@ -105,13 +105,16 @@ export function listCategories(schoolId: string): Promise<ProfileCategory[]> {
   return withSchool(schoolId, (tx) => loadCategories(tx));
 }
 
-/** How many active categories the school has (0 = the profile step is off). */
-export function countCategories(schoolId: string): Promise<number> {
+/**
+ * How many active categories the school has. `selfServiceOnly` leaves out admin-assigned ones:
+ * those are the categories staff fill in themselves (0 = the profile step is off).
+ */
+export function countCategories(schoolId: string, { selfServiceOnly = false } = {}): Promise<number> {
   return withSchool(schoolId, async (tx) => {
     const [row] = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(profileCategories)
-      .where(activeCategory);
+      .where(selfServiceOnly ? and(activeCategory, eq(profileCategories.adminAssigned, false)) : activeCategory);
     return row.count;
   });
 }

@@ -26,7 +26,7 @@ describe("needsProfile", () => {
 
   it("is true for a staff member who has not filled a profile the school asks for", async () => {
     expect(await needsProfile(USER)).toBe(true);
-    expect(countCategoriesMock).toHaveBeenCalledWith(USER.schoolId);
+    expect(countCategoriesMock).toHaveBeenCalledWith(USER.schoolId, { selfServiceOnly: true });
   });
 
   it("is false without a school", async () => {

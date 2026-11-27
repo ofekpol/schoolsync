@@ -171,6 +171,19 @@ describe.skipIf(skipIfNoTestDb)("profile categories", () => {
     ).rejects.toThrow();
   });
 
+  it("counts only self-service categories for the profile step", async () => {
+    await createCategory(testSchoolA, subject);
+    await createCategory(testSchoolA, {
+      name: "תפקיד",
+      multiSelect: true,
+      required: true,
+      adminAssigned: true,
+      options: [{ label: "מורה", permissions: ["rooms.book"] }],
+    });
+    expect(await countCategories(testSchoolA)).toBe(2);
+    expect(await countCategories(testSchoolA, { selfServiceOnly: true })).toBe(1);
+  });
+
   it("keeps schools apart", async () => {
     const created = await createCategory(testSchoolA, subject);
     expect(await listCategories(testSchoolB)).toEqual([]);

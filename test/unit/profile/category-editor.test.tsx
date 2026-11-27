@@ -53,3 +53,13 @@ describe("CategoryEditor permissions", () => {
     });
   });
 });
+
+describe("CategoryEditor option rows", () => {
+  afterEach(cleanup);
+
+  it("moves focus into a newly added option row", () => {
+    render(<CategoryEditor initial={ROLE} isNew={false} onSave={vi.fn()} onCancel={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "addOption" }));
+    expect(document.activeElement).toBe(screen.getAllByRole("textbox", { name: "optionNumber" }).at(-1));
+  });
+});

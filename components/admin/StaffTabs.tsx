@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Clock } from "lucide-react";
@@ -39,6 +39,11 @@ export function StaffTabs({
   );
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const hasRequestsTab = tabs.some((tab) => tab.id === requestsTabId);
+
+  // The strip scrolls sideways on narrow screens; keep the chosen tab visible.
+  useEffect(() => {
+    tabRefs.current[active]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [active]);
 
   function select(id: string, focus = false) {
     setActive(id);

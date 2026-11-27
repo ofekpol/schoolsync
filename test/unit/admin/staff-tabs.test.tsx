@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StaffTabs } from "@/components/admin/StaffTabs";
 
 vi.mock("next-intl", () => ({
@@ -8,6 +8,12 @@ vi.mock("next-intl", () => ({
 }));
 
 afterEach(() => cleanup());
+
+const scrollIntoView = vi.fn();
+beforeEach(() => {
+  scrollIntoView.mockReset();
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
 
 const tabs = [
   { id: "staff", label: "Staff", count: 3, panel: <p>staff panel</p> },
@@ -60,5 +66,13 @@ describe("StaffTabs", () => {
     expect(screen.getByRole("tab", { name: /^Requests/ })).toHaveFocus();
     await user.keyboard("{ArrowRight}{ArrowRight}");
     expect(screen.getByRole("tab", { name: "Links" })).toHaveFocus();
+  });
+});
+
+describe("StaffTabs on a narrow strip", () => {
+  it("scrolls the tab opened from the URL into view", () => {
+    render(<StaffTabs tabs={tabs} initialTab="links" />);
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", inline: "nearest" });
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(screen.getByRole("tab", { name: "Links" }));
   });
 });

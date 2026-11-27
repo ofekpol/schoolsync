@@ -120,6 +120,13 @@ function OptionList({ rows, onChange, newKey, withPermissions }: {
   withPermissions: boolean;
 }) {
   const t = useTranslations("admin.categories");
+  const [addedKey, setAddedKey] = useState<number | null>(null);
+
+  function add() {
+    const key = newKey();
+    setAddedKey(key);
+    onChange([...rows, { key, label: "", permissions: [] }]);
+  }
 
   function move(index: number, direction: -1 | 1) {
     const next = rows.slice();
@@ -138,7 +145,7 @@ function OptionList({ rows, onChange, newKey, withPermissions }: {
           <div key={row.key}>
           <div className="flex items-center gap-1">
             <input aria-label={t("optionNumber", { number: index + 1 })} value={row.label}
-              maxLength={MAX_LABEL_LENGTH} className={INPUT}
+              maxLength={MAX_LABEL_LENGTH} className={INPUT} autoFocus={row.key === addedKey}
               onChange={(e) => update({ label: e.target.value })} />
             <Button type="button" size="icon-sm" variant="ghost" disabled={index === 0}
               aria-label={t("moveUp", { name: label })} onClick={() => move(index, -1)}>
@@ -163,8 +170,7 @@ function OptionList({ rows, onChange, newKey, withPermissions }: {
         );
       })}
       {rows.length < MAX_OPTIONS_PER_CATEGORY && (
-        <Button type="button" size="sm" variant="outline"
-          onClick={() => onChange([...rows, { key: newKey(), label: "", permissions: [] }])}>
+        <Button type="button" size="sm" variant="outline" onClick={add}>
           <Plus aria-hidden="true" />
           {t("addOption")}
         </Button>

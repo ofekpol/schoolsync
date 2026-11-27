@@ -39,3 +39,27 @@ export const WeeklySlotSchema = z.object({
   releasedDates: z.array(z.string()),
 });
 export const SlotsResponseSchema = z.object({ slots: z.array(WeeklySlotSchema) });
+
+export const BookingInputSchema = z.object({
+  roomId: RoomIdSchema,
+  date: DateSchema,
+  periods: z
+    .array(PeriodSchema)
+    .min(1)
+    .max(MAX_PERIODS_PER_DAY)
+    .transform((periods) => [...periods].sort((a, b) => a - b))
+    .refine((periods) => periods.every((p, i) => i === 0 || p === periods[i - 1] + 1), {
+      message: "periods_not_consecutive",
+    }),
+  note: z.string().trim().max(MAX_BOOKING_NOTE).nullable().optional(),
+});
+
+export const MyBookingSchema = z.object({
+  groupId: z.string().uuid(),
+  roomId: z.string().uuid(),
+  roomName: z.string(),
+  date: z.string(),
+  periods: z.array(z.number().int()),
+  note: z.string().nullable(),
+});
+export const MyBookingsResponseSchema = z.object({ bookings: z.array(MyBookingSchema) });

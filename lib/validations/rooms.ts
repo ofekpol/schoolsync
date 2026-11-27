@@ -63,3 +63,42 @@ export const MyBookingSchema = z.object({
   note: z.string().nullable(),
 });
 export const MyBookingsResponseSchema = z.object({ bookings: z.array(MyBookingSchema) });
+
+const CellSchema = z.discriminatedUnion("state", [
+  z.object({ period: z.number().int(), state: z.literal("free") }),
+  z.object({
+    period: z.number().int(),
+    state: z.literal("weekly"),
+    slotId: z.string().uuid(),
+    label: z.string(),
+    staffName: z.string().nullable(),
+  }),
+  z.object({
+    period: z.number().int(),
+    state: z.literal("booked"),
+    groupId: z.string().uuid(),
+    staffName: z.string(),
+    note: z.string().nullable(),
+    mine: z.boolean(),
+  }),
+]);
+
+export const DayViewSchema = z.object({
+  date: z.string(),
+  periods: z.array(z.object({ period: z.number().int(), start: z.string(), end: z.string() })),
+  rooms: z.array(z.object({ id: z.string().uuid(), name: z.string(), cells: z.array(CellSchema) })),
+});
+
+/** `?date=&periods=3,4&free=1&q=&mine=1` from the URL (API and the /rooms page). */
+export const DayQuerySchema = z.object({
+  date: DateSchema.optional(),
+  periods: z
+    .string()
+    .regex(/^\d{1,2}(,\d{1,2})*$/)
+    .transform((s) => s.split(",").map(Number))
+    .pipe(z.array(PeriodSchema))
+    .optional(),
+  free: z.literal("1").optional(),
+  q: z.string().trim().max(MAX_ROOM_NAME).optional(),
+  mine: z.literal("1").optional(),
+});

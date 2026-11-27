@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Cell, DayView } from "@/lib/rooms/day";
@@ -11,7 +12,7 @@ function CellContent({ cell, roomId, roomName, date, t }: { cell: Cell; roomId: 
   if (cell.state === "free") {
     return (
       <Link
-        href={`/rooms/${roomId}?date=${date}&period=${cell.period}`}
+        href={`/rooms/${roomId}?date=${date}&period=${cell.period}` as Route}
         aria-label={t("bookThis", { room: roomName, period: cell.period })}
         className={cn(CELL_BASE, "border-emerald-200 bg-emerald-50 font-medium text-emerald-900 hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-700")}
       >
@@ -67,7 +68,7 @@ export async function RoomsDayGrid({ day }: { day: DayView }) {
             {day.rooms.map((room) => (
               <tr key={room.id}>
                 <th scope="row" className="text-start font-medium">
-                  <Link href={`/rooms/${room.id}?date=${day.date}`} className="hover:underline">{room.name}</Link>
+                  <Link href={`/rooms/${room.id}?date=${day.date}` as Route} className="hover:underline">{room.name}</Link>
                 </th>
                 {room.cells.map((cell) => (
                   <td key={cell.period} className="h-14 align-top">
@@ -82,7 +83,7 @@ export async function RoomsDayGrid({ day }: { day: DayView }) {
       <ul className="space-y-3 md:hidden">
         {day.rooms.map((room) => (
           <li key={room.id} className="rounded-xl border border-neutral-200 bg-white p-3">
-            <Link href={`/rooms/${room.id}?date=${day.date}`} className="font-semibold hover:underline">{room.name}</Link>
+            <Link href={`/rooms/${room.id}?date=${day.date}` as Route} className="font-semibold hover:underline">{room.name}</Link>
             <ol className="mt-2 grid grid-cols-2 gap-2">
               {room.cells.map((cell) => (
                 <li key={cell.period}>

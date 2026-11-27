@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -41,7 +42,7 @@ export default async function RoomDayPage({ params, searchParams }: PageProps) {
 
   return (
     <main className="mx-auto max-w-2xl space-y-5 px-4 pb-12 pt-6">
-      <Link href={`/rooms?date=${date}`} className="text-sm text-violet-700 hover:underline">
+      <Link href={`/rooms?date=${date}` as Route} className="text-sm text-violet-700 hover:underline">
         {t("backToRooms")}
       </Link>
       <header>

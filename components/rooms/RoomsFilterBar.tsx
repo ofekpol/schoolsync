@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -13,13 +14,13 @@ export interface RoomsFilters {
 }
 
 /** `/rooms` URL for these filters on another date. */
-export function roomsHref(filters: RoomsFilters, date = filters.date): string {
+export function roomsHref(filters: RoomsFilters, date = filters.date): Route {
   const params = new URLSearchParams({ date });
   if (filters.periods.length) params.set("periods", filters.periods.join(","));
   if (filters.freeOnly) params.set("free", "1");
   if (filters.mine) params.set("mine", "1");
   if (filters.q) params.set("q", filters.q);
-  return `/rooms?${params}`;
+  return `/rooms?${params}` as Route;
 }
 
 const CHIP = "flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-sm has-[:checked]:border-violet-600 has-[:checked]:bg-violet-50";
@@ -70,7 +71,7 @@ export async function RoomsFilterBar({ filters, dayPeriods }: { filters: RoomsFi
         <button type="submit" className="ms-auto rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800">
           {t("apply")}
         </button>
-        <Link href={`/rooms?date=${filters.date}`} className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+        <Link href={`/rooms?date=${filters.date}` as Route} className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
           {t("clear")}
         </Link>
       </div>

@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -87,7 +88,7 @@ export default async function RoomsPage({ searchParams }: { searchParams: Promis
           <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
             {mine.map((booking) => (
               <li key={booking.groupId} className="px-4 py-3 text-sm">
-                <Link href={`/rooms/${booking.roomId}?date=${booking.date}`} className="font-medium hover:underline">
+                <Link href={`/rooms/${booking.roomId}?date=${booking.date}` as Route} className="font-medium hover:underline">
                   {booking.roomName}
                 </Link>
                 <span className="text-neutral-600">

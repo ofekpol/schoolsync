@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { getSchoolById, updateSchoolServices } from "@/lib/db/schools";
+import { getActiveAcademicYearId, getSchoolById, updateSchoolServices } from "@/lib/db/schools";
 import { skipIfNoTestDb, testDb, testSchoolA } from "./setup";
 
 const ACTOR = "00000000-0000-0000-0000-0000000000ad";
@@ -25,10 +25,17 @@ describe.skipIf(skipIfNoTestDb)("schools.services", () => {
     await expect(setServices("{chess}")).rejects.toThrow();
   });
 
-  it("accepts rooms (migration 0030)", async () => {
+  it("accepts rooms (migration 0030) and gives the school an active year for it", async () => {
+    await testDb!.execute(sql`UPDATE schools SET active_academic_year_id = NULL WHERE id = ${testSchoolA}`);
     expect(await updateSchoolServices(testSchoolA, ["gantt", "rooms"], ACTOR)).toBe(true);
     expect((await getSchoolById(testSchoolA))?.services).toEqual(["gantt", "rooms"]);
-    await testDb!.execute(sql`UPDATE schools SET services = '{gantt}' WHERE id = ${testSchoolA}`);
+    const yearId = await getActiveAcademicYearId(testSchoolA);
+    expect(yearId).not.toBeNull();
+    // Turning rooms on again keeps the same year.
+    await updateSchoolServices(testSchoolA, ["gantt", "rooms"], ACTOR);
+    expect(await getActiveAcademicYearId(testSchoolA)).toBe(yearId);
+    await testDb!.execute(sql`UPDATE schools SET services = '{gantt}', active_academic_year_id = NULL WHERE id = ${testSchoolA}`);
+    await testDb!.execute(sql`DELETE FROM academic_years WHERE id = ${yearId}`);
   });
 
   it("updates a school's services and reports unknown schools", async () => {

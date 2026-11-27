@@ -1,8 +1,9 @@
 import "server-only";
 import { cache } from "react";
-import { asc, eq, isNull, type SQL } from "drizzle-orm";
+import { and, asc, eq, isNull, type SQL } from "drizzle-orm";
 import { db, rethrowWithDatabaseHint, withSchool } from "@/lib/db/client";
-import { auditLog, schools } from "@/lib/db/schema";
+import { academicYears, auditLog, schools } from "@/lib/db/schema";
+import { jerusalemDateString } from "@/lib/datetime";
 import { hasService, type Service } from "@/lib/services";
 import { SchoolAccessTokenSchema } from "@/lib/validations/school";
 
@@ -100,6 +101,31 @@ export async function getActiveAcademicYearId(schoolId: string): Promise<string 
 }
 
 /**
+ * Rooms needs an active school year (booking horizon, weekly use). When the school has none, makes
+ * the current one (Sept 1 → Aug 31 on the Jerusalem calendar) active, creating it if needed.
+ */
+export async function ensureActiveAcademicYear(schoolId: string, now: Date = new Date()): Promise<string> {
+  const existing = await getActiveAcademicYearId(schoolId);
+  if (existing) return existing;
+  const today = jerusalemDateString(now);
+  const start = Number(today.slice(5, 7)) >= 9 ? Number(today.slice(0, 4)) : Number(today.slice(0, 4)) - 1;
+  const label = `${start}-${start + 1}`;
+  const yearId = await withSchool(schoolId, async (tx) => {
+    await tx
+      .insert(academicYears)
+      .values({ schoolId, label, startDate: `${start}-09-01`, endDate: `${start + 1}-08-31` })
+      .onConflictDoNothing({ target: [academicYears.schoolId, academicYears.label] });
+    const [row] = await tx.select({ id: academicYears.id }).from(academicYears).where(eq(academicYears.label, label));
+    return row.id;
+  });
+  await db
+    .update(schools)
+    .set({ activeAcademicYearId: yearId })
+    .where(and(eq(schools.id, schoolId), isNull(schools.activeAcademicYearId)));
+  return (await getActiveAcademicYearId(schoolId)) ?? yearId;
+}
+
+/**
  * Every school with its secret link token, alphabetical by name.
  * Platform admins only (/platform/schools) — never expose to a school's users.
  */
@@ -134,6 +160,7 @@ export async function updateSchoolServices(
       .limit(1);
     if (!before) return false;
     await db.update(schools).set({ services }).where(eq(schools.id, schoolId));
+    if (services.includes("rooms")) await ensureActiveAcademicYear(schoolId);
     await withSchool(schoolId, (tx) =>
       tx.insert(auditLog).values({
         schoolId,

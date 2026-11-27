@@ -47,11 +47,11 @@ app/
   (public)/schedule/         — Read-only guest view: /schedule?school=<token>; no token = "link required" screen
   (public)/page.tsx          — `/` redirects to login
   demo/                      — Public demo sandbox entry (/demo); POST /api/v1/demo creates a private demo school
-  (staff)/                   — /dashboard (monthly/weekly calendar), /events/new (event form)
+  (staff)/                   — /dashboard (monthly/weekly calendar), /events/new (event form), /rooms (day view), /rooms/[id] (book), /rooms/manage
   (admin)/admin/             — /staff (staff, invites, pending sign-ups, school links, grade colors), /event-types
   (platform)/platform/schools — Platform admins: provision schools, list every school's links
   api/health/                — Uptime probe (app + `select 1`), hit by `.github/workflows/uptime.yml`
-  api/v1/                    — REST route handlers (public/, events/, admin/, ai/, auth/, ical-subscriptions/, export/ics, platform/)
+  api/v1/                    — REST route handlers (public/, events/, admin/, ai/, auth/, ical-subscriptions/, export/ics, platform/, rooms/)
   ical/[token]/route.ts      — text/calendar feed (unauthenticated, token-gated)
   auth/                      — /login, /register, /confirm, /callback, /pending, /deactivated, /change-password
   invite/[token]/            — Invite redemption page
@@ -59,6 +59,8 @@ lib/
   db/                        — Drizzle schema, RLS client wrapper, invites, staff, schools, provision, platform-admins, ban-deactivated
   auth/                      — session.ts, admin.ts, platform-admin.ts, public-request.ts (middleware allowlist), scopes.ts
   events/                    — Domain logic: approval (state machine), crud, queries, revisions
+  permissions/               — getPermissions/hasPermission: powers from admin-assigned profile labels
+  rooms/                     — Rooms service: guard, week, rooms, weekly slots, bookings, day view (day.ts is client-safe)
   ai/                        — chat/ (staff chat tools), adder/ (smart adder: parse + conflict check), model.ts, quota.ts
   ical/                      — VEVENT serializer + subscriptions
   views/                     — Event → Gantt / calendar / agenda projections
@@ -66,8 +68,8 @@ lib/
   validations/               — Zod schemas
 components/                  — Shared UI; Gantt/, dashboard/, admin/, ai/, wizard/, FilterBar, etc.
 db/
-  migrations/                — One .sql file per schema change (0000–0018 so far)
-  seed.ts                    — Demo school (fixed token in db/demo-school.ts) + admin + 6 grade editors + counselor + 11 event types
+  migrations/                — One .sql file per schema change (0000–0022, 0029–0030; 0023–0028 live on `feature/timetable`)
+  seed.ts                    — Demo school (fixed token in db/demo-school.ts) + admin + 6 grade editors + counselor + 11 event types; seed-rooms.ts adds rooms
 messages/                    — he.json (primary), en.json
 test/
   unit/ integration/ e2e/    — Vitest unit, real-Postgres integration (RLS), Playwright
@@ -121,6 +123,10 @@ Deleting a draft hides it (`deleted_at`, soft delete); deleting a published even
 Email + password via Supabase Auth, plus Google OAuth. No custom session cookies, with one exception: **public demo schools** (`schools.demo_expires_at` set, migration 0019) use a signed `ss_demo` cookie and have no Supabase Auth users (`lib/auth/demo-session.ts`, checked first in `middleware.ts` and `getStaffUser`). Demo users get 403 `demo_disabled` on every outbound/account route (staff, invites, pending, change-password, support, AI); a DB trigger caps their rows and text. Design: `docs/superpowers/specs/2026-11-09-demo-sandbox-design.md`.
 
 Google OAuth requires the Google provider enabled in the Supabase dashboard (Client ID/Secret) with `/auth/callback` registered as a redirect URL. Sign-ups through a school link land in that school's `pending_registrations` and need admin activation; they do not auto-create an active `staff_users` row.
+
+**Profile permissions** (migration 0029): options of admin-assigned profile categories carry `permissions` (`rooms.book`, `rooms.manage`; manage implies book). `lib/permissions` resolves them; admins hold all, only active staff hold any. They sit beside roles and never widen what roles control. Staff cannot set admin-assigned labels on themselves (`admin_assigned`); admin label changes are audited.
+
+**Rooms** (service `rooms`, migration 0030): every `/api/v1/rooms` route goes through `requireRoomsPermission` (`lib/rooms/guard.ts`). Viewing and booking need `rooms.book`; setting up the week, rooms and weekly slots needs `rooms.manage`. Writes lock the room row; one active booking per room/date/period is a unique index. Design: `docs/superpowers/specs/2026-11-26-rooms-design.md`.
 
 **Roles:** `editor` | `admin` | `viewer` (stored in `staff_users.role`). **Platform admins** are rows in `platform_admins` (auth user ids), separate from school roles; they reach `/platform/schools`.
 
@@ -196,6 +202,12 @@ events            id, school_id, status ∈ {draft,approved,canceled} (+ unused 
 event_grades      event_id, grade  (composite PK)
 event_revisions   id, event_id, snapshot JSONB, submitted_by, decided_by, decision ∈ {published,edited}, reason
 ical_subscriptions id, staff_user_id, token, filter_grades, filter_event_types, revoked_at
+profile_categories / profile_category_options / staff_profile_options  labels (0022); admin_assigned + permissions[] (0029)
+rooms_week        school_id PK, week jsonb (days → numbered periods with HH:MM times)
+rooms             id, school_id, name (unique while active), sort_order, archived_at
+room_weekly_slots id, school_id, room_id, academic_year_id, day 0–6, period 1–12, label, staff_user_id
+room_slot_releases slot_id, date (PK), released_by — a weekly slot freed on one date
+room_bookings     id, school_id, room_id, group_id, date, period, staff_user_id, note, canceled_at, canceled_by
 audit_log         id, school_id, actor_staff_id, action, target_table, target_id, payload, at
 ```
 

@@ -77,7 +77,7 @@ export async function enableDemoRooms(database: Tx, schoolId: string, yearId: st
   await database
     .update(schema.schools)
     .set({
-      services: sql`ARRAY(SELECT DISTINCT unnest(${schema.schools.services} || ARRAY['rooms']))`,
+      services: sql`CASE WHEN 'rooms' = ANY(${schema.schools.services}) THEN ${schema.schools.services} ELSE ${schema.schools.services} || ARRAY['rooms'] END`,
       activeAcademicYearId: sql`coalesce(${schema.schools.activeAcademicYearId}, ${yearId}::uuid)`,
     })
     .where(eq(schema.schools.id, schoolId));

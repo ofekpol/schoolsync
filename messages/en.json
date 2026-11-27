@@ -673,6 +673,7 @@
       "services": {
         "title": "Services",
         "gantt": "Event calendar (Gantt)",
+        "rooms": "Rooms",
         "saved": "Saved",
         "error": "Save failed",
         "hideWarning": "The service will be hidden. Its data is kept.",

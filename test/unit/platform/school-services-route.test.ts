@@ -39,7 +39,7 @@ describe("PATCH /api/v1/platform/schools/[id]", () => {
 
   it("returns 400 for an empty or unknown services list or a bad id", async () => {
     expect((await call({ services: [] })).status).toBe(400);
-    expect((await call({ services: ["rooms"] })).status).toBe(400);
+    expect((await call({ services: ["chess"] })).status).toBe(400);
     expect((await call({ services: ["gantt"] }, "not-a-uuid")).status).toBe(400);
     expect(updateSchoolServicesMock).not.toHaveBeenCalled();
   });

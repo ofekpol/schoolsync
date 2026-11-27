@@ -5,7 +5,7 @@ import type { StaffUserRecord } from "@/lib/auth/session";
 import { getSchoolById } from "@/lib/db/schools";
 import { hasService, homePathFor, type Service } from "@/lib/services";
 
-const SERVICE_HOME: Record<Service, string> = { gantt: "/dashboard" };
+const SERVICE_HOME: Record<Service, string> = { gantt: "/dashboard", rooms: "/rooms" };
 
 /**
  * Page guard: sends a user whose school lacks `service` to the school's home

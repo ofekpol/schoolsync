@@ -41,3 +41,15 @@ export const WeekSchema: z.ZodType<Week> = z.object({
     }),
 });
 
+
+/** Weekday (0 = Sunday) of a `YYYY-MM-DD` calendar date; no timezone shift. */
+export function dayOfDate(date: string): number {
+  return new Date(`${date}T00:00:00Z`).getUTCDay();
+}
+
+/** Start and end of `period` on `date`, or null when the school has no such period that day. */
+export function periodOf(week: Week, date: string, period: number): { start: string; end: string } | null {
+  const day = week.days.find((d) => d.day === dayOfDate(date));
+  const found = day?.periods.find((p) => p.period === period);
+  return found ? { start: found.start, end: found.end } : null;
+}
